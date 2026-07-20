@@ -1,0 +1,29 @@
+# Papers (large PDFs, freely available online — see README links)
+study/papers/*.pdf
+
+# Simulator artifacts
+*.o
+*.so
+build/
+m5out/
+checkpoints/
+*.img
+*.gz
+vmlinux*
+
+# Raw results — keep plots and summaries, not gigabytes of traces
+results/**/*.trace
+results/**/*.csv.gz
+results/**/raw/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
+*.swp

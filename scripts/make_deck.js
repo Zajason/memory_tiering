@@ -1,11 +1,11 @@
 // Generates docs/memory-tiering-cxl-gr.pptx — concept presentation (Greek)
 // Content follows docs/presentation-outline.md
 //
-// Visual system: "systems datasheet" — flat, no cards/shadows/badges. A grid of
-// monospace coordinate tags (§NN, FIG.N, NN/14) is the repeated motif. Display
-// type is large Cambria; all data/labels are Courier New; body is Calibri.
-// Palette is amber (fast/hot tier) + teal (slow/CXL tier) on near-black ink,
-// with light editorial slides between and one amber full-bleed close.
+// Visual paradigm: an academic conference talk (LaTeX/Beamer). Serif type
+// throughout (Times New Roman), white background, numbered sections (§3.2) and
+// captioned figures/tables (Σχήμα N, Πίνακας N) in booktabs style, dense prose
+// instead of bullet fragments, a thin footline, and only two restrained colors
+// used the way Beamer uses \structure{} (navy) and \alert{} (dark red).
 //
 // Run: node scripts/make_deck.js
 
@@ -13,206 +13,165 @@ const pptxgen = require("pptxgenjs");
 const path = require("path");
 
 const pres = new pptxgen();
-pres.layout = "LAYOUT_WIDE"; // 13.33" x 7.5" — must be set before adding slides
-pres.author = "ntua-el23408";
+pres.layout = "LAYOUT_WIDE"; // 13.33" x 7.5"
+pres.author = "el23408";
 pres.title = "Memory Tiering σε συστήματα CXL";
 
-// ── Palette ──────────────────────────────────────────────────────────────────
-const INK = "14181F"; // primary dark field
-const INK2 = "1D242E"; // dark inset panel
-const LINE_D = "313A46"; // hairline on dark
-const PAPER = "EAEDF1"; // light field (cool, not cream)
-const PANEL_L = "FFFFFF"; // light inset
-const LINE_L = "D3D9E2"; // hairline on light
+// ── Palette (paper) ──────────────────────────────────────────────────────────
+const BG = "FFFFFF";
+const INK = "1A1A1A";
+const MUT = "6E6E6E";
+const NAVY = "1F3A63"; // \structure — section numbers, headings, primary rule
+const ALERT = "8C2A2A"; // \alert — sparing emphasis
+const RULE = "BFBFBF"; // hairlines
+const BLK = "F0F0EE"; // block body fill (Beamer block)
+const BLKA = "F7ECEC"; // alert-block body fill
 
-const FG = "E9ECF1"; // text on dark
-const MUT_D = "8A95A3"; // muted on dark
-const INKTX = "171C24"; // text on light
-const MUT_L = "5C6675"; // muted on light
+const SERIF = "Times New Roman";
+const CODE = "Courier New";
 
-const AMBER = "F2A93B"; // fast / hot tier — primary accent
-const AMBER_DK = "B0741A"; // amber readable on light
-const TEAL = "5FB8A8"; // slow / CXL tier
-const TEAL_DK = "2E7D6F"; // teal readable on light
-const REDS = "E8604C"; // emphasis / warning
-
-const DISP = "Cambria"; // display — full Greek coverage, true-width in QA
-const MONO = "Courier New"; // tags, data, figure marks
-const BODY = "Calibri"; // running text
-
-const W = 13.33;
-const ML = 0.8; // content left
-const MR = 12.53; // content right
-const CW = MR - ML; // content width = 11.73
+const ML = 0.85; // content left
+const MR = 12.48; // content right
+const CW = MR - ML; // 11.63
+const FOOT = "Memory Tiering σε συστήματα CXL  ·  el23408";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-function slide(mode) {
+// A frame: white slide with a §-numbered frametitle and a Beamer-style footline.
+function frame(n, sec, secName, ttl) {
   const s = pres.addSlide();
-  s._mode = mode;
-  s.background = { color: mode === "dark" ? INK : mode === "amber" ? AMBER : PAPER };
-  return s;
-}
-const isDark = (s) => s._mode === "dark";
-const fg = (s) => (isDark(s) ? FG : INKTX);
-const mut = (s) => (isDark(s) ? MUT_D : MUT_L);
-const line = (s) => (isDark(s) ? LINE_D : LINE_L);
-const panel = (s) => (isDark(s) ? INK2 : PANEL_L);
-const amberOn = (s) => (isDark(s) ? AMBER : AMBER_DK);
-const tealOn = (s) => (isDark(s) ? TEAL : TEAL_DK);
-
-// Running head: the motif. §NN + section tag left, NN/14 right, in monospace.
-function head(s, n, section) {
-  const nn = String(n).padStart(2, "0");
+  s.background = { color: BG };
   s.addText(
     [
-      { text: `§${nn}`, options: { color: amberOn(s), bold: true } },
-      { text: `   ${section}`, options: { color: mut(s) } },
+      { text: `${sec}  `, options: { color: NAVY, bold: true } },
+      { text: ttl, options: { color: INK, bold: true } },
     ],
-    {
-      x: ML, y: 0.52, w: CW - 1.4, h: 0.3,
-      fontFace: MONO, fontSize: 12, charSpacing: 1, margin: 0, valign: "middle",
-    }
+    { x: ML, y: 0.42, w: CW, h: 0.55, fontFace: SERIF, fontSize: 24, margin: 0, valign: "middle" }
   );
-  s.addText(`${nn} / 14`, {
-    x: MR - 1.4, y: 0.52, w: 1.4, h: 0.3,
-    fontFace: MONO, fontSize: 12, color: mut(s), align: "right", margin: 0, valign: "middle",
-  });
-  // baseline tick — a short amber mark, not a full-width rule
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 0.9, w: 0.55, h: 0.028, fill: { color: amberOn(s) } });
+  // footline
+  s.addShape(pres.ShapeType.rect, { x: ML, y: 7.04, w: CW, h: 0.008, fill: { color: RULE } });
+  s.addText(FOOT, { x: ML, y: 7.1, w: 6.5, h: 0.3, fontFace: SERIF, fontSize: 9.5, color: MUT, margin: 0, valign: "middle" });
+  s.addText(secName, { x: ML + 6.5, y: 7.1, w: 3.5, h: 0.3, fontFace: SERIF, fontSize: 9.5, italic: true, color: MUT, align: "center", margin: 0, valign: "middle" });
+  s.addText(`${n} / 14`, { x: MR - 1.5, y: 7.1, w: 1.5, h: 0.3, fontFace: SERIF, fontSize: 9.5, color: MUT, align: "right", margin: 0, valign: "middle" });
+  return s;
 }
 
-// Big Cambria title, flush-left.
-function title(s, text, y = 1.2, size = 34) {
-  s.addText(text, {
-    x: ML, y, w: CW, h: 0.72,
-    fontFace: DISP, fontSize: size, bold: true, color: fg(s), lineSpacing: size * 1.06, margin: 0,
-  });
-}
-
-// Flat horizontal meter bar with a monospace value label.
-function meter(s, x, y, w, frac, color, label, labelColor) {
-  s.addShape(pres.ShapeType.rect, { x, y, w, h: 0.2, fill: { color: line(s) } });
-  s.addShape(pres.ShapeType.rect, { x, y, w: Math.max(0.02, w * frac), h: 0.2, fill: { color } });
-  if (label) {
-    s.addText(label, {
-      x: x + w + 0.12, y: y - 0.08, w: 1.6, h: 0.36,
-      fontFace: MONO, fontSize: 12, bold: true, color: labelColor || color, valign: "middle", margin: 0,
-    });
-  }
-}
-
-// Datasheet table with hairline rules and dark header row.
-function sheet(s, x, y, w, colW, rows, opts = {}) {
+// Booktabs table: no cell borders/fills; thick top & bottom rules, thin rule
+// under the (bold) header row. The academic table look.
+function booktabs(s, x, y, colW, rows, rowH, opts = {}) {
+  const w = colW.reduce((a, b) => a + b, 0);
   s.addTable(rows, {
-    x, y, w, colW,
-    fontFace: BODY, fontSize: opts.fs || 12.5, color: fg(s),
-    fill: { color: panel(s) },
-    border: { type: "solid", color: line(s), pt: 1 },
-    valign: "middle",
-    margin: [opts.pv || 0.07, 0.14, opts.pv || 0.07, 0.14],
-    rowH: opts.rowH,
+    x, y, w, colW, rowH,
+    fontFace: SERIF, fontSize: opts.fs || 13.5, color: INK,
+    fill: { color: BG }, border: { type: "none" },
+    valign: "middle", margin: [0.05, 0.1, 0.05, 0.1],
   });
+  const h0 = Array.isArray(rowH) ? rowH[0] : rowH;
+  const tot = Array.isArray(rowH) ? rowH.reduce((a, b) => a + b, 0) : rowH * rows.length;
+  s.addShape(pres.ShapeType.rect, { x, y, w, h: 0.022, fill: { color: INK } });          // top rule
+  s.addShape(pres.ShapeType.rect, { x, y: y + h0, w, h: 0.01, fill: { color: RULE } });   // header sep
+  s.addShape(pres.ShapeType.rect, { x, y: y + tot, w, h: 0.022, fill: { color: INK } });  // bottom rule
 }
-function hcell(text, s) {
-  return { text, options: { bold: true, color: isDark(s) ? INK : "FFFFFF", fill: { color: isDark(s) ? AMBER : INK }, fontFace: MONO, fontSize: 11.5 } };
+// bold header cell
+const hb = (t) => ({ text: t, options: { bold: true } });
+
+// Caption line (Σχήμα N: ... / Πίνακας N: ...)
+function caption(s, x, y, w, label, text, align = "left") {
+  s.addText(
+    [
+      { text: label + " ", options: { bold: true } },
+      { text: text, options: {} },
+    ],
+    { x, y, w, h: 0.32, fontFace: SERIF, fontSize: 11, italic: true, color: MUT, align, margin: 0 }
+  );
+}
+
+// Beamer block: titled box, subtle fill, sharp corners, no shadow.
+function block(s, x, y, w, h, title, body, alert) {
+  s.addShape(pres.ShapeType.rect, { x, y, w, h, fill: { color: alert ? BLKA : BLK } });
+  s.addText(title, { x: x + 0.2, y: y + 0.12, w: w - 0.4, h: 0.32, fontFace: SERIF, fontSize: 14.5, bold: true, color: alert ? ALERT : NAVY, margin: 0 });
+  s.addText(body, { x: x + 0.2, y: y + 0.48, w: w - 0.4, h: h - 0.6, fontFace: SERIF, fontSize: 13.5, color: INK, lineSpacing: 19, margin: 0, valign: "top" });
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 01 — Title
+// 01 — Title page (like a paper front page)
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("dark");
-  s.addText("ΕΡΓΑΣΙΑ 02  ·  ΠΡΟΗΓΜΕΝΗ ΑΡΧΙΤΕΚΤΟΝΙΚΗ ΥΠΟΛΟΓΙΣΤΩΝ", {
-    x: ML, y: 0.72, w: CW, h: 0.3,
-    fontFace: MONO, fontSize: 12.5, color: AMBER, charSpacing: 1.5, margin: 0,
-  });
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 1.12, w: 0.55, h: 0.03, fill: { color: AMBER } });
+  const s = pres.addSlide();
+  s.background = { color: BG };
 
-  s.addText("Memory Tiering\nσε συστήματα CXL", {
-    x: ML, y: 1.85, w: 8.5, h: 2.3,
-    fontFace: DISP, fontSize: 54, bold: true, color: FG, lineSpacing: 58, margin: 0,
+  s.addText("Προηγμένη Αρχιτεκτονική Υπολογιστών  ·  Εργασία 2  ·  Παρουσίαση ιδέας", {
+    x: ML, y: 0.95, w: CW, h: 0.35, fontFace: SERIF, fontSize: 14, italic: true, color: MUT, margin: 0,
   });
 
+  s.addText("Memory Tiering σε συστήματα CXL", {
+    x: ML, y: 1.5, w: CW, h: 0.8, fontFace: SERIF, fontSize: 40, bold: true, color: INK, margin: 0,
+  });
   s.addText(
-    "Προσομοίωση τεχνικών ιεραρχικής διαχείρισης μνήμης με\nυποστήριξη υλικού, στον προσομοιωτή CXLRAMSim.",
-    {
-      x: ML, y: 4.35, w: 8.5, h: 0.9,
-      fontFace: BODY, fontSize: 17, color: TEAL, lineSpacing: 25, margin: 0,
-    }
+    "Προσομοίωση τεχνικών ιεραρχικής διαχείρισης μνήμης με υποστήριξη υλικού, στον προσομοιωτή CXLRAMSim",
+    { x: ML, y: 2.35, w: CW, h: 0.72, fontFace: SERIF, fontSize: 18, italic: true, color: NAVY, lineSpacing: 24, margin: 0 }
   );
 
-  // Two-tier schematic, drawn flat with monospace annotations
-  const tx = 9.7, tw = 2.85;
-  s.addText("ΔΥΟ ΒΑΘΜΙΔΕΣ", {
-    x: tx, y: 1.9, w: tw, h: 0.3, fontFace: MONO, fontSize: 11, color: MUT_D, charSpacing: 1, margin: 0,
-  });
-  s.addShape(pres.ShapeType.rect, { x: tx, y: 2.3, w: tw, h: 0.85, fill: { color: AMBER } });
-  s.addText("DDR", { x: tx + 0.2, y: 2.4, w: tw - 0.4, h: 0.4, fontFace: DISP, fontSize: 22, bold: true, color: INK, margin: 0 });
-  s.addText("γρήγορη · μικρή", { x: tx + 0.2, y: 2.78, w: tw - 0.4, h: 0.3, fontFace: BODY, fontSize: 12, color: "5A4410", margin: 0 });
-  s.addText("~80–100 ns", { x: tx, y: 3.18, w: tw, h: 0.28, fontFace: MONO, fontSize: 11.5, color: MUT_D, margin: 0 });
+  s.addShape(pres.ShapeType.rect, { x: ML, y: 3.18, w: CW, h: 0.014, fill: { color: RULE } });
 
-  s.addShape(pres.ShapeType.rect, { x: tx, y: 3.72, w: tw, h: 1.65, fill: { color: TEAL_DK } });
-  s.addText("CXL", { x: tx + 0.2, y: 3.86, w: tw - 0.4, h: 0.4, fontFace: DISP, fontSize: 22, bold: true, color: "EAF6F3", margin: 0 });
-  s.addText("αργή · μεγάλη", { x: tx + 0.2, y: 4.26, w: tw - 0.4, h: 0.3, fontFace: BODY, fontSize: 12, color: "CDE7E1", margin: 0 });
-  s.addText("~250–400 ns  ·  2–3×", { x: tx, y: 5.4, w: tw, h: 0.28, fontFace: MONO, fontSize: 11.5, color: MUT_D, margin: 0 });
-
-  s.addText("ntua-el23408  ·  github.com/Zajason/memory_tiering", {
-    x: ML, y: 6.7, w: CW, h: 0.3, fontFace: MONO, fontSize: 11, color: MUT_D, margin: 0,
-  });
-
-  s.addNotes(
-    "Στόχος: να δείξω ότι κατάλαβα το πρόβλημα και ότι έχω αξιόπιστο πλάνο. " +
-    "Δεν έχω ακόμα αποτελέσματα — και το λέω ανοιχτά."
+  // Abstract, as in a paper
+  s.addText("Περίληψη.", { x: ML, y: 3.35, w: 2.0, h: 0.3, fontFace: SERIF, fontSize: 14, bold: true, color: INK, margin: 0 });
+  s.addText(
+    "Οι μνήμες CXL προσφέρουν φθηνή χωρητικότητα πάνω από τον δίαυλο PCIe, με το τίμημα ~2–3× " +
+    "μεγαλύτερης καθυστέρησης· σχηματίζουν έτσι ένα σύστημα μνήμης δύο βαθμίδων. Η παρούσα εργασία " +
+    "αναπαράγει, στον προσομοιωτή CXLRAMSim, γιατί η μετανάστευση σελίδων 4 KB από το λειτουργικό " +
+    "σύστημα αποτυγχάνει να γεφυρώσει το χάσμα επίδοσης προς την τοπική DRAM, και εξετάζει λύσεις " +
+    "με υποστήριξη υλικού (M5, NeoMem, Memstrata) που κάνουν profiling μέσα στη συσκευή CXL.",
+    { x: ML + 0.35, y: 3.68, w: CW - 0.35, h: 1.5, fontFace: SERIF, fontSize: 14.5, color: INK, lineSpacing: 21, align: "justify", margin: 0 }
   );
+  s.addText(
+    [
+      { text: "Λέξεις-κλειδιά:  ", options: { bold: true } },
+      { text: "CXL · memory tiering · μετανάστευση σελίδων · profiling υλικού · κοκκομέτρηση", options: { italic: true } },
+    ],
+    { x: ML + 0.35, y: 5.15, w: CW - 0.35, h: 0.32, fontFace: SERIF, fontSize: 13, color: MUT, margin: 0 }
+  );
+
+  s.addShape(pres.ShapeType.rect, { x: ML, y: 5.75, w: CW, h: 0.014, fill: { color: RULE } });
+  s.addText(
+    [
+      { text: "el23408", options: { bold: true } },
+      { text: "   ·   Εθνικό Μετσόβιο Πολυτεχνείο   ·   Ιούλιος 2026", options: {} },
+    ],
+    { x: ML, y: 5.95, w: CW, h: 0.35, fontFace: SERIF, fontSize: 14, color: INK, margin: 0 }
+  );
+  s.addText("github.com/Zajason/memory_tiering", {
+    x: ML, y: 6.35, w: CW, h: 0.3, fontFace: CODE, fontSize: 11, color: MUT, margin: 0,
+  });
+
+  s.addNotes("Στόχος: δείχνω ότι κατάλαβα το πρόβλημα και ότι έχω αξιόπιστο πλάνο. Δεν έχω ακόμα αποτελέσματα — και το λέω ανοιχτά.");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
 // 02 — Motivation
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("light");
-  head(s, 2, "ΚΙΝΗΤΡΟ");
-  title(s, "Η μνήμη είναι ο περιοριστικός πόρος");
+  const s = frame(2, "§1.1", "1. Κίνητρο", "Η μνήμη είναι ο περιοριστικός πόρος");
 
   s.addText(
-    [
-      { text: "Η DRAM είναι ακριβή και η χωρητικότητα ανά socket έχει φτάσει σε τοίχο — περιορισμένα DIMM slots, περιορισμένα pins DDR.", options: { breakLine: true, paraSpaceAfter: 12 } },
-      { text: "Για περισσότερη μνήμη αγοράζεις περισσότερους επεξεργαστές που δεν χρειάζεσαι.", options: { breakLine: true, paraSpaceAfter: 12 } },
-      { text: "Το CXL επιτρέπει επέκταση χωρητικότητας πάνω από τον δίαυλο PCIe, ανεξάρτητα από τους πυρήνες.", options: {} },
-    ],
-    {
-      x: ML, y: 2.35, w: 6.6, h: 2.4,
-      fontFace: BODY, fontSize: 15.5, color: INKTX, lineSpacing: 23, margin: 0, valign: "top",
-    }
+    "Η χωρητικότητα της μνήμης ανά επεξεργαστικό socket έχει φτάσει σε τοίχο: περιορισμένος αριθμός " +
+    "από DIMM slots και pins DDR. Για να αποκτήσει κανείς περισσότερη μνήμη αναγκάζεται να αγοράσει " +
+    "περισσότερους επεξεργαστές τους οποίους δεν χρειάζεται. Το CXL σπάει αυτόν τον δεσμό, επιτρέποντας " +
+    "επέκταση της χωρητικότητας πάνω από τον δίαυλο PCIe, ανεξάρτητα από τους πυρήνες.",
+    { x: ML, y: 1.45, w: CW, h: 1.35, fontFace: SERIF, fontSize: 16, color: INK, lineSpacing: 24, align: "justify", margin: 0 }
   );
 
-  s.addText("ΤΟ ΠΡΟΒΛΗΜΑ ΣΕ ΑΡΙΘΜΟΥΣ", {
-    x: ML, y: 4.95, w: 6.6, h: 0.3, fontFace: MONO, fontSize: 11.5, color: MUT_L, charSpacing: 1, margin: 0,
-  });
-  s.addText(
-    "Σε στόλους cloud, μεγάλο μέρος της εγκατεστημένης DRAM μένει αναξιοποίητο («stranded») " +
-    "επειδή οι πυρήνες του μηχανήματος έχουν ήδη πουληθεί.",
-    {
-      x: ML, y: 5.3, w: 6.6, h: 1.0, fontFace: BODY, fontSize: 14, color: INKTX, lineSpacing: 20, margin: 0,
-    }
+  block(
+    s, ML, 3.0, CW, 1.35, "Παρατήρηση 1 — αποκομμένη («stranded») μνήμη",
+    "Σε στόλους cloud υπερκλίμακας, περίπου το 25% της εγκατεστημένης DRAM παραμένει αναξιοποίητο, " +
+    "επειδή οι πυρήνες του μηχανήματος έχουν ήδη διατεθεί σε άλλους ενοίκους. Το CXL στοχεύει ακριβώς " +
+    "στην ανάκτηση αυτής της αποκομμένης χωρητικότητας (Azure — Pond, ASPLOS ’23)."
   );
 
-  // Big statement numeral on a dark inset — flat, no card chrome
-  s.addShape(pres.ShapeType.rect, { x: 7.9, y: 2.35, w: 4.63, h: 3.95, fill: { color: INK } });
   s.addText(
-    [
-      { text: "≈25", options: { fontSize: 110 } },
-      { text: " %", options: { fontSize: 40 } },
-    ],
-    { x: 8.2, y: 2.7, w: 4.1, h: 1.75, fontFace: DISP, bold: true, color: AMBER, margin: 0, valign: "middle" }
+    "Αυτό το οικονομικό κίνητρο —φθηνή, κοινόχρηστη χωρητικότητα— είναι που κάνει το CXL ελκυστικό. " +
+    "Το τεχνικό τίμημα, όμως, είναι η καθυστέρηση προσπέλασης, την οποία εξετάζουμε στη συνέχεια.",
+    { x: ML, y: 4.65, w: CW, h: 0.9, fontFace: SERIF, fontSize: 15, italic: true, color: MUT, lineSpacing: 22, align: "justify", margin: 0 }
   );
-  s.addShape(pres.ShapeType.rect, { x: 8.2, y: 4.55, w: 0.55, h: 0.03, fill: { color: AMBER } });
-  s.addText("της DRAM σε στόλο υπερκλίμακας\nπαραμένει «stranded»", {
-    x: 8.2, y: 4.75, w: 4.05, h: 0.7, fontFace: BODY, fontSize: 15, color: FG, lineSpacing: 21, margin: 0,
-  });
-  s.addText("Azure — Pond, ASPLOS '23", {
-    x: 8.2, y: 5.78, w: 4.05, h: 0.3, fontFace: MONO, fontSize: 10.5, color: MUT_D, margin: 0,
-  });
 
   s.addNotes("Ένας αριθμός να μείνει: ~25% stranded DRAM. Το οικονομικό κίνητρο όλου του πεδίου.");
 }
@@ -221,367 +180,311 @@ function hcell(text, s) {
 // 03 — What CXL costs
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("light");
-  head(s, 3, "ΤΟ ΤΙΜΗΜΑ");
-  title(s, "Τι κοστίζει πραγματικά η μνήμη CXL");
+  const s = frame(3, "§1.2", "1. Κίνητρο", "Το τίμημα: η καθυστέρηση της CXL");
 
-  sheet(s, ML, 2.15, 7.1, [3.0, 2.05, 2.05], [
-    [hcell("Διαδρομή", s), hcell("Idle", s), hcell("Εύρος ζώνης", s)],
-    ["Τοπική DDR5", { text: "~80–100 ns", options: { fontFace: MONO } }, "~30–50 GB/s / κανάλι"],
-    ["Απομακρ. NUMA socket", { text: "~140–180 ns", options: { fontFace: MONO } }, "—"],
+  caption(s, ML, 1.4, 6.7, "Πίνακας 1:", "τυπικές τιμές καθυστέρησης και εύρους ζώνης ανά διαδρομή.");
+  booktabs(s, ML, 1.75, [2.9, 2.0, 1.8], [
+    [hb("Διαδρομή"), hb("Καθυστέρηση"), hb("Εύρος ζώνης")],
+    ["Τοπική DDR5", { text: "80–100 ns", options: { fontFace: CODE, fontSize: 12 } }, "30–50 GB/s"],
+    ["Απομακρ. NUMA socket", { text: "140–180 ns", options: { fontFace: CODE, fontSize: 12 } }, "—"],
     [
-      { text: "Μνήμη CXL (x8 Gen5)", options: { bold: true, color: AMBER_DK } },
-      { text: "~250–400 ns", options: { bold: true, color: AMBER_DK, fontFace: MONO } },
-      { text: "~25–30 GB/s", options: { bold: true, color: AMBER_DK } },
+      { text: "Μνήμη CXL (x8 Gen5)", options: { bold: true } },
+      { text: "250–400 ns", options: { fontFace: CODE, fontSize: 12, bold: true, color: ALERT } },
+      { text: "25–30 GB/s", options: { bold: true } },
     ],
-  ], { rowH: [0.42, 0.44, 0.44, 0.44] });
+  ], [0.42, 0.42, 0.42, 0.42]);
 
-  s.addText("2–3×", {
-    x: ML, y: 4.2, w: 1.7, h: 0.75, fontFace: DISP, fontSize: 44, bold: true, color: AMBER_DK, margin: 0,
-  });
   s.addText(
-    "μεγαλύτερη καθυστέρηση — ενώ η DRAM πάνω στην κάρτα είναι κανονική DDR5. " +
-    "Το τίμημα είναι η διασύνδεση, όχι η μνήμη.",
-    {
-      x: ML + 1.85, y: 4.22, w: 5.25, h: 0.75, fontFace: BODY, fontSize: 13.5, color: INKTX, lineSpacing: 19, margin: 0, valign: "middle",
-    }
+    [
+      { text: "Η καθυστέρηση είναι ", options: {} },
+      { text: "2–3× μεγαλύτερη", options: { bold: true, color: ALERT } },
+      { text: " από την τοπική DDR — παρότι η DRAM πάνω στην κάρτα είναι κοινή DDR5. Το τίμημα το πληρώνει η ", options: {} },
+      { text: "διασύνδεση", options: { italic: true } },
+      { text: ", όχι η μνήμη. Συνεπώς φόρτοι δεσμευμένοι από καθυστέρηση (pointer chasing) υποφέρουν, ενώ φόρτοι δεσμευμένοι από εύρος ζώνης σχεδόν δεν το αντιλαμβάνονται.", options: {} },
+    ],
+    { x: ML, y: 3.9, w: 6.7, h: 1.7, fontFace: SERIF, fontSize: 15, color: INK, lineSpacing: 23, align: "justify", margin: 0 }
   );
 
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 5.2, w: 7.1, h: 1.1, fill: { color: "F6E4D8" } });
-  s.addText(
-    "Συνέπεια: φόρτοι δεσμευμένοι από καθυστέρηση (pointer chasing) υποφέρουν· " +
-    "φόρτοι δεσμευμένοι από εύρος ζώνης σχεδόν δεν το αντιλαμβάνονται.",
-    {
-      x: ML + 0.28, y: 5.35, w: 6.55, h: 0.8, fontFace: BODY, fontSize: 13, color: "6B3A1E", lineSpacing: 19, margin: 0, valign: "middle",
-    }
-  );
-
-  // Request path as a monospace call-stack
-  s.addShape(pres.ShapeType.rect, { x: 8.15, y: 2.15, w: 4.38, h: 4.15, fill: { color: INK } });
-  s.addText("Η ΔΙΑΔΡΟΜΗ ΕΝΟΣ LOAD", {
-    x: 8.4, y: 2.32, w: 3.9, h: 0.3, fontFace: MONO, fontSize: 11, color: MUT_D, charSpacing: 1, margin: 0,
+  // Σχήμα 1: request path as a typeset enumeration
+  const fx = 8.15, fw = CW - (fx - ML);
+  s.addText("Η διαδρομή ενός load που αστοχεί στην LLC:", {
+    x: fx, y: 1.4, w: fw, h: 0.32, fontFace: SERIF, fontSize: 13.5, italic: true, color: INK, margin: 0,
   });
   const steps = [
-    ["Πυρήνας CPU", TEAL], ["Αστοχία LLC", TEAL], ["CXL Root Complex", TEAL],
-    ["Πακετοποίηση M2S", AMBER], ["Σύνδεσμος PCIe", AMBER], ["Ελεγκτής συσκευής", AMBER],
-    ["DRAM στην κάρτα", TEAL],
+    "Πυρήνας CPU  →  αστοχία LLC", "CXL Root Complex", "πακετοποίηση M2S", "σύνδεσμος PCIe (SERDES)",
+    "ελεγκτής συσκευής  →  de-packetize", "DRAM στην κάρτα", "και όλη η διαδρομή αντίστροφα (S2M)",
   ];
-  steps.forEach(([label, col], i) => {
-    const y = 2.74 + i * 0.44;
-    s.addText(`${String(i + 1).padStart(2, "0")}`, { x: 8.4, y, w: 0.4, h: 0.34, fontFace: MONO, fontSize: 12, bold: true, color: col, valign: "middle", margin: 0 });
-    s.addText(label, { x: 8.85, y, w: 3.5, h: 0.34, fontFace: BODY, fontSize: 13, color: FG, valign: "middle", margin: 0 });
+  steps.forEach((t, i) => {
+    const y = 1.85 + i * 0.42;
+    s.addText(`(${i + 1})`, { x: fx, y, w: 0.5, h: 0.32, fontFace: CODE, fontSize: 12, color: NAVY, margin: 0, valign: "middle" });
+    s.addText(t, { x: fx + 0.55, y, w: fw - 0.55, h: 0.32, fontFace: SERIF, fontSize: 14, color: i === 6 ? MUT : INK, italic: i === 6, margin: 0, valign: "middle" });
   });
-  s.addText("↩ και όλη η διαδρομή αντίστροφα (S2M)", {
-    x: 8.4, y: 5.86, w: 3.95, h: 0.32, fontFace: BODY, fontSize: 11.5, italic: true, color: MUT_D, margin: 0,
-  });
+  caption(s, fx, 4.98, fw, "Σχήμα 1:", "κάθε στάδιο προσθέτει καθυστέρηση· η διασύνδεση κυριαρχεί.");
 
   s.addNotes("Το σημείο: η DRAM στην κάρτα είναι κανονική DDR5. Η διασύνδεση είναι ο φόρος — γι' αυτό υπάρχει tiering.");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 04 — The tiering problem stated  (dark)
+// 04 — The tiering problem stated
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("dark");
-  head(s, 4, "ΔΙΑΤΥΠΩΣΗ");
-  title(s, "Το πρόβλημα του tiering, με μια πρόταση");
+  const s = frame(4, "§2", "2. Το πρόβλημα", "Το πρόβλημα του tiering");
 
   s.addText(
-    "Δύο βαθμίδες μνήμης. Κράτα τα «θερμά» δεδομένα στη γρήγορη. Αν το πετύχεις, ένα μηχάνημα " +
-    "με 25% τοπική DRAM αποδίδει σχεδόν σαν να είχε 100%.",
-    {
-      x: ML, y: 2.2, w: CW, h: 0.6, fontFace: BODY, fontSize: 16, color: TEAL, lineSpacing: 23, margin: 0,
-    }
+    "Έχουμε δύο βαθμίδες μνήμης — μια γρήγορη και μικρή (τοπική DDR) και μια αργή και μεγάλη (CXL). " +
+    "Σκοπός είναι να διατηρούνται τα «θερμά» δεδομένα στη γρήγορη βαθμίδα. Αν επιτευχθεί, ένα μηχάνημα " +
+    "με μόλις 25% τοπική DRAM αποδίδει σχεδόν σαν να διέθετε 100%.",
+    { x: ML, y: 1.45, w: CW, h: 0.95, fontFace: SERIF, fontSize: 16, color: INK, lineSpacing: 24, align: "justify", margin: 0 }
   );
 
-  // Two verbs, flat split panels
-  const pw = (CW - 0.4) / 2;
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 3.0, w: pw, h: 1.75, fill: { color: INK2 } });
-  s.addText("↑", { x: ML + 0.3, y: 3.18, w: 0.7, h: 0.6, fontFace: DISP, fontSize: 30, bold: true, color: AMBER, margin: 0 });
-  s.addText("ΠΡΟΑΓΩΓΗ", { x: ML + 1.05, y: 3.24, w: pw - 1.3, h: 0.4, fontFace: MONO, fontSize: 16, bold: true, color: AMBER, valign: "middle", margin: 0 });
-  s.addText("Αργή → γρήγορη. Πρέπει να γίνει έγκαιρα: μια σελίδα που προάγεται αφού κρυώσει είναι καθαρή σπατάλη.", {
-    x: ML + 0.3, y: 3.82, w: pw - 0.6, h: 0.85, fontFace: BODY, fontSize: 13.5, color: FG, lineSpacing: 19, margin: 0,
-  });
+  const bw = (CW - 0.4) / 2;
+  block(s, ML, 2.55, bw, 1.55, "Ορισμός — Προαγωγή (promotion)",
+    "Μετακίνηση σελίδας από την αργή στη γρήγορη βαθμίδα. Πρέπει να είναι έγκαιρη: μια σελίδα που " +
+    "προάγεται αφού έχει ήδη κρυώσει αποτελεί καθαρή σπατάλη.");
+  block(s, ML + bw + 0.4, 2.55, bw, 1.55, "Ορισμός — Υποβάθμιση (demotion)",
+    "Μετακίνηση σελίδας από τη γρήγορη στην αργή βαθμίδα. Πρέπει να είναι ασφαλής: η υποβάθμιση " +
+    "μιας ακόμη θερμής σελίδας προκαλεί ταλάντωση (ping-pong).");
 
-  const x2 = ML + pw + 0.4;
-  s.addShape(pres.ShapeType.rect, { x: x2, y: 3.0, w: pw, h: 1.75, fill: { color: INK2 } });
-  s.addText("↓", { x: x2 + 0.3, y: 3.18, w: 0.7, h: 0.6, fontFace: DISP, fontSize: 30, bold: true, color: TEAL, margin: 0 });
-  s.addText("ΥΠΟΒΑΘΜΙΣΗ", { x: x2 + 1.05, y: 3.24, w: pw - 1.3, h: 0.4, fontFace: MONO, fontSize: 16, bold: true, color: TEAL, valign: "middle", margin: 0 });
-  s.addText("Γρήγορη → αργή. Πρέπει να είναι ασφαλής: η υποβάθμιση κάτι ακόμα θερμού προκαλεί ping-pong.", {
-    x: x2 + 0.3, y: 3.82, w: pw - 0.6, h: 0.85, fontFace: BODY, fontSize: 13.5, color: FG, lineSpacing: 19, margin: 0,
-  });
+  s.addText(
+    [
+      { text: "Η υποβάθμιση είναι το εύκολο μέρος — μια προσέγγιση LRU αρκεί, και ο πυρήνας του Linux ήδη διαθέτει LRU. ", options: {} },
+      { text: "Η προαγωγή είναι το ανοιχτό πρόβλημα:", options: { bold: true, color: ALERT } },
+      { text: " απαιτεί να γνωρίζουμε ότι μια σελίδα είναι θερμή τη δεδομένη στιγμή, και αυτό κοστίζει. Είναι θέση που διατυπώνει ρητά και η ίδια η κοινότητα του Linux MM.", options: {} },
+    ],
+    { x: ML, y: 4.4, w: CW, h: 1.4, fontFace: SERIF, fontSize: 16, color: INK, lineSpacing: 24, align: "justify", margin: 0 }
+  );
 
-  s.addText("Η υποβάθμιση είναι εύκολη — μια προσέγγιση LRU αρκεί, και το Linux ήδη έχει LRU.", {
-    x: ML, y: 5.2, w: CW, h: 0.35, fontFace: BODY, fontSize: 14.5, color: MUT_D, margin: 0,
-  });
-  s.addText("Η προαγωγή είναι το ανοιχτό πρόβλημα.", {
-    x: ML, y: 5.62, w: CW, h: 0.5, fontFace: DISP, fontSize: 26, bold: true, color: AMBER, margin: 0,
-  });
-  s.addText("Το λέει η ίδια η κοινότητα του Linux MM, όχι εγώ.", {
-    x: ML, y: 6.22, w: CW, h: 0.35, fontFace: BODY, fontSize: 13.5, italic: true, color: MUT_D, margin: 0,
-  });
-
-  s.addNotes("Γιατί δύσκολη η προαγωγή: απαιτεί να ξέρεις ότι μια σελίδα είναι θερμή ΤΩΡΑ — και αυτό κοστίζει.");
+  s.addNotes("Γιατί δύσκολη η προαγωγή: απαιτεί να ξέρεις ότι μια σελίδα είναι θερμή ΤΩΡΑ.");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
 // 05 — Failure mode 1: profiling
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("light");
-  head(s, 5, "ΑΣΤΟΧΙΑ 1 / 3  ·  PROFILING");
-  title(s, "Γιατί αποτυγχάνει σήμερα: το profiling");
+  const s = frame(5, "§3.1", "3. Γιατί αποτυγχάνει", "Αστοχία: το profiling");
 
-  sheet(s, ML, 2.1, CW, [2.55, 4.0, 5.18], [
-    [hcell("Μηχανισμός", s), hcell("Πώς δουλεύει", s), hcell("Το μοιραίο ελάττωμα", s)],
+  caption(s, ML, 1.4, CW, "Πίνακας 2:", "μηχανισμοί εντοπισμού θερμών σελίδων και το θεμελιώδες ελάττωμα καθενός.");
+  booktabs(s, ML, 1.75, [2.6, 4.0, 5.03], [
+    [hb("Μηχανισμός"), hb("Αρχή λειτουργίας"), hb("Θεμελιώδες ελάττωμα")],
     [
-      { text: "PTE-scan · DAMON", options: { bold: true, fontFace: MONO, fontSize: 11.5 } },
-      "Καθαρισμός και σάρωση των access bits των PTE",
-      "1 bit = δυαδική πληροφορία. Η σάρωση κρατά δευτερόλεπτα — το θερμό σύνολο έχει ήδη αλλάξει",
+      { text: "PTE-scan (DAMON)", options: { fontFace: CODE, fontSize: 11.5 } },
+      "Σάρωση των access bits των PTE",
+      "1 bit = δυαδική πληροφορία· η σάρωση διαρκεί δευτερόλεπτα — το θερμό σύνολο έχει ήδη αλλάξει",
     ],
     [
-      { text: "hint faults · AutoNUMA · TPP", options: { bold: true, fontFace: MONO, fontSize: 11 } },
-      "Σκόπιμη απο-χαρτογράφηση PTE ώστε η προσπέλαση να παγιδευτεί",
-      { text: "Μετρά TLB misses, όχι LLC misses — τα δύο συσχετίζονται ασθενώς", options: { color: REDS } },
+      { text: "hint faults (AutoNUMA, TPP)", options: { fontFace: CODE, fontSize: 11 } },
+      "Σκόπιμη απο-χαρτογράφηση PTE ώστε η προσπέλαση να παγιδεύεται",
+      { text: "Μετρά αστοχίες TLB, όχι αστοχίες LLC — συσχετίζονται ασθενώς", options: { color: ALERT } },
     ],
     [
-      { text: "PEBS / IBS · Memtis", options: { bold: true, fontFace: MONO, fontSize: 11.5 } },
+      { text: "PEBS / IBS (Memtis)", options: { fontFace: CODE, fontSize: 11.5 } },
       "Δειγματοληψία της PMU σε αστοχίες LLC",
-      "Το overhead ακολουθεί τον ρυθμό: >50% επιβράδυνση σε πυκνά δείγματα",
+      "Το overhead ακολουθεί τον ρυθμό δειγματοληψίας: >50% επιβράδυνση σε πυκνά δείγματα",
     ],
     [
-      { text: "υλικό στη συσκευή CXL", options: { bold: true, fontFace: MONO, fontSize: 11.5, color: AMBER_DK } },
-      { text: "Μετρητές μέσα στον ελεγκτή της συσκευής", options: { color: AMBER_DK } },
-      { text: "Σωστό γεγονός, μηδενικό κόστος CPU — αλλά απαιτεί νέο υλικό", options: { color: AMBER_DK, bold: true } },
+      { text: "υλικό στη συσκευή CXL", options: { fontFace: CODE, fontSize: 11.5, color: NAVY, bold: true } },
+      { text: "Μετρητές μέσα στον ελεγκτή της συσκευής", options: { color: NAVY } },
+      { text: "Σωστό γεγονός, μηδενικό κόστος CPU — αλλά απαιτεί νέο υλικό", options: { color: NAVY, bold: true } },
     ],
-  ], { rowH: [0.42, 0.72, 0.72, 0.72, 0.72], fs: 12 });
+  ], [0.42, 0.7, 0.7, 0.7, 0.62]);
 
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 5.7, w: CW, h: 0.85, fill: { color: INK } });
   s.addText(
     [
-      { text: "Η ΚΡΙΣΙΜΗ ΛΕΠΤΟΜΕΡΕΙΑ  ", options: { bold: true, color: AMBER, fontFace: MONO, fontSize: 12 } },
-      { text: "AutoNUMA και TPP μετρούν αστοχίες TLB, αλλά την κίνηση προς το CXL την καθορίζουν οι αστοχίες LLC. Βελτιστοποιούν λάθος σήμα.", options: { color: FG, fontFace: BODY, fontSize: 13.5 } },
+      { text: "Το κρίσιμο σημείο. ", options: { bold: true, color: ALERT } },
+      { text: "Οι AutoNUMA και TPP μετρούν αστοχίες TLB, αλλά την κίνηση προς τη μνήμη CXL την καθορίζουν οι αστοχίες LLC· μια σελίδα μπορεί να είναι έντονα θερμή ως προς το TLB και σχεδόν αόρατη ως προς την κίνηση CXL. Βελτιστοποιούν, δηλαδή, το λάθος σήμα.", options: {} },
     ],
-    { x: ML + 0.28, y: 5.82, w: CW - 0.56, h: 0.6, lineSpacing: 19, margin: 0, valign: "middle" }
+    { x: ML, y: 5.55, w: CW, h: 1.1, fontFace: SERIF, fontSize: 15, color: INK, lineSpacing: 22, align: "justify", margin: 0 }
   );
 
   s.addNotes("Κοινός παρονομαστής: ακρίβεια × επικαιρότητα × overhead — διάλεξε δύο.");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 06 — Failure mode 2: granularity  (dark, the central slide)
+// 06 — Failure mode 2: granularity (central)
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("dark");
-  head(s, 6, "ΑΣΤΟΧΙΑ 2 / 3  ·  ΤΟ ΚΕΝΤΡΙΚΟ ΣΗΜΕΙΟ");
-  title(s, "Γιατί αποτυγχάνει σήμερα: η κοκκομέτρηση");
+  const s = frame(6, "§3.2", "3. Γιατί αποτυγχάνει", "Αστοχία: η κοκκομέτρηση");
 
   s.addText(
-    "Η πυκνότητα προσπελάσεων μέσα σε μια σελίδα 4 KB είναι εξαιρετικά ανομοιόμορφη — " +
-    "μια αναζήτηση σε hash table αγγίζει 64 bytes από τα 4096.",
-    {
-      x: ML, y: 2.0, w: CW, h: 0.55, fontFace: BODY, fontSize: 15.5, color: TEAL, lineSpacing: 22, margin: 0,
-    }
+    "Η πυκνότητα των προσπελάσεων μέσα σε μια σελίδα 4 KB είναι εξαιρετικά ανομοιόμορφη: μια αναζήτηση " +
+    "σε πίνακα κατακερματισμού αγγίζει 64 bytes από τα 4096 (βλ. Σχήμα 2). Το 4 KB είναι λάθος μονάδα " +
+    "και προς τις δύο κατευθύνσεις — υπερβολικά χονδρό για ό,τι είναι πραγματικά θερμό, αλλά και " +
+    "υπερβολικά λεπτό για τον μηχανισμό μετανάστευσης, που πληρώνει σταθερό κόστος ανά σελίδα.",
+    { x: ML, y: 1.42, w: CW, h: 1.35, fontFace: SERIF, fontSize: 15.5, color: INK, lineSpacing: 23, align: "justify", margin: 0 }
   );
 
-  // Scale spectrum: three big numerals with arrows, on dark, no cards
-  const cols = [
-    { x: ML, size: "64 B", label: "cache line", col: TEAL, pro: "Ελάχιστη σπατάλη μεταφοράς", con: "Τα μεταδεδομένα εκρήγνυνται· ο πίνακας σελίδων δεν το χαρτογραφεί" },
-    { x: ML + 4.05, size: "4 KB", label: "προεπιλογή Linux", col: AMBER, pro: "Η μονάδα που ξέρει το OS", con: "Μέτρια και στα δύο: σπαταλά και κοστίζει" },
-    { x: ML + 8.1, size: "2 MB", label: "huge page", col: REDS, pro: "Φθηνή μετανάστευση ανά byte", con: "Τεράστια σπατάλη: 99,99% της μεταφοράς μπορεί να είναι ψυχρό" },
-  ];
+  // Σχήμα 2: the scale spectrum, typeset restrained (no big color blocks)
+  const cols = [["64 B", "cache line", "ελάχιστη σπατάλη· μη διαχειρίσιμα μεταδεδομένα"],
+                ["4 KB", "προεπιλογή Linux", "μέτριο και στα δύο: σπαταλά και κοστίζει"],
+                ["2 MB", "huge page", "φθηνή μετανάστευση· τεράστια σπατάλη (>99%)"]];
+  const spanW = CW, cwv = (spanW - 1.0) / 3;
   cols.forEach((c, i) => {
-    s.addText(c.size, { x: c.x, y: 2.75, w: 3.5, h: 0.85, fontFace: DISP, fontSize: 52, bold: true, color: c.col, margin: 0 });
-    s.addText(c.label, { x: c.x, y: 3.62, w: 3.5, h: 0.3, fontFace: MONO, fontSize: 12, color: MUT_D, margin: 0 });
-    s.addText("+  " + c.pro, { x: c.x, y: 4.02, w: 3.6, h: 0.45, fontFace: BODY, fontSize: 12.5, color: FG, lineSpacing: 17, margin: 0 });
-    s.addText("−  " + c.con, { x: c.x, y: 4.5, w: 3.6, h: 0.75, fontFace: BODY, fontSize: 12.5, color: MUT_D, lineSpacing: 17, margin: 0 });
-    if (i < 2) {
-      s.addText("→", { x: c.x + 3.6, y: 2.78, w: 0.45, h: 0.75, fontFace: DISP, fontSize: 30, color: MUT_D, align: "center", valign: "middle", margin: 0 });
-    }
+    const x = ML + i * (cwv + 0.5);
+    s.addText(c[0], { x, y: 2.95, w: cwv, h: 0.5, fontFace: SERIF, fontSize: 28, bold: true, color: NAVY, align: "center", margin: 0 });
+    s.addText(c[1], { x, y: 3.5, w: cwv, h: 0.28, fontFace: CODE, fontSize: 11, color: MUT, align: "center", margin: 0 });
+    s.addText(c[2], { x, y: 3.82, w: cwv, h: 0.6, fontFace: SERIF, fontSize: 12.5, italic: true, color: INK, align: "center", lineSpacing: 16, margin: 0 });
+    if (i < 2) s.addText("−→", { x: x + cwv, y: 2.95, w: 0.5, h: 0.5, fontFace: SERIF, fontSize: 20, color: MUT, align: "center", valign: "middle", margin: 0 });
   });
+  caption(s, ML, 4.5, CW, "Σχήμα 2:", "το φάσμα κοκκομέτρησης — καμία επιλογή δεν είναι καλή ταυτόχρονα σε σπατάλη και σε κόστος.", "center");
 
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 5.4, w: CW, h: 1.1, fill: { color: AMBER } });
-  s.addText("Δεν υπάρχει PTE για μια cache line.", {
-    x: ML + 0.3, y: 5.5, w: CW - 0.6, h: 0.4, fontFace: DISP, fontSize: 20, bold: true, color: INK, margin: 0, valign: "middle",
-  });
-  s.addText(
-    "Άρα δεν «μεταναστεύεις γραμμές αντί για σελίδες» μέσα από το λειτουργικό. Λύση: είτε έμμεση αναφορά σε υλικό " +
-    "(η τοπική DRAM γίνεται cache), είτε — και εδώ στοχεύω — profiling σε λεπτή κοκκομέτρηση που οδηγεί αποφάσεις σε χονδρή.",
-    {
-      x: ML + 0.3, y: 5.94, w: CW - 0.6, h: 0.5, fontFace: BODY, fontSize: 13, color: "3A2A08", lineSpacing: 17, margin: 0, valign: "middle",
-    }
+  block(s, ML, 5.0, CW, 1.55,
+    "Κρίσιμο σημείο — δεν υπάρχει PTE για μια cache line",
+    "Άρα κανείς δεν μπορεί να «μεταναστεύσει γραμμές αντί για σελίδες» μέσα από το λειτουργικό. Η λύση " +
+    "είναι είτε έμμεση αναφορά σε υλικό (η τοπική DRAM γίνεται κρυφή μνήμη γραμμών), είτε — και εδώ " +
+    "στοχεύει η εργασία — profiling σε λεπτή κοκκομέτρηση (64 B) που οδηγεί αποφάσεις μετανάστευσης σε " +
+    "χονδρή (4 KB). Η κοκκομέτρηση profiling διαφέρει από την κοκκομέτρηση migration· αυτό ακριβώς κάνει το M5.",
+    true
   );
 
-  s.addNotes(
-    "Εδώ θα με ρωτήσουν. Απάντηση: κοκκομέτρηση profiling ≠ κοκκομέτρηση migration. " +
-    "Το M5 κάνει profiling στα 64 B και migration στα 4 KB — δεν είναι συμβιβασμός, είναι ο σχεδιασμός."
-  );
+  s.addNotes("Εδώ θα με ρωτήσουν. Απάντηση: κοκκομέτρηση profiling ≠ κοκκομέτρηση migration. Το M5 profiling στα 64 B, migration στα 4 KB.");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
 // 07 — Failure mode 3: migration cost
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("light");
-  head(s, 7, "ΑΣΤΟΧΙΑ 3 / 3  ·  ΚΟΣΤΟΣ");
-  title(s, "Γιατί αποτυγχάνει σήμερα: το κόστος μεταφοράς");
+  const s = frame(7, "§3.3", "3. Γιατί αποτυγχάνει", "Αστοχία: το κόστος μεταφοράς");
 
-  s.addText("Τι πληρώνει ο πυρήνας για να προάγει μία σελίδα 4 KB", {
-    x: ML, y: 2.12, w: 7.2, h: 0.3, fontFace: MONO, fontSize: 12, color: MUT_L, charSpacing: 0.5, margin: 0,
+  s.addText("Για να προαχθεί μία σελίδα 4 KB, ο πυρήνας πληρώνει τέσσερα κόστη:", {
+    x: ML, y: 1.42, w: CW, h: 0.35, fontFace: SERIF, fontSize: 16, color: INK, margin: 0,
   });
 
   const costs = [
-    ["Αντιγραφή", "4 KB ανάγνωση από CXL + 4 KB εγγραφή σε DDR — καταναλώνει το εύρος ζώνης που θέλεις να σώσεις"],
-    ["Ενημέρωση πίνακα σελίδων", "Διάσχιση του rmap για κάθε PTE που χαρτογραφεί τη σελίδα"],
-    ["TLB shootdown", "IPI σε κάθε πυρήνα με πιθανή cached μετάφραση — συνήθως το κυρίαρχο κόστος"],
-    ["Ανταγωνισμός κλειδωμάτων", "mmap_lock, LRU locks — η μετανάστευση δεν παραλληλοποιείται καλά"],
+    ["Αντιγραφή.", "4 KB ανάγνωση από CXL και 4 KB εγγραφή σε DDR — καταναλώνει το εύρος ζώνης που θέλει να σώσει."],
+    ["Ενημέρωση πίνακα σελίδων.", "Διάσχιση του rmap για κάθε PTE που χαρτογραφεί τη σελίδα."],
+    ["Ακύρωση TLB (shootdown).", "IPI προς κάθε πυρήνα με πιθανή cached μετάφραση — συνήθως το κυρίαρχο κόστος."],
+    ["Ανταγωνισμός κλειδωμάτων.", "mmap_lock, LRU locks· δεν παραλληλοποιείται καλά."],
   ];
   costs.forEach(([h, d], i) => {
-    const y = 2.62 + i * 0.9;
+    const y = 1.95 + i * 0.8;
     const hot = i === 2;
-    s.addText(`0${i + 1}`, { x: ML, y, w: 0.55, h: 0.34, fontFace: DISP, fontSize: 22, bold: true, color: hot ? REDS : TEAL_DK, margin: 0 });
-    s.addText(h, { x: ML + 0.65, y: y - 0.02, w: 6.6, h: 0.3, fontFace: BODY, fontSize: 14.5, bold: true, color: hot ? REDS : INKTX, margin: 0 });
-    s.addText(d, { x: ML + 0.65, y: y + 0.3, w: 6.6, h: 0.5, fontFace: BODY, fontSize: 12, color: MUT_L, lineSpacing: 16, margin: 0 });
-    if (i < 3) s.addShape(pres.ShapeType.rect, { x: ML + 0.65, y: y + 0.78, w: 6.6, h: 0.012, fill: { color: LINE_L } });
+    s.addText(`${i + 1}.`, { x: ML, y, w: 0.4, h: 0.6, fontFace: SERIF, fontSize: 14.5, bold: true, color: hot ? ALERT : NAVY, margin: 0 });
+    s.addText(
+      [
+        { text: h + " ", options: { bold: true, color: hot ? ALERT : INK } },
+        { text: d, options: {} },
+      ],
+      { x: ML + 0.45, y, w: 6.5, h: 0.7, fontFace: SERIF, fontSize: 13.5, color: INK, lineSpacing: 19, align: "justify", margin: 0 }
+    );
   });
 
-  // µsec block, flat dark
-  s.addShape(pres.ShapeType.rect, { x: 8.15, y: 2.62, w: 4.38, h: 3.55, fill: { color: INK } });
-  s.addText("μs", { x: 8.4, y: 2.9, w: 3.9, h: 1.25, fontFace: DISP, fontSize: 82, bold: true, color: REDS, margin: 0 });
-  s.addText("κόστος ανά μετανάστευση σελίδας", { x: 8.4, y: 4.2, w: 3.9, h: 0.3, fontFace: BODY, fontSize: 13.5, bold: true, color: FG, margin: 0 });
-  s.addText("έναντι των ~250 ns που προσπαθείς να αποφύγεις", { x: 8.4, y: 4.54, w: 3.9, h: 0.5, fontFace: MONO, fontSize: 11.5, color: MUT_D, lineSpacing: 16, margin: 0 });
-  s.addShape(pres.ShapeType.rect, { x: 8.4, y: 5.1, w: 0.55, h: 0.028, fill: { color: REDS } });
+  block(s, 8.05, 1.95, CW - (8.05 - ML), 3.15, "Τάξη μεγέθους",
+    "Μια μετανάστευση σελίδας κοστίζει της τάξης των μικροδευτερολέπτων (μs) — χιλιάδες φορές " +
+    "περισσότερο από τα ~250 ns που προσπαθούμε να αποφύγουμε ανά προσπέλαση.\n\n" +
+    "Συνέπεια: μια σελίδα πρέπει να ξαναπροσπελαστεί πολλές φορές για να αποσβέσει τη μεταφορά της. " +
+    "Γι’ αυτό μια λανθασμένη προαγωγή δεν είναι απλώς άχρηστη — είναι ενεργά επιζήμια.");
+
   s.addText(
-    "Μια σελίδα πρέπει να ξαναπροσπελαστεί πολλές φορές για να αποσβέσει τη μεταφορά της. " +
-    "Γι' αυτό μια λάθος προαγωγή είναι ενεργά επιζήμια.",
-    { x: 8.4, y: 5.26, w: 3.9, h: 0.85, fontFace: BODY, fontSize: 12.5, italic: true, color: FG, lineSpacing: 17, margin: 0 }
+    "Το κόστος αυτό είναι που επιβάλλει ποσόστωση (quota) στο εύρος ζώνης μετανάστευσης και υστέρηση " +
+    "(hysteresis) στις αποφάσεις — ώστε ο μηχανισμός να μην καταναλώνει τους πόρους που υποτίθεται ότι σώζει.",
+    { x: ML, y: 5.35, w: CW, h: 0.85, fontFace: SERIF, fontSize: 14.5, italic: true, color: MUT, lineSpacing: 21, align: "justify", margin: 0 }
   );
 
   s.addNotes("Τάξη μεγέθους: μικροδευτερόλεπτα έναντι νανοδευτερολέπτων. Χιλιαπλάσιο κόστος.");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 08 — Three papers, three diagnoses
+// 08 — Three papers
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("light");
-  head(s, 8, "Η ΒΙΒΛΙΟΓΡΑΦΙΑ");
-  title(s, "Τρεις εργασίες, τρεις διαφορετικές διαγνώσεις");
+  const s = frame(8, "§4.1", "4. Σχετική βιβλιογραφία", "Τρεις εργασίες, τρεις διαγνώσεις");
 
-  sheet(s, ML, 2.1, CW, [1.95, 4.05, 3.9, 1.83], [
-    [hcell("Εργασία", s), hcell("Διάγνωση", s), hcell("Λύση", s), hcell("Κοκκομέτρηση", s)],
+  caption(s, ML, 1.4, CW, "Πίνακας 3:", "οι τρεις εργασίες αναφοράς εντοπίζουν διαφορετική ρίζα του ίδιου προβλήματος.");
+  booktabs(s, ML, 1.75, [1.95, 4.05, 3.9, 1.83], [
+    [hb("Εργασία"), hb("Διάγνωση"), hb("Λύση"), hb("Κοκκομέτρηση")],
     [
-      { text: "NeoMem\nMICRO '24", options: { bold: true, fontFace: MONO, fontSize: 11.5 } },
-      "Το profiling είναι αργό και χονδροειδές — διόρθωσέ το και οι σελίδες 4 KB αρκούν",
-      "Count-min sketch μέσα στον ελεγκτή CXL + δυναμικό κατώφλι θερμότητας",
-      { text: "4 KB", options: { fontFace: MONO } },
+      { text: "NeoMem\n(MICRO ’24)", options: { bold: true } },
+      "Το profiling είναι αργό και χονδροειδές — διορθώνοντάς το, οι σελίδες 4 KB αρκούν",
+      "Count-min sketch μέσα στον ελεγκτή CXL και δυναμικό κατώφλι θερμότητας",
+      { text: "4 KB", options: { fontFace: CODE, fontSize: 12 } },
     ],
     [
-      { text: "M5\nASPLOS '25", options: { bold: true, fontFace: MONO, fontSize: 11.5, color: AMBER_DK } },
-      { text: "Η θερμότητα είναι υπο-σελιδική — το πλήθος προσπελάσεων ανά σελίδα παραπλανά", options: { color: AMBER_DK } },
-      { text: "Top-K trackers για σελίδες (HPT) και για λέξεις 64 B (HWT)", options: { color: AMBER_DK } },
-      { text: "profiling 64 B\nmigration 4 KB", options: { bold: true, color: AMBER_DK, fontFace: MONO, fontSize: 11 } },
+      { text: "M5\n(ASPLOS ’25)", options: { bold: true, color: NAVY } },
+      { text: "Η θερμότητα είναι υπο-σελιδική — το πλήθος προσπελάσεων ανά σελίδα παραπλανά", options: { color: NAVY } },
+      { text: "Top-K trackers για σελίδες (HPT) και για λέξεις 64 B (HWT)", options: { color: NAVY } },
+      { text: "profiling 64 B\nmigration 4 KB", options: { fontFace: CODE, fontSize: 10.5, bold: true, color: NAVY } },
     ],
     [
-      { text: "Memstrata\nOSDI '24", options: { bold: true, fontFace: MONO, fontSize: 11.5 } },
-      "Το tiering σε υλικό δουλεύει — μέχρι να συνυπάρξουν πολλές VM και να συγκρουστούν",
-      "Χρωματισμός σελίδων + online εκτιμητής επιβράδυνσης",
-      { text: "64 B (υλικό)", options: { fontFace: MONO } },
+      { text: "Memstrata\n(OSDI ’24)", options: { bold: true } },
+      "Το tiering σε υλικό λειτουργεί — έως ότου συνυπάρξουν πολλές VM και συγκρουστούν",
+      "Χρωματισμός σελίδων και online εκτιμητής επιβράδυνσης",
+      { text: "64 B (υλικό)", options: { fontFace: CODE, fontSize: 12 } },
     ],
-  ], { rowH: [0.42, 0.82, 0.82, 0.82], fs: 12.5 });
+  ], [0.42, 0.82, 0.82, 0.82]);
 
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 5.55, w: CW, h: 0.95, fill: { color: INK } });
   s.addText(
     [
-      { text: "Διαφωνούν μεταξύ τους — και αυτό είναι το ενδιαφέρον.  ", options: { bold: true, color: AMBER } },
-      { text: "NeoMem → ανάλυση στον χρόνο.  M5 → ανάλυση στον χώρο.  Memstrata → το πρόβλημα εμφανίζεται μόνο υπό συστέγαση φόρτων.", options: { color: FG } },
+      { text: "Οι τρεις διαγνώσεις διαφωνούν, και αυτό είναι διαφωτιστικό: ", options: { bold: true } },
+      { text: "το NeoMem εντοπίζει έλλειψη ανάλυσης στον χρόνο, το M5 έλλειψη ανάλυσης στον χώρο, ενώ το Memstrata δείχνει ότι το πρόβλημα εκδηλώνεται μόνο υπό συστέγαση πολλών φόρτων. Η εργασία εστιάζει στο M5, ως το πλησιέστερο στην υπόθεση της υπο-σελιδικής θερμότητας.", options: {} },
     ],
-    { x: ML + 0.28, y: 5.68, w: CW - 0.56, h: 0.7, fontFace: BODY, fontSize: 13.5, lineSpacing: 19, margin: 0, valign: "middle" }
+    { x: ML, y: 5.5, w: CW, h: 1.1, fontFace: SERIF, fontSize: 15, color: INK, lineSpacing: 22, align: "justify", margin: 0 }
   );
 
   s.addNotes("Το ότι διαφωνούν είναι δύναμη: δείχνει ότι διάβασα και τις τρεις, όχι μία.");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 09 — The honest tradeoff  (dark ledger)
+// 09 — The honest tradeoff
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("dark");
-  head(s, 9, "ΓΙΑΤΙ ΔΕΝ ΕΧΕΙ ΛΥΘΕΙ");
-  title(s, "Ο έντιμος συμβιβασμός: σελίδες ή γραμμές;");
+  const s = frame(9, "§4.2", "4. Σχετική βιβλιογραφία", "Ο έντιμος συμβιβασμός: σελίδες ή γραμμές;");
 
-  const colA = 5.05, colB = 8.9, cwv = 3.5;
-  s.addText("ΜΕΤΑΝΑΣΤΕΥΣΗ ΣΕΛΙΔΩΝ · OS", { x: colA, y: 2.0, w: cwv, h: 0.3, fontFace: MONO, fontSize: 11.5, bold: true, color: TEAL, margin: 0 });
-  s.addText("CACHING ΓΡΑΜΜΩΝ · ΥΛΙΚΟ", { x: colB, y: 2.0, w: cwv, h: 0.3, fontFace: MONO, fontSize: 11.5, bold: true, color: AMBER, margin: 0 });
-
-  const attrs = [
+  caption(s, ML, 1.35, CW, "Πίνακας 4:", "σύγκριση μετανάστευσης σελίδων (λογισμικό) και caching γραμμών (υλικό).");
+  booktabs(s, ML, 1.68, [4.0, 3.8, 3.83], [
+    [hb("Ιδιότητα"), hb("Μετανάστευση σελίδων (OS)"), hb("Caching γραμμών (υλικό)")],
     ["Μονάδα", "4 KB / 2 MB", "64 B"],
-    ["Ποιος αποφασίζει", "OS, με παλιά πληροφορία", "Υλικό, αντιδραστικά"],
+    ["Ποιος αποφασίζει", "OS, με παρωχημένη πληροφορία", "Υλικό, αντιδραστικά"],
     ["Χαμένη μεταφορά", "Υψηλή", "Σχεδόν μηδενική"],
-    ["Σταθερό κόστος / κίνηση", "μs (TLB shootdown)", "ns"],
-    ["Μεταδεδομένα", "Πίνακες σελίδων (υπάρχουν)", "Πίνακας ετικετών — τεράστιος"],
-    ["Χωρητικότητα", "100% αξιοποιήσιμη", "Γρήγορη βαθμίδα → cache"],
+    ["Σταθερό κόστος ανά κίνηση", { text: "μs (TLB shootdown)", options: { fontFace: CODE, fontSize: 12 } }, { text: "ns", options: { fontFace: CODE, fontSize: 12 } }],
+    ["Μεταδεδομένα", "Πίνακες σελίδων (ήδη υπάρχουν)", "Πίνακας ετικετών — τεράστιος"],
+    ["Χωρητικότητα", "100% αξιοποιήσιμη", "Γρήγορη βαθμίδα → κρυφή μνήμη"],
     ["Αστοχίες σύγκρουσης", "Δεν υφίστανται", "Ναι — και μεταξύ ενοίκων"],
     ["Νέο υλικό", "Όχι", "Ναι"],
-  ];
-  const y0 = 2.42, rh = 0.44;
-  attrs.forEach(([a, b, c], i) => {
-    const y = y0 + i * rh;
-    if (i % 2 === 0) s.addShape(pres.ShapeType.rect, { x: ML, y, w: CW, h: rh, fill: { color: INK2 } });
-    s.addText(a, { x: ML + 0.2, y, w: colA - ML - 0.3, h: rh, fontFace: BODY, fontSize: 12.5, bold: true, color: FG, valign: "middle", margin: 0 });
-    s.addText(b, { x: colA, y, w: cwv, h: rh, fontFace: BODY, fontSize: 12.5, color: MUT_D, valign: "middle", margin: 0 });
-    s.addText(c, { x: colB, y, w: cwv + 0.3, h: rh, fontFace: BODY, fontSize: 12.5, color: MUT_D, valign: "middle", margin: 0 });
-  });
+  ], [0.42, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4, 0.4], { fs: 13 });
 
   s.addText(
-    "Η κοκκομέτρηση γραμμής εξαλείφει τη σπατάλη και το σταθερό κόστος — και αγοράζει αστοχίες σύγκρουσης, " +
-    "αποθήκευση ετικετών και απώλεια της γρήγορης χωρητικότητας. Δεν είναι καθαρή νίκη.",
-    { x: ML, y: 6.15, w: CW, h: 0.6, fontFace: DISP, fontSize: 14.5, bold: true, color: AMBER, lineSpacing: 20, margin: 0 }
+    [
+      { text: "Συμπέρασμα: ", options: { bold: true, color: ALERT } },
+      { text: "η κοκκομέτρηση γραμμής εξαλείφει τη σπατάλη και το σταθερό κόστος, αλλά αγοράζει αστοχίες σύγκρουσης, αποθήκευση ετικετών και απώλεια της γρήγορης χωρητικότητας ως διευθυνσιοδοτήσιμης μνήμης. Δεν είναι καθαρή νίκη — γι’ αυτό και το πεδίο δεν έχει συγκλίνει.", options: {} },
+    ],
+    { x: ML, y: 5.7, w: CW, h: 1.0, fontFace: SERIF, fontSize: 14.5, color: INK, lineSpacing: 21, align: "justify", margin: 0 }
   );
 
-  s.addNotes("Αυτή η διαφάνεια ξεχωρίζει το «διάβασα μια εργασία» από το «κατάλαβα το πρόβλημα». Να μην κοπεί.");
+  s.addNotes("Αυτή η διαφάνεια ξεχωρίζει το «διάβασα μια εργασία» από το «κατάλαβα το πρόβλημα».");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
 // 10 — The tool
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("light");
-  head(s, 10, "ΜΕΘΟΔΟΛΟΓΙΑ  ·  CXLRAMSim");
-  title(s, "Το εργαλείο: CXLRAMSim");
+  const s = frame(10, "§5.1", "5. Μεθοδολογία", "Το εργαλείο: CXLRAMSim");
 
   s.addText(
-    "Πλήρης προσομοίωση συστήματος πάνω σε gem5 v25, με εκκίνηση Linux 6.14. Μοντελοποιεί τη συσκευή CXL " +
-    "στη σωστή θέση πάνω στον δίαυλο I/O — άρα ο πυρήνας, οι οδηγοί και η στοίβα λογισμικού μένουν αναλλοίωτοι.",
-    { x: ML, y: 2.1, w: CW, h: 0.7, fontFace: BODY, fontSize: 15, color: INKTX, lineSpacing: 22, margin: 0 }
+    "Ο CXLRAMSim είναι προσομοιωτής πλήρους συστήματος πάνω στο gem5 v25, με εκκίνηση Linux 6.14. " +
+    "Μοντελοποιεί τη συσκευή CXL στη σωστή θέση πάνω στον δίαυλο I/O, επιτρέποντας αναλλοίωτο πυρήνα, " +
+    "οδηγούς και στοίβα λογισμικού.",
+    { x: ML, y: 1.45, w: CW, h: 0.9, fontFace: SERIF, fontSize: 16, color: INK, lineSpacing: 24, align: "justify", margin: 0 }
   );
 
+  s.addText("Βασικά δομικά στοιχεία που μοντελοποιεί:", { x: ML, y: 2.45, w: CW, h: 0.32, fontFace: SERIF, fontSize: 14.5, bold: true, color: INK, margin: 0 });
   const comps = [
-    ["FIRMWARE", "Πίνακες ACPI: MCFG, DSDT, CEDT, SRAT για ανακάλυψη"],
-    ["CXL.io", "Root Complex και σύνολα καταχωρητών για απαρίθμηση"],
-    ["CXL.mem", "Επίπεδο συναλλαγών, κανάλια M2S / S2M"],
-    ["ΣΥΝΟΧΗ", "MESI δύο επιπέδων, κατανεμημένος κατάλογος"],
+    ["Firmware.", "πίνακες ACPI (MCFG, DSDT, CEDT, SRAT) για ανακάλυψη της τοπολογίας."],
+    ["CXL.io.", "Root Complex και σύνολα καταχωρητών για απαρίθμηση της συσκευής."],
+    ["CXL.mem.", "επίπεδο συναλλαγών με κανάλια M2S / S2M και πακετοποίηση στα άκρα."],
+    ["Συνοχή.", "πρωτόκολλο MESI δύο επιπέδων με κατανεμημένο κατάλογο (Ruby)."],
   ];
-  const cwc = (CW - 0.6) / 4;
   comps.forEach(([h, d], i) => {
-    const x = ML + i * (cwc + 0.2);
-    s.addText(h, { x, y: 3.0, w: cwc, h: 0.32, fontFace: MONO, fontSize: 13, bold: true, color: TEAL_DK, margin: 0 });
-    s.addShape(pres.ShapeType.rect, { x, y: 3.36, w: 0.5, h: 0.026, fill: { color: TEAL_DK } });
-    s.addText(d, { x, y: 3.5, w: cwc, h: 1.0, fontFace: BODY, fontSize: 12, color: MUT_L, lineSpacing: 16, margin: 0 });
+    const y = 2.82 + i * 0.42;
+    s.addText("–", { x: ML + 0.1, y, w: 0.3, h: 0.32, fontFace: SERIF, fontSize: 14.5, color: NAVY, margin: 0 });
+    s.addText([{ text: h + " ", options: { bold: true, fontFace: CODE, fontSize: 12.5 } }, { text: d, options: {} }],
+      { x: ML + 0.45, y, w: CW - 0.45, h: 0.34, fontFace: SERIF, fontSize: 14, color: INK, valign: "middle", margin: 0 });
   });
 
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 4.75, w: CW, h: 1.75, fill: { color: INK } });
-  s.addText("ΠΟΥ ΜΠΑΙΝΕΙ Ο ΔΙΚΟΣ ΜΟΥ ΚΩΔΙΚΑΣ", { x: ML + 0.3, y: 4.92, w: CW - 0.6, h: 0.3, fontFace: MONO, fontSize: 12, bold: true, color: AMBER, charSpacing: 0.5, margin: 0 });
-  s.addText(
-    "Στο σημείο όπου ο κόμβος CXL απο-πακετοποιεί ένα αίτημα M2S σε προσπέλαση DRAM, έχω " +
-    "{φυσική διεύθυνση, ανάγνωση/εγγραφή, χρονική στιγμή}.",
-    { x: ML + 0.3, y: 5.28, w: CW - 0.6, h: 0.5, fontFace: BODY, fontSize: 13.5, color: FG, lineSpacing: 18, margin: 0 }
-  );
-  s.addText(
-    "Αυτό είναι ακριβώς η ροή αστοχιών LLC προς το CXL που κάνουν profiling το NeoMem και το M5 — " +
-    "δεν μπορείς να δεις τίποτε άλλο από εκεί. Ο profiler είναι μια λήψη πάνω σε αυτό το μονοπάτι.",
-    { x: ML + 0.3, y: 5.82, w: CW - 0.6, h: 0.55, fontFace: BODY, fontSize: 13.5, color: TEAL, lineSpacing: 18, margin: 0 }
-  );
+  block(s, ML, 4.75, CW, 1.75, "Πού παρεμβάλλεται ο κώδικας της εργασίας",
+    "Στο σημείο όπου ο κόμβος CXL απο-πακετοποιεί ένα αίτημα M2S σε προσπέλαση της DRAM, διατίθεται η " +
+    "πλειάδα {φυσική διεύθυνση, ανάγνωση/εγγραφή, χρονική στιγμή}. Αυτή είναι ακριβώς η ροή αστοχιών " +
+    "LLC προς τη CXL την οποία κάνουν profiling τα NeoMem και M5· τίποτε άλλο δεν είναι ορατό από εκεί. " +
+    "Ο profiler υλοποιείται ως λήψη (tap) πάνω σε αυτό το μονοπάτι αιτημάτων.");
 
   s.addNotes("Ανοιχτό θέμα: χρειάζομαι πρόσβαση στο αποθετήριο του CXLRAMSim — δεν βρήκα δημόσιο repo.");
 }
@@ -590,79 +493,74 @@ function hcell(text, s) {
 // 11 — The experiment
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("light");
-  head(s, 11, "ΣΧΕΔΙΟ ΑΞΙΟΛΟΓΗΣΗΣ");
-  title(s, "Το πείραμα που αποδεικνύει το πρόβλημα");
+  const s = frame(11, "§5.2", "5. Μεθοδολογία", "Σχέδιο πειράματος");
 
-  s.addText("ΠΕΝΤΕ ΣΚΕΛΗ ΣΥΓΚΡΙΣΗΣ", { x: ML, y: 2.1, w: 5.4, h: 0.3, fontFace: MONO, fontSize: 11.5, color: MUT_L, charSpacing: 0.5, margin: 0 });
+  s.addText("Πέντε σκέλη σύγκρισης.", { x: ML, y: 1.42, w: 5.6, h: 0.32, fontFace: SERIF, fontSize: 15, bold: true, color: NAVY, margin: 0 });
   const arms = [
-    ["Όλα σε CXL", "κάτω φράγμα", MUT_L, 0.18],
-    ["Όλα σε τοπική DRAM", "άνω φράγμα", MUT_L, 1.0],
-    ["Αφελής μετανάστευση σελίδων", "το «πρόβλημα»", REDS, 0.42],
-    ["Σχήμα του M5 (HPT+HWT)", "η πρόταση", TEAL_DK, 0.78],
-    ["Oracle τοποθέτηση", "βέλτιστο offline", MUT_L, 0.95],
+    ["Όλα σε CXL", "κάτω φράγμα"],
+    ["Όλα σε τοπική DRAM", "άνω φράγμα"],
+    ["Αφελής μετανάστευση σελίδων", "το «πρόβλημα»"],
+    ["Σχήμα του M5 (HPT + HWT)", "η πρόταση"],
+    ["Oracle τοποθέτηση", "βέλτιστο offline"],
   ];
-  arms.forEach(([a, tag, col, frac], i) => {
-    const y = 2.5 + i * 0.62;
-    s.addText(a, { x: ML, y, w: 4.0, h: 0.3, fontFace: BODY, fontSize: 12.5, bold: col !== MUT_L, color: INKTX, margin: 0 });
-    s.addText(tag, { x: ML, y: y + 0.28, w: 4.0, h: 0.24, fontFace: MONO, fontSize: 10, italic: true, color: col, margin: 0 });
-    meter(s, ML + 4.15, y + 0.06, 1.7, frac, col === MUT_L ? "9AA4B2" : col);
+  arms.forEach(([a, tag], i) => {
+    const y = 1.82 + i * 0.44;
+    s.addText(`${i + 1}.`, { x: ML, y, w: 0.35, h: 0.3, fontFace: SERIF, fontSize: 14, color: NAVY, margin: 0 });
+    s.addText([{ text: a, options: { bold: i === 2 || i === 3 } }, { text: "  — " + tag, options: { italic: true, color: MUT } }],
+      { x: ML + 0.4, y, w: 5.4, h: 0.34, fontFace: SERIF, fontSize: 14, color: INK, valign: "middle", margin: 0 });
   });
-  s.addText("Η απόσταση αφελές ↔ oracle είναι το πρόβλημα που αναπαράγω.", {
-    x: ML, y: 5.7, w: 5.9, h: 0.6, fontFace: DISP, fontSize: 14.5, bold: true, color: AMBER_DK, lineSpacing: 19, margin: 0,
-  });
-
-  s.addShape(pres.ShapeType.rect, { x: 6.9, y: 2.1, w: 0.014, h: 4.2, fill: { color: LINE_L } });
-
-  s.addText("ΦΟΡΤΟΙ ΕΡΓΑΣΙΑΣ", { x: 7.25, y: 2.1, w: 5.3, h: 0.3, fontFace: MONO, fontSize: 11.5, color: MUT_L, charSpacing: 0.5, margin: 0 });
   s.addText(
-    [
-      { text: "GUPS — τυχαίες ενημερώσεις 8 B, μηδενική χωρική τοπικότητα· η αντίπαλη περίπτωση", options: { breakLine: true, paraSpaceAfter: 6 } },
-      { text: "XSBench — αναζητήσεις Monte Carlo σε μεγάλους πίνακες", options: { breakLine: true, paraSpaceAfter: 6 } },
-      { text: "PageRank — άτακτη προσπέλαση γράφου, μετακινούμενο θερμό σύνολο", options: { breakLine: true, paraSpaceAfter: 6 } },
-      { text: "Btree / YCSB-C — λοξή κατανομή Zipf, ακραία υπο-σελιδική θερμότητα", options: {} },
-    ],
-    { x: 7.25, y: 2.46, w: 5.3, h: 1.75, fontFace: BODY, fontSize: 12.5, color: INKTX, lineSpacing: 17, margin: 0, valign: "top" }
+    "Η απόσταση μεταξύ του αφελούς σκέλους και του oracle είναι, επακριβώς, το πρόβλημα που αναπαράγεται.",
+    { x: ML, y: 4.15, w: 5.6, h: 0.7, fontFace: SERIF, fontSize: 14, italic: true, color: ALERT, lineSpacing: 20, align: "justify", margin: 0 }
   );
 
-  s.addText("ΜΕΤΡΙΚΕΣ", { x: 7.25, y: 4.35, w: 5.3, h: 0.3, fontFace: MONO, fontSize: 11.5, color: MUT_L, charSpacing: 0.5, margin: 0 });
+  s.addShape(pres.ShapeType.rect, { x: 6.75, y: 1.45, w: 0.01, h: 4.4, fill: { color: RULE } });
+
+  s.addText("Φόρτοι εργασίας.", { x: 7.1, y: 1.42, w: 5.4, h: 0.32, fontFace: SERIF, fontSize: 15, bold: true, color: NAVY, margin: 0 });
   s.addText(
     [
-      { text: "Αθροιστική κατανομή πυκνότητας προσπελάσεων ανά γραμμή 64 B", options: { breakLine: true, paraSpaceAfter: 6 } },
-      { text: "Απόδοση μεταφοράς: bytes που μεταφέρθηκαν ÷ bytes που χρησιμοποιήθηκαν", options: { breakLine: true, paraSpaceAfter: 6 } },
-      { text: "Επικαιρότητα προαγωγής · ποσοστό σελίδων ακόμη θερμών κατά την προαγωγή", options: { breakLine: true, paraSpaceAfter: 6 } },
-      { text: "Επιβράδυνση συναρτήσει του λόγου βαθμίδων · πλήθος ping-pong", options: {} },
+      { text: "GUPS", options: { fontFace: CODE, fontSize: 12 } }, { text: " — τυχαίες ενημερώσεις 8 B, μηδενική χωρική τοπικότητα (η αντίπαλη περίπτωση)\n", options: {} },
+      { text: "XSBench", options: { fontFace: CODE, fontSize: 12 } }, { text: " — αναζητήσεις Monte Carlo σε μεγάλους πίνακες\n", options: {} },
+      { text: "PageRank", options: { fontFace: CODE, fontSize: 12 } }, { text: " — άτακτη προσπέλαση γράφου, μετακινούμενο θερμό σύνολο\n", options: {} },
+      { text: "Btree / YCSB-C", options: { fontFace: CODE, fontSize: 12 } }, { text: " — κατανομή Zipf, ακραία υπο-σελιδική θερμότητα", options: {} },
     ],
-    { x: 7.25, y: 4.71, w: 5.3, h: 1.78, fontFace: BODY, fontSize: 12.5, color: INKTX, lineSpacing: 17, margin: 0, valign: "top" }
+    { x: 7.1, y: 1.8, w: 5.4, h: 1.7, fontFace: SERIF, fontSize: 13.5, color: INK, lineSpacing: 20, margin: 0 }
+  );
+
+  s.addText("Μετρικές.", { x: 7.1, y: 3.85, w: 5.4, h: 0.32, fontFace: SERIF, fontSize: 15, bold: true, color: NAVY, margin: 0 });
+  s.addText(
+    [
+      { text: "– αθροιστική κατανομή πυκνότητας προσπελάσεων ανά γραμμή 64 B\n", options: {} },
+      { text: "– απόδοση μεταφοράς: bytes που μεταφέρθηκαν ÷ bytes που χρησιμοποιήθηκαν\n", options: {} },
+      { text: "– επικαιρότητα προαγωγής και ποσοστό σελίδων ακόμη θερμών κατά την προαγωγή\n", options: {} },
+      { text: "– επιβράδυνση συναρτήσει του λόγου βαθμίδων· πλήθος ταλαντώσεων (ping-pong)", options: {} },
+    ],
+    { x: 7.1, y: 4.23, w: 5.4, h: 1.95, fontFace: SERIF, fontSize: 13, color: INK, lineSpacing: 19, margin: 0 }
   );
 
   s.addNotes("Πάντα αναφέρω και τα δύο φράγματα δίπλα σε κάθε σχήμα — αλλιώς το νούμερο δεν ερμηνεύεται.");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 12 — The figure (native chart)
+// 12 — The figure
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("light");
-  head(s, 12, "ΤΟ ΖΗΤΟΥΜΕΝΟ ΑΠΟΤΕΛΕΣΜΑ");
-  title(s, "Η εικόνα στην οποία κρίνεται η εργασία");
+  const s = frame(12, "§5.3", "5. Μεθοδολογία", "Το ζητούμενο σχήμα");
 
-  s.addText("FIG. 01", { x: ML, y: 2.12, w: 5.2, h: 0.3, fontFace: MONO, fontSize: 12, bold: true, color: AMBER_DK, margin: 0 });
   s.addText(
-    "Για κάθε σελίδα 4 KB: τι ποσοστό των προσπελάσεών της συγκεντρώνεται στις k θερμότερες γραμμές των 64 B; " +
-    "Αν το 80% πέφτει σε λιγότερο από το 10% της σελίδας, το επιχείρημα της κοκκομέτρησης αποδεικνύεται σε ένα διάγραμμα.",
-    { x: ML, y: 2.5, w: 5.15, h: 1.5, fontFace: BODY, fontSize: 13.5, color: INKTX, lineSpacing: 20, margin: 0 }
+    "Για κάθε σελίδα 4 KB μετράμε τι ποσοστό των προσπελάσεών της συγκεντρώνεται στις k θερμότερες " +
+    "γραμμές των 64 B. Αν το 80% των προσπελάσεων πέφτει σε λιγότερο από το 10% της σελίδας, το " +
+    "επιχείρημα της κοκκομέτρησης αποδεικνύεται σε ένα και μόνο διάγραμμα (Σχήμα 3).",
+    { x: ML, y: 1.45, w: 5.15, h: 1.6, fontFace: SERIF, fontSize: 15, color: INK, lineSpacing: 23, align: "justify", margin: 0 }
   );
 
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 4.15, w: 5.15, h: 1.15, fill: { color: "F6E4D8" } });
-  s.addText("⚠ ΠΡΟΣΟΧΗ ΣΤΗΝ ΑΝΑΓΝΩΣΗ", { x: ML + 0.25, y: 4.28, w: 4.6, h: 0.3, fontFace: MONO, fontSize: 11.5, bold: true, color: "9A4A22", margin: 0 });
-  s.addText("Η καμπύλη δίπλα είναι η αναμενόμενη μορφή, όχι μετρημένα δεδομένα. Δεν έχω τρέξει ακόμα τον προσομοιωτή.", {
-    x: ML + 0.25, y: 4.6, w: 4.65, h: 0.62, fontFace: BODY, fontSize: 12, color: "6B3A1E", lineSpacing: 17, margin: 0,
-  });
-
-  s.addText("Αν η καμπύλη βγει επίπεδη, το επιχείρημα της υπο-σελιδικής θερμότητας καταρρέει για αυτόν τον φόρτο — εξίσου χρήσιμο.", {
-    x: ML, y: 5.45, w: 5.15, h: 0.8, fontFace: BODY, fontSize: 12.5, italic: true, color: MUT_L, lineSpacing: 18, margin: 0,
-  });
+  s.addText(
+    [
+      { text: "Επιφύλαξη. ", options: { bold: true, color: ALERT } },
+      { text: "Η καμπύλη είναι η αναμενόμενη μορφή, όχι μετρημένα δεδομένα· ο προσομοιωτής δεν έχει ακόμη εκτελεστεί. Αν βγει επίπεδη, το επιχείρημα της υπο-σελιδικής θερμότητας καταρρέει για τον φόρτο αυτόν — αποτέλεσμα εξίσου χρήσιμο.", options: {} },
+    ],
+    { x: ML, y: 3.25, w: 5.15, h: 1.9, fontFace: SERIF, fontSize: 14, color: INK, lineSpacing: 21, align: "justify", margin: 0 }
+  );
 
   const cats = ["1", "4", "8", "16", "24", "32", "48", "64"];
   s.addChart(
@@ -672,19 +570,20 @@ function hcell(text, s) {
       { name: "Ομοιόμορφη (GUPS)", labels: cats, values: [2, 6, 13, 25, 38, 50, 75, 100] },
     ],
     {
-      x: 6.5, y: 2.15, w: 6.03, h: 4.3,
-      showTitle: true, title: "Αθροιστικό % προσπελάσεων στις k θερμότερες γραμμές 64 B",
-      titleFontSize: 12, titleColor: INKTX, titleFontFace: BODY,
-      chartColors: [AMBER_DK, TEAL_DK], lineSize: 3, lineSmooth: true,
-      showLegend: true, legendPos: "b", legendFontSize: 11, legendColor: INKTX, legendFontFace: MONO,
-      catAxisTitle: "k θερμότερες γραμμές 64 B (από 64)", showCatAxisTitle: true, catAxisTitleFontSize: 10, catAxisTitleColor: MUT_L,
-      valAxisTitle: "αθροιστικό %", showValAxisTitle: true, valAxisTitleFontSize: 10, valAxisTitleColor: MUT_L,
-      catAxisLabelColor: MUT_L, valAxisLabelColor: MUT_L, catAxisLabelFontFace: MONO, valAxisLabelFontFace: MONO,
-      catAxisLabelFontSize: 10, valAxisLabelFontSize: 10,
+      x: 6.35, y: 1.5, w: 6.13, h: 4.05,
+      showTitle: false,
+      chartColors: [NAVY, ALERT], lineSize: 2.25, lineSmooth: true,
+      lineDash: ["solid", "dash"],
+      showLegend: true, legendPos: "b", legendFontSize: 11, legendColor: INK, legendFontFace: SERIF,
+      catAxisTitle: "k θερμότερες γραμμές 64 B (από 64)", showCatAxisTitle: true, catAxisTitleFontSize: 11, catAxisTitleColor: MUT, catAxisTitleFontFace: SERIF,
+      valAxisTitle: "αθροιστικό %", showValAxisTitle: true, valAxisTitleFontSize: 11, valAxisTitleColor: MUT, valAxisTitleFontFace: SERIF,
+      catAxisLabelColor: INK, valAxisLabelColor: INK, catAxisLabelFontFace: SERIF, valAxisLabelFontFace: SERIF,
+      catAxisLabelFontSize: 11, valAxisLabelFontSize: 11,
       valAxisMaxVal: 100, valAxisMinVal: 0, valAxisMajorUnit: 25,
-      valGridLine: { color: LINE_L, size: 1 }, catGridLine: { style: "none" },
+      valGridLine: { color: "E3E3E3", size: 1 }, catGridLine: { style: "none" },
     }
   );
+  caption(s, 6.35, 5.65, 6.13, "Σχήμα 3:", "αθροιστικό ποσοστό προσπελάσεων στις k θερμότερες γραμμές 64 B (αναμενόμενη μορφή).", "center");
 
   s.addNotes("Σκίτσο, όχι δεδομένα — και το δηλώνω. Ο Zipf δείχνει ακραία συγκέντρωση· το GUPS είναι αρνητικός έλεγχος.");
 }
@@ -693,73 +592,55 @@ function hcell(text, s) {
 // 13 — Timeline
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("light");
-  head(s, 13, "ΧΡΟΝΟΔΙΑΓΡΑΜΜΑ");
-  title(s, "Φάσεις και διαχείριση ρίσκου");
+  const s = frame(13, "§6.1", "6. Πλάνο & συζήτηση", "Φάσεις υλοποίησης και διαχείριση ρίσκου");
 
   const phases = [
-    ["Φ1", "Εκκίνηση & checkpoint", "Boot σε shell, επιβεβαίωση κόμβου zNUMA, microbenchmark: «απόδειξε ότι το CXL είναι αργό»"],
-    ["Φ2", "Λήψη ιχνών προσπέλασης", "Σημείο λήψης στη ροή αιτημάτων· κατανομή πυκνότητας — πρώτο πραγματικό αποτέλεσμα"],
-    ["Φ3", "Βασική γραμμή μεταφοράς", "Αφελής μετανάστευση σελίδων με έντιμο μοντέλο κόστους και ποσόστωση εύρους ζώνης"],
-    ["Φ4", "Υλοποίηση M5", "Πρώτα το HPT, μετά το HWT ως το διαφοροποιητικό στοιχείο"],
-    ["Φ5", "Αξιολόγηση & συγγραφή", "Ευαισθησία σε K, διάστημα, ποσόστωση, καθυστέρηση CXL"],
+    ["Φάση 1.", "Εκκίνηση και checkpoint.", "Boot έως shell, επιβεβαίωση κόμβου zNUMA, microbenchmark καθυστέρησης («απόδειξη ότι η CXL είναι αργή»)."],
+    ["Φάση 2.", "Λήψη ιχνών προσπέλασης.", "Σημείο λήψης στη ροή αιτημάτων της συσκευής και κατανομή πυκνότητας — το πρώτο πραγματικό αποτέλεσμα."],
+    ["Φάση 3.", "Βασική γραμμή μετανάστευσης.", "Αφελής μετανάστευση σελίδων με έντιμο μοντέλο κόστους και ποσόστωση εύρους ζώνης."],
+    ["Φάση 4.", "Υλοποίηση M5.", "Πρώτα ο HPT (θερμές σελίδες), κατόπιν ο HWT (θερμές λέξεις 64 B) ως το διαφοροποιητικό στοιχείο."],
+    ["Φάση 5.", "Αξιολόγηση και συγγραφή.", "Ανάλυση ευαισθησίας ως προς K, διάστημα, ποσόστωση και καθυστέρηση CXL."],
   ];
   phases.forEach(([p, h, d], i) => {
-    const y = 2.2 + i * 0.82;
+    const y = 1.5 + i * 0.82;
     const hot = i === 1;
-    if (hot) s.addShape(pres.ShapeType.rect, { x: ML, y, w: CW, h: 0.72, fill: { color: "F6E4D8" } });
-    s.addText(p, { x: ML + 0.2, y, w: 0.85, h: 0.72, fontFace: DISP, fontSize: 26, bold: true, color: hot ? REDS : TEAL_DK, valign: "middle", margin: 0 });
-    s.addText(h, { x: ML + 1.15, y, w: 3.2, h: 0.72, fontFace: BODY, fontSize: 14, bold: true, color: INKTX, valign: "middle", margin: 0 });
-    s.addText(d, { x: ML + 4.5, y, w: 7.15, h: 0.72, fontFace: BODY, fontSize: 12, color: MUT_L, valign: "middle", lineSpacing: 16, margin: 0 });
-    if (i < 4 && !hot) s.addShape(pres.ShapeType.rect, { x: ML + 1.15, y: y + 0.72, w: CW - 1.15, h: 0.01, fill: { color: LINE_L } });
+    s.addText(p, { x: ML, y, w: 1.15, h: 0.32, fontFace: SERIF, fontSize: 15, bold: true, color: hot ? ALERT : NAVY, margin: 0, valign: "top" });
+    s.addText([{ text: h + " ", options: { bold: true, color: hot ? ALERT : INK } }, { text: d, options: {} }],
+      { x: ML + 1.2, y, w: CW - 1.2, h: 0.7, fontFace: SERIF, fontSize: 14.5, color: INK, lineSpacing: 20, align: "justify", margin: 0, valign: "top" });
+    if (i < 4) s.addShape(pres.ShapeType.rect, { x: ML + 1.2, y: y + 0.7, w: CW - 1.2, h: 0.006, fill: { color: "E8E8E8" } });
   });
 
   s.addText(
-    "Η Φ2 απομειώνει το ρίσκο όλων των υπολοίπων: παράγει παρουσιάσιμο αποτέλεσμα πριν γραφτεί οποιαδήποτε πολιτική. " +
-    "Προαιρετικά: μοντέλο κόστους υλικού, σάρωση καθυστέρησης, δύο ταυτόχρονοι φόρτοι.",
-    { x: ML, y: 6.45, w: CW, h: 0.6, fontFace: BODY, fontSize: 12, italic: true, color: MUT_L, lineSpacing: 17, margin: 0 }
+    "Η Φάση 2 απομειώνει το ρίσκο όλων των υπολοίπων, παράγοντας παρουσιάσιμο αποτέλεσμα πριν γραφτεί " +
+    "οποιαδήποτε πολιτική. Προαιρετικές επεκτάσεις: μοντέλο κόστους υλικού, σάρωση καθυστέρησης, δύο συντρέχοντες φόρτοι.",
+    { x: ML, y: 5.75, w: CW, h: 0.8, fontFace: SERIF, fontSize: 14, italic: true, color: MUT, lineSpacing: 21, align: "justify", margin: 0 }
   );
 
   s.addNotes("Δηλώνω ξεκάθαρα τι είναι βασικό και τι stretch goal.");
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// 14 — Open questions  (amber full-bleed close)
+// 14 — Open questions
 // ═════════════════════════════════════════════════════════════════════════════
 {
-  const s = slide("amber");
-  s.addText("§14   ΠΡΟΣ ΣΥΖΗΤΗΣΗ", {
-    x: ML, y: 0.6, w: CW - 1.4, h: 0.3, fontFace: MONO, fontSize: 12.5, bold: true, color: INK, charSpacing: 1, margin: 0,
-  });
-  s.addText("14 / 14", { x: MR - 1.4, y: 0.6, w: 1.4, h: 0.3, fontFace: MONO, fontSize: 12, color: "6B4E12", align: "right", margin: 0 });
-  s.addShape(pres.ShapeType.rect, { x: ML, y: 0.98, w: 0.55, h: 0.03, fill: { color: INK } });
-
-  s.addText("Ανοιχτά ερωτήματα προς εσάς", {
-    x: ML, y: 1.35, w: CW, h: 0.8, fontFace: DISP, fontSize: 38, bold: true, color: INK, margin: 0,
-  });
+  const s = frame(14, "§6.2", "6. Πλάνο & συζήτηση", "Ανοιχτά ερωτήματα προς συζήτηση");
 
   const qs = [
-    ["Πρόσβαση στο CXLRAMSim", "Υπάρχει αποθετήριο και οδηγίες build; Ιδανικά και έτοιμο disk image — το χτίσιμο από το μηδέν είναι παράκαμψη ημερών."],
-    ["Κλίμακα φόρτων", "Αποδεκτό να κατεβάσω το μέγεθος σε εκατοντάδες MB αντί 10–20 GB RSS, κρατώντας ρεαλιστικό τον λόγο των βαθμίδων;"],
-    ["Εύρος υλοποίησης", "Αρκεί profiler HPT+HWT με μοντελοποιημένη μηχανή μεταφοράς, ή θέλετε πραγματική μετανάστευση Linux από kernel module;"],
-    ["Επιλογή εργασίας", "Είναι το M5 η σωστή επιλογή, ή προτιμάτε να δείτε NeoMem;"],
+    ["Πρόσβαση στον CXLRAMSim.", "Υπάρχει διαθέσιμο αποθετήριο και οδηγίες build; Ιδανικά και έτοιμο disk image — το χτίσιμο από το μηδέν είναι παράκαμψη ημερών που δεν διδάσκει τίποτε για το tiering."],
+    ["Κλίμακα φόρτων.", "Είναι αποδεκτό να μειωθεί το μέγεθος σε εκατοντάδες MB αντί για 10–20 GB RSS, διατηρώντας ρεαλιστικό τον λόγο των βαθμίδων;"],
+    ["Εύρος υλοποίησης.", "Αρκεί profiler HPT+HWT με μοντελοποιημένη μηχανή μετανάστευσης, ή ζητείται πραγματική μετανάστευση Linux οδηγούμενη από kernel module;"],
+    ["Επιλογή εργασίας.", "Είναι το M5 η ενδεδειγμένη επιλογή, ή προτιμάται υλοποίηση του NeoMem;"],
   ];
   qs.forEach(([h, d], i) => {
-    const y = 2.5 + i * 1.02;
-    s.addText(`0${i + 1}`, { x: ML, y, w: 0.7, h: 0.8, fontFace: DISP, fontSize: 30, bold: true, color: "6B4E12", margin: 0 });
-    s.addText(h, { x: ML + 0.85, y: y - 0.02, w: 11, h: 0.32, fontFace: MONO, fontSize: 14, bold: true, color: INK, margin: 0 });
-    s.addText(d, { x: ML + 0.85, y: y + 0.32, w: 11, h: 0.5, fontFace: BODY, fontSize: 13, color: "3A2A08", lineSpacing: 17, margin: 0 });
-    if (i < 3) s.addShape(pres.ShapeType.rect, { x: ML + 0.85, y: y + 0.86, w: 11, h: 0.012, fill: { color: "D9992E" } });
-  });
-
-  s.addText("github.com/Zajason/memory_tiering", {
-    x: ML, y: 6.9, w: CW, h: 0.3, fontFace: MONO, fontSize: 11.5, color: "6B4E12", margin: 0,
+    const y = 1.55 + i * 1.05;
+    s.addText(`${i + 1}.`, { x: ML, y, w: 0.45, h: 0.32, fontFace: SERIF, fontSize: 16, bold: true, color: NAVY, margin: 0 });
+    s.addText(h, { x: ML + 0.5, y, w: CW - 0.5, h: 0.34, fontFace: SERIF, fontSize: 16, bold: true, color: INK, margin: 0 });
+    s.addText(d, { x: ML + 0.5, y: y + 0.36, w: CW - 0.5, h: 0.6, fontFace: SERIF, fontSize: 14, color: INK, lineSpacing: 20, align: "justify", margin: 0 });
   });
 
   s.addNotes(
-    "Το να ρωτάω ανοιχτά είναι δύναμη. Έτοιμη απάντηση για «γιατί όχι απευθείας cache lines»: " +
-    "δεν υπάρχει PTE για γραμμή → έμμεση αναφορά σε υλικό → Flat Memory Mode → κοστίζει αστοχίες " +
-    "σύγκρουσης και χωρητικότητα → αυτό ακριβώς λύνει το Memstrata."
+    "Έτοιμη απάντηση για «γιατί όχι απευθείας cache lines»: δεν υπάρχει PTE για γραμμή → έμμεση " +
+    "αναφορά σε υλικό → Flat Memory Mode → κοστίζει αστοχίες σύγκρουσης και χωρητικότητα → αυτό ακριβώς λύνει το Memstrata."
   );
 }
 

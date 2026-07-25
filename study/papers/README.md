@@ -5,8 +5,8 @@ PDFs are gitignored. Download them here:
 ```bash
 cd study/papers
 curl -LO https://www.usenix.org/system/files/osdi24-zhong-yuhong.pdf   # Memstrata (OSDI'24)
-curl -L -o m5-asplos25.pdf https://jiyuan.is/papers/asplos25-m5.pdf     # M5 (ASPLOS'25)
-curl -L -o neomem-micro24.pdf https://arxiv.org/pdf/2403.18702          # NeoMem (MICRO'24)
+curl -L -o m5-asplos25.pdf https ://jiyuan.is/papers/asplos25-m5.pdf     # M5 (ASPLOS'25)
+curl -L -o neomem-micro24.pdf https://arxiv.org/pdf/2403.18702         # NeoMem (MICRO'24)
 curl -L -o cxlramsim.pdf https://arxiv.org/pdf/2603.29483               # CXLRAMSim v1.0
 ```
 

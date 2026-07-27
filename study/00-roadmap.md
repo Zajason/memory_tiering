@@ -15,6 +15,7 @@ to get to "I can explain this to the prof without hedging."
 | 6 | [06-paper-neomem.md](06-paper-neomem.md) | Profiling in the CXL controller | 30 min |
 | 7 | [07-cxlramsim.md](07-cxlramsim.md) | The simulator, and where your code hooks in | 45 min |
 | 8 | [08-glossary.md](08-glossary.md) | Keep open in a tab while reading everything else | — |
+| 9 | [09-qna.md](09-qna.md) | **Presentation prep.** Q&A the profs might ask — rehearse before the talk. | 60 min |
 
 ## The one-paragraph version
 

@@ -255,16 +255,25 @@ VOID PIN_FAST_ANALYSIS_CALL countBbl(UINT32 numIns) {
             if (g_insCount >= g_ffTarget + g_warmupTarget) {
                 g_phase = PHASE_PROFILE;
                 g_profileStartIns = g_insCount;
+                g_epochStartIns = g_insCount;
             }
             break;
         case PHASE_PROFILE:
             if (g_lenTarget && g_insCount - g_profileStartIns >= g_lenTarget) {
                 g_phase = PHASE_DONE;
                 g_active = 0;
-            } else if (g_epochInsTarget && g_insCount - g_epochStartIns >= g_epochInsTarget) {
-                // Time-proportional epoch boundary. finishEpoch touches shared
-                // state, so take the lock -- this fires once per epoch, not per
-                // basic block, so the cost is irrelevant.
+            } else if (g_epochInsTarget && g_roiEnabled &&
+                       g_insCount - g_epochStartIns >= g_epochInsTarget) {
+                // Time-proportional epoch boundary.
+                //
+                // Gated on g_roiEnabled: instructions keep retiring outside the
+                // region of interest, and without the gate the timer would fire
+                // there and emit epochs that recorded nothing. g_epochStartIns is
+                // also reset on ROI entry, so the first epoch inside a region is a
+                // full one rather than however much time had elapsed outside it.
+                //
+                // finishEpoch touches shared state, so take the lock. This fires
+                // once per epoch, not per basic block, so the cost is irrelevant.
                 PIN_GetLock(&g_lock, 1);
                 g_epochStartIns = g_insCount;
                 finishEpoch();
@@ -281,6 +290,11 @@ VOID PIN_FAST_ANALYSIS_CALL countBbl(UINT32 numIns) {
 // Fold the current epoch's counters into the aggregate histograms, optionally dump
 // the raw records, then zero the table. Caller holds g_lock.
 void finishEpoch() {
+    // Nothing was recorded: do not burn an epoch id on it. An empty epoch would
+    // otherwise inflate the reported epoch count and make the run look like it
+    // sampled more windows than it actually did.
+    if (g_counters.totalAccesses() == 0) return;
+
     UINT64 pagesThisEpoch = 0;
     UINT64 accessesThisEpoch = 0;
     UINT64 uniqueWordsThisEpoch = 0;
@@ -391,6 +405,9 @@ VOID instrumentTrace(TRACE trace, VOID*) {
 
 VOID roiEnter() {
     g_roiEnabled = true;
+    // Restart the time-proportional epoch clock, so the first epoch inside the
+    // region is a full window rather than however long we spent outside it.
+    g_epochStartIns = g_insCount;
     if (g_phase == PHASE_WARMUP || g_phase == PHASE_PROFILE) g_active = 1;
 }
 

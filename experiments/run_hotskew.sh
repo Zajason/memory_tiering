@@ -54,8 +54,28 @@ else
               -l3_kb "$L3_KB" -l3_assoc "$L3_ASSOC")
 fi
 
-COMMON=(-epoch "$EPOCH_M" -dump_pages "$DUMP_PAGES" -tag "$BENCH" -o "$OUT"
-        -roi_begin hotskew_roi_begin -roi_end hotskew_roi_end)
+# Region of interest, on or off.
+#
+# For the stock build the ROI is what we want: it brackets steady state and keeps
+# graph construction out of the measurement.
+#
+# For the userspace-load build it must be OFF. The whole point of that variant is to
+# count the graph-load copy, which happens during construction -- i.e. outside the
+# ROI. Measuring it with the ROI on would exclude exactly the traffic the variant
+# exists to expose, and quietly reproduce the stock result instead.
+#
+# Override with USE_ROI=0|1.
+if [[ -z "${USE_ROI:-}" ]]; then
+  case "${GAPBS_VARIANT:-stock}" in
+    userspace-load) USE_ROI=0 ;;
+    *)              USE_ROI=1 ;;
+  esac
+fi
+
+COMMON=(-epoch "$EPOCH_M" -dump_pages "$DUMP_PAGES" -tag "$BENCH" -o "$OUT")
+if [[ "$USE_ROI" == "1" ]]; then
+  COMMON+=(-roi_begin hotskew_roi_begin -roi_end hotskew_roi_end)
+fi
 
 export OMP_NUM_THREADS="$HOST_THREADS"
 

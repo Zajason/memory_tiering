@@ -27,3 +27,18 @@ venv/
 .vscode/
 .idea/
 *.swp
+
+# Benchmark sources and datasets (fetched by benchmarks/setup_*.sh)
+bench/
+
+# Pintool build output
+src/profiler/pintool/obj-intel64/
+src/profiler/validate/synth
+benchmarks/zipf_client
+benchmarks/zipf_selftest
+
+# Raw per-page dumps are large; keep summaries, CSVs and figures
+results/**/*.pages.bin
+results/**/*.run.log
+results/**/*.server.log
+results/**/*.client.log

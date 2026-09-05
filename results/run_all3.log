@@ -39,3 +39,23 @@ mean_unique_words  44.763 / 64
 top4_word_share    0.0861   (share of accesses in each page's 4 hottest words)
 
 ########## sssp [userspace-load] ##########
+Average Time:        68.41461
+[hotskew] wrote /home/zajason/dev/advarch/memory_tiering/results/spr-20t-ul/gapbs-sssp.summary.txt
+    wall 121.92 s   maxrss 2475744 KB
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1386
+  8         12.5%   0.2464
+ 16           25%   0.3556
+ 32           50%   0.4855
+ 48           75%   0.5433
+
+# P(page has at least 48 of 64 words accessed) = 0.4593
+epochs             15
+llc_miss_ratio     0.023464  (DRAM accesses per memory ref)
+page_observations  2285224   (page x epoch pairs with >=1 access)
+mean_unique_words  36.348 / 64
+top4_word_share    0.1079   (share of accesses in each page's 4 hottest words)
+
+########## pr [userspace-load] ##########

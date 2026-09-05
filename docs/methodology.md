@@ -257,6 +257,30 @@ applied to the benchmark. The residual (largest at $N=16$) is consistent with th
 remaining known deviations: the dataset, and the kernel traffic that *cannot* be made
 visible in user space — page-fault zeroing and page-cache population.
 
+### Attributing the change
+
+The controller-view run differs from the steady-state run in *two* ways — the ROI is
+off, and the load copy is visible — so the improvement has to be decomposed before it
+can be attributed. Mean unique words per page, BFS on kron-23:
+
+| configuration | mean unique words |
+|---|---|
+| stock, ROI on (kernel only) | 18.30 |
+| stock, ROI off (whole process) | 20.14 |
+| user-space load, ROI off | **46.86** |
+
+Turning the ROI off accounts for **1.8** words of the 28.6-word change. Making the
+load copy visible accounts for the other **26.7**. The effect is the load, not the
+ROI, by an order of magnitude — which is what the isolated microbenchmark predicted.
+
+### One asymmetry to keep in mind
+
+Because the two variants use different ROI settings, they are not a controlled A/B on
+a single knob; they are two deliberately different measurements. `USE_ROI` overrides
+the default if you want the four-way matrix. The default pairing is chosen so that
+each variant answers its own question properly: steady-state behaviour needs the ROI,
+and the controller view needs it off, because M5's counters have no ROI at all.
+
 ### The general lesson
 
 Any Pin-based reproduction of a memory-controller measurement has this gap. It is
@@ -460,6 +484,41 @@ Thread count was swept, and the metric barely moves:
 Word coverage per page is a property of the data-structure access pattern, not of how
 many cores walk it. Single-threaded runs avoid deviation #2 entirely and run faster
 under Pin, so they are the default. `HOST_THREADS` overrides it.
+
+---
+
+## 8b. An operational hazard worth knowing about
+
+Pin replaces the injected process's command line with the **application's**. A
+pin-controlled BFS appears in `ps` as plain `bfs`, with no mention of `pin` and no
+mention of the tool. Anything that cleans up by matching on the command line —
+`pkill -f pin`, `pkill -f hotskew` — silently misses them.
+
+During development a PageRank run survived three separate cleanup attempts and kept
+going for 38 minutes, appending to a `.pages.bin` that a later run had already
+written. The result was one file containing interleaved records from two runs, with
+nothing in the output to indicate it.
+
+The reliable signal is the mapped library: a process running the tool has
+`obj-intel64/hotskew.so` in `/proc/PID/maps`, which argv rewriting cannot affect.
+`experiments/stop_runs.sh` uses that, and also reports which result files each
+process holds open so it is obvious what would be corrupted.
+
+```bash
+./experiments/stop_runs.sh          # list
+./experiments/stop_runs.sh --kill   # stop them
+```
+
+Two related rules learned the same way:
+
+- **Never edit a shell script while it is running.** Bash re-reads the file by byte
+  offset as it executes, so an edit shifts the offsets and it resumes mid-token. The
+  failure looks like a nonsense syntax error in a line that is perfectly valid.
+- **Never rebuild the `.so` while a run has it mapped.** The linker rewrites the file
+  in place.
+
+Neither affects the results reported here — the contaminated PageRank run was
+re-collected — but both cost time to diagnose and would be easy to repeat.
 
 ---
 

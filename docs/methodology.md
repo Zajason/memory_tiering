@@ -132,7 +132,115 @@ random execution points"*.
 accesses, folds that epoch's distribution into the aggregate, and zeroes the
 counters. `-roi_epoch` additionally closes the window when the region of interest is
 left, so one epoch never straddles two kernel invocations. Results are reported with
-the epoch length stated, and `sensitivity_sweep.sh epoch` shows how much it moves.
+the epoch length stated, and `sensitivity_sweep.sh epoch` shows how much it moves:
+
+| epoch (M DRAM accesses) | mean unique words | P(≤4) | P(≤16) |
+|---|---|---|---|
+| 1 | 19.970 | 0.4033 | 0.6797 |
+| 2 | 20.452 | 0.3847 | 0.6830 |
+| 5 | 20.308 | 0.2676 | 0.6812 |
+| 10 | 18.298 | 0.1662 | 0.7078 |
+| ≥25 (whole run) | 18.298 | 0.1662 | 0.7078 |
+
+BFS on kron-23 emits about 9.6M DRAM accesses in total, so any window at or above
+10M is the whole run and the curve flattens. Below that, `P(≤4)` moves by a factor of
+2.4 — which is the point.
+
+### Two kinds of window, and why the choice matters
+
+A window measured in DRAM accesses and a window measured in time are not
+interchangeable, and the difference produced a misleading result before it was
+noticed.
+
+Sweeping LLC size with an *access-based* window gave byte-identical distributions for
+4 MB, 16 MB, 36 MB and 60 MB. That is not a bug and not only the compulsory-miss
+effect above: a smaller cache emits *more* DRAM accesses, so a fixed count of them
+spans proportionally *less* execution. The two effects cancel exactly, and the axis
+reports nothing.
+
+The question M5's hardware actually asks is time-based — their PAC daemon dumps every
+10 ms (`m5_manager -s 10`). So the tool grew `-epoch_ins N`, which closes the window
+every $N$ million instructions. Under a time-proportional window a larger cache
+genuinely absorbs more traffic, fewer words per page reach the controller, and pages
+look sparser. `sensitivity_sweep.sh window` runs both kinds side by side over the same
+cache sizes so the difference is explicit rather than folklore.
+
+Stated as a rule: **report the window kind alongside the window length.** A sparsity
+number without both is not reproducible.
+
+---
+
+## 3b. The kernel blind spot
+
+This is the largest single difference between what a Pin tool can see and what M5's
+hardware saw, and it was found by chasing the gap in §7 rather than assumed up front.
+
+**Pin instruments the instructions the application executes.** Memory the *kernel*
+touches on the application's behalf executes no user-mode load or store, so no
+instrumentation fires:
+
+- the copy inside `read(2)` / `write(2)`
+- page-fault zeroing of freshly faulted anonymous pages
+- page-cache population, DMA from storage
+- anything else done in kernel context
+
+M5's PAC and WAC sit at the memory controller. They count every byte of it.
+
+### Measured, not assumed
+
+`src/profiler/validate/kernel_blindspot.c` moves the same 512 MiB into the same
+buffers two ways and profiles both:
+
+| how the bytes move | DRAM accesses seen | pages observed | mean words/page |
+|---|---|---|---|
+| `read(2)` — kernel performs the copy | **5** | 4 | 1.250 |
+| `memcpy` — application performs the copy | **24,838,154** | 262,150 | **63.999 / 64** |
+
+Identical bytes, identical destination pages. One is invisible; the other is the
+densest possible signature — every one of 64 words in every one of 131,072 pages.
+
+(The 24.8M figure also checks out arithmetically: 8.4M source line reads, 8.4M
+write-allocate reads on the destination, and 8.4M dirty writebacks = 25.2M.)
+
+### Why this matters for GAPBS specifically
+
+GAPBS loads its serialized CSR with `file.read()` — `reader.h`, `ReadSerializedGraph`,
+lines 290–296. For a kron-23 graph that is **1.05 GB copied by the kernel**, landing
+in roughly 269,000 4 KB pages, every word of every one of them written.
+
+M5's counters record those 269,000 pages as 64/64 words touched. Ours record nothing.
+Since the graph arrays are also most of what the kernel then traverses, this pushes
+their whole distribution toward "dense" relative to ours — in exactly the direction of
+the discrepancy in §7.
+
+The same argument applies to every benchmark that loads a large dataset from a file:
+Liblinear parses a multi-gigabyte SVM-light file, Redis is loaded over a socket.
+
+### What we do about it
+
+`benchmarks/patches/gapbs-userspace-load.patch` routes the load copy through a 4 MB
+user-space staging buffer, so the destination writes become ordinary stores that Pin
+observes. The bytes and their layout are unchanged; only which agent performs the
+final copy differs.
+
+That gives two measurements, both legitimate, answering different questions:
+
+- **without the patch** — the application's own access pattern, which is what a
+  tiering policy operating in steady state has to work with;
+- **with the patch** — the traffic a memory controller would see, which is what M5's
+  Figure 4 actually plots.
+
+They are reported separately. Conflating them is how a reproduction ends up with a
+number that cannot be explained.
+
+### The general lesson
+
+Any Pin-based reproduction of a memory-controller measurement has this gap. It is
+probably part of what M5 meant by *"requires notable effort to precisely determine
+DRAM access addresses"*. It cannot be fully closed in user space — page-fault zeroing
+and page-cache traffic remain invisible whatever you do — which is a real argument
+for moving this work into CXLRAMSim, where the simulator sees every request including
+the kernel's.
 
 ---
 

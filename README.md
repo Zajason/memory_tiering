@@ -119,25 +119,57 @@ count is unchanged and only the associativity moves.
 
 ---
 
-## Results so far
+## Results
 
 **The tool is calibrated.** Against synthetic workloads whose word-density is known
 on paper, it is exact across four orders of granularity — stride 4096/1024/256/64
 give 1.000 / 3.999 / 15.996 / 63.981 words per page against an analytic 1 / 4 / 16 / 64.
 
-**The dense case reproduces almost exactly.** PageRank touches every word of every
-CSR page; we measure 63.996/64 and `P(≤48 words) = 0.0001` against the paper's 0.02.
-An independent method on different hardware with a different dataset landing on the
-same answer is the strongest available evidence the pipeline measures the right thing.
+**PageRank reproduces almost exactly.** It sweeps every edge every iteration, so
+every word of every CSR page is touched: we measure 63.1/64 and `P(≤48) = 0.007`
+against the paper's 0.02. An independent method, on different hardware, with a
+different dataset, landing on the same answer for the case where the answer is
+unambiguous — that is the strongest evidence available that the pipeline measures the
+right quantity.
 
-**The sparse case is directionally right but quantitatively sparser than the paper.**
-BFS: we report `P(≤16 words) = 0.45–0.71` depending on measurement window, against
-M5's 0.17. The sensitivity sweep identifies the mechanism (how much of the graph the
-window spans) and the residual is most plausibly the dataset — M5's graphs came from
-Memtis' `bench_dir` and were not published. This is reported as an open gap, not
-tuned away. See [methodology §7](docs/methodology.md#7-results-against-the-paper).
+### Three things worth knowing
 
-**One finding the paper does not report.** Restricting to the pages a migration
+**1. The measurement window is the parameter that makes the question well-posed.**
+Word coverage per page only grows, so over a long enough window every page looks
+dense. Measured that way, the answer is byte-identical for a 4 MB and a 60 MB LLC —
+compulsory misses eventually touch everything. A sparsity number without a stated
+window length *and kind* is not reproducible. See
+[methodology §3](docs/methodology.md#3-why-epochs-are-mandatory-the-most-important-thing-in-this-document).
+
+**2. Pin cannot see kernel-side memory traffic, and here it dominates.** Measured in
+isolation, moving the same 512 MiB:
+
+| how the bytes move | DRAM accesses Pin sees | pages | words/page |
+|---|---|---|---|
+| `read(2)` — kernel copies | **5** | 4 | 1.25 |
+| `memcpy` — app copies | **24,838,154** | 262,150 | **63.999 / 64** |
+
+GAPBS loads a 1.05 GB CSR with `read(2)`. M5's counters at the memory controller see
+that as ~269,000 perfectly dense pages; Pin sees nothing. Routing the copy through
+user space closes most of the gap for BFS:
+
+| N | stock | **user-space copy** | M5 Fig. 4 |
+|---|---|---|---|
+| 4 | 0.150 | **0.063** | 0.050 |
+| 8 | 0.289 | **0.136** | 0.110 |
+| 16 | 0.588 | **0.265** | 0.170 |
+| 32 | 0.807 | **0.319** | 0.260 |
+| 48 | 0.813 | **0.320** | 0.345 |
+
+At N=48, where the CDF has nearly converged, the discrepancy goes from +0.47 to
+−0.025 — inside the error of reading values off the paper's bar chart. The blind spot
+was hypothesised from the shape of the disagreement and tested on a microbenchmark
+before being applied, not tuned until the numbers matched.
+
+This is an argument *for* CXLRAMSim: in gem5 the device request path sees kernel
+traffic too, so the blind spot does not exist there.
+
+**3. A qualification the paper does not make.** Restricting to the pages a migration
 policy would actually act on inverts the picture for graph workloads:
 
 | BFS population | P(≤16 of 64 words) |
@@ -149,8 +181,16 @@ policy would actually act on inverts the picture for graph workloads:
 The hottest pages in BFS are *dense*; sparsity lives in the lukewarm tail. A top-$K$
 policy would already be picking dense pages, so sub-page tracking has little left to
 correct for this workload — whereas for Redis, where 86% of pages are sparse, the
-argument is strong. That distinction is sharper than the figure alone poses, and it
-is the sort of thing worth knowing before committing to implementing HWT.
+argument is strong. Worth knowing before committing to implement HWT rather than HPT
+alone. See [docs/next-steps.md](docs/next-steps.md).
+
+### Reproducing the tables
+
+```bash
+./.venv/bin/python src/analysis/compare_to_paper.py --config spr-20t      # app's own pattern
+./.venv/bin/python src/analysis/compare_to_paper.py --config spr-20t-ul   # controller view
+./.venv/bin/python src/analysis/plot_figures.py --config spr-20t-ul
+```
 
 ---
 

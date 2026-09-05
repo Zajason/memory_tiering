@@ -86,6 +86,8 @@ benchmarks/               fetch/patch/build scripts for the M5 artifact benchmar
 configs/                  cache geometries, incl. M5's Intel CAT partitions
 experiments/              runners and the sensitivity sweep
 docs/methodology.md       what is measured, why, and where it deviates
+docs/tool-reference.md    every knob, the output formats, recipes
+docs/next-steps.md        what this implies for the CXLRAMSim half
 study/                    background notes on CXL, tiering, and the three papers
 ```
 
@@ -97,9 +99,9 @@ M5's Figures 4 and 10 use fourteen workloads. Status here:
 
 | Workload | In M5 Fig. 4 | Status |
 |---|---|---|
-| GAPBS bc, bfs, cc, pr, sssp, tc | yes | **running** — `benchmarks/setup_gapbs.sh` |
+| GAPBS bc, bfs, cc, pr, sssp, tc | yes | **done**, both load variants — `benchmarks/setup_gapbs.sh` |
 | Liblinear | yes | scripted — `benchmarks/setup_liblinear.sh` |
-| Redis | yes | scripted — `benchmarks/setup_redis.sh` (needs a build; not yet run here) |
+| Redis | yes | scripted, **not yet run** — `benchmarks/setup_redis.sh`. The most valuable one left: see Results #3 |
 | SPEC CPU2017 mcf, cactuBSSN, fotonik3d, roms | yes | not run — needs a licence |
 | Memcached, CacheLib | yes | not attempted |
 

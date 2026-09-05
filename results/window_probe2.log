@@ -1,0 +1,14 @@
+##### bfs epoch=0 #####
+  4         6.25%   0.0002
+  8         12.5%   0.0003
+ 16           25%   0.0005
+ 32           50%   0.0006
+ 48           75%   0.0008
+
+# P(page has at least 48 of 64 words accessed) = 0.9992
+epochs             1
+llc_miss_ratio     0.019806  (DRAM accesses per memory ref)
+page_observations  288792   (page x epoch pairs with >=1 access)
+mean_unique_words  63.962 / 64
+top4_word_share    0.0797   (share of accesses in each page's 4 hottest words)
+##### cc epoch=0 #####

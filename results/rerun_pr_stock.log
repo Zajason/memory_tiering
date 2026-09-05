@@ -1,0 +1,23 @@
+=== gapbs-pr [spr-20t]  threads=1 epoch=10M variant=stock ===
+    ./pr -f /home/zajason/dev/advarch/memory_tiering/bench/gapbs/graphs/kron-23.sg -n 1
+Read Time:           0.41034
+Graph has 8388606 nodes and 129337761 undirected edges for degree: 15
+Trial Time:          405.91782
+Average Time:        405.91782
+[hotskew] wrote /home/zajason/dev/advarch/memory_tiering/results/spr-20t/gapbs-pr.summary.txt
+    wall 407.13 s   maxrss 1391192 KB
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.0003
+  8         12.5%   0.0004
+ 16           25%   0.0005
+ 32           50%   0.0006
+ 48           75%   0.0065
+
+# P(page has at least 48 of 64 words accessed) = 0.9961
+epochs             27
+llc_miss_ratio     0.050553  (DRAM accesses per memory ref)
+page_observations  2738738   (page x epoch pairs with >=1 access)
+mean_unique_words  63.105 / 64
+top4_word_share    0.0901   (share of accesses in each page's 4 hottest words)

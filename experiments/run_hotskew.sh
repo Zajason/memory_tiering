@@ -36,7 +36,11 @@ source "$CFG_FILE"
 
 check_prereqs
 
-OUTDIR="$RESULTS_ROOT/$CONFIG"
+# The GAPBS variant changes what is measured, not just how, so it gets its own
+# results directory rather than silently overwriting the other one.
+SUFFIX=""
+[[ "${GAPBS_VARIANT:-stock}" == "userspace-load" ]] && SUFFIX="-ul"
+OUTDIR="$RESULTS_ROOT/$CONFIG$SUFFIX"
 mkdir -p "$OUTDIR"
 OUT="$OUTDIR/$BENCH"
 
@@ -57,7 +61,8 @@ export OMP_NUM_THREADS="$HOST_THREADS"
 
 run_pin() { # run_pin <workdir> <cmd...>
   local wd="$1"; shift
-  echo "=== $BENCH [$CONFIG]  threads=$HOST_THREADS epoch=${EPOCH_M}M ==="
+  echo "=== $BENCH [$CONFIG${SUFFIX}]  threads=$HOST_THREADS epoch=${EPOCH_M}M \
+variant=${GAPBS_VARIANT:-stock} ==="
   echo "    $*"
   local log="$OUT.run.log"
   ( cd "$wd" && /usr/bin/time -f "    wall %e s   maxrss %M KB" \

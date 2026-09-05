@@ -10,8 +10,26 @@ REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 PIN="$PIN_ROOT/pin"
 TOOL="$REPO/src/profiler/pintool/obj-intel64/hotskew.so"
 
-GAPBS_DIR="$BENCH_ROOT/gapbs"
-GRAPH_DIR="$GAPBS_DIR/graphs"
+# Two GAPBS builds, differing only in who copies the graph during loading.
+#
+#   bench/gapbs     stock: file.read(), so the kernel performs the copy and Pin
+#                   cannot see it. Measures the application's own access pattern.
+#   bench/gapbs-ul  patched: the copy goes through a user-space staging buffer, so
+#                   the destination writes are visible. Measures what a memory
+#                   controller -- and therefore M5's PAC/WAC -- would have seen.
+#
+# The difference is large and it is the main reason a naive Pin reproduction of M5's
+# Figure 4 comes out too sparse. See docs/methodology.md §3b.
+#
+# GAPBS_VARIANT=stock|userspace-load
+: "${GAPBS_VARIANT:=stock}"
+case "$GAPBS_VARIANT" in
+  stock)          GAPBS_DIR="$BENCH_ROOT/gapbs" ;;
+  userspace-load) GAPBS_DIR="$BENCH_ROOT/gapbs-ul" ;;
+  *) echo "GAPBS_VARIANT must be stock or userspace-load" >&2; exit 1 ;;
+esac
+# Graphs are shared between the two builds; they are large and identical.
+GRAPH_DIR="$BENCH_ROOT/gapbs/graphs"
 LIBLINEAR_DIR="$BENCH_ROOT/liblinear-multicore"
 REDIS_DIR="$BENCH_ROOT/redis"
 YCSB_DIR="$BENCH_ROOT/ycsb"

@@ -2,55 +2,65 @@ GAPBS: perform the serialized-graph load copy in user space.
 
 Why
 ---
-GAPBS reads its CSR with file.read() (reader.h ReadSerializedGraph), which is a
+GAPBS reads its CSR with file.read() (reader.h, ReadSerializedGraph), which is a
 read(2) syscall: the kernel copies the bytes into the destination buffers. No
 user-mode load or store executes for that copy, so Intel Pin cannot observe it.
 
 M5's PAC and WAC sit at the memory controller and count it -- and a bulk load writes
-every 64 B word of every destination page, which is the densest access pattern that
-exists. For a 1.05 GB graph that is roughly 269,000 4 KB pages that M5 records as
-64/64 words touched and a Pin-based tool records as zero.
+every 64 B word of every destination page, the densest access pattern that exists.
+For a kron-23 graph that is ~1.05 GB landing in ~269,000 4 KB pages that M5 records
+as 64/64 words touched and a Pin-based tool records as nothing.
 
 Measured directly (src/profiler/validate/kernel_blindspot.c), moving 512 MiB:
 
-    via read(2):  5 DRAM accesses,        4 pages,  1.250 words/page
-    via memcpy:   24,838,154 accesses,  262,150 pages, 63.999 words/page
+    via read(2):  5 DRAM accesses,          4 pages,  1.250 words/page
+    via memcpy:   24,838,154 accesses, 262,150 pages, 63.999 words/page
 
-This patch routes the copy through a small user-space staging buffer, so the writes
-to the destination arrays become ordinary stores that Pin sees. The bytes that end up
-in memory, and their layout, are identical; only which agent performs the final copy
-changes. The staging buffer is 4 MB, so it stays cache-resident and adds negligible
-traffic of its own.
+Effect on the reproduction, BFS on kron-23 (P(page has <= N of 64 words touched)):
+
+    N            4      8     16     32     48
+    unpatched  .150   .289   .588   .807   .813
+    patched    .063   .136   .265   .319   .320
+    M5 Fig. 4  .050   .110   .170   .260   .345
+
+The patch routes the copy through a 4 MB user-space staging buffer, so the writes to
+the destination arrays become ordinary stores that Pin sees. The bytes that end up in
+memory, and their layout, are identical; only which agent performs the final copy
+changes. The staging buffer stays cache-resident and adds negligible traffic.
 
 Use this to measure what M5's hardware would have seen. Leave it off to measure only
-the application's own access pattern. Both are legitimate; they answer different
-questions, and docs/methodology.md reports both.
+the application's own steady-state access pattern. Both are legitimate and answer
+different questions; docs/methodology.md reports both.
 
 Apply with:  git -C bench/gapbs apply ../../benchmarks/patches/gapbs-userspace-load.patch
-
+diff --git a/src/reader.h b/src/reader.h
+index 4544ba3..f5be7a3 100644
 --- a/src/reader.h
 +++ b/src/reader.h
-@@ -20,6 +20,7 @@
+@@ -10,6 +10,8 @@
+ #include <string>
+ #include <type_traits>
+ 
++#include <vector>
++#include <cstring>
  #include "pvector.h"
  #include "util.h"
-
-+#include <vector>
-
- /*
- GAP Benchmark Suite
-@@ -40,6 +41,29 @@ class Reader {
+ 
+@@ -36,6 +38,33 @@ class Reader {
    std::string filename_;
-
+ 
   public:
++
 +  // Copy `bytes` from `in` into `dst` through a user-space staging buffer.
 +  //
-+  // file.read(dst, bytes) would have the kernel write dst directly, which Intel Pin
-+  // cannot observe (see benchmarks/patches/gapbs-userspace-load.patch). Staging the
-+  // data and memcpy-ing it makes the destination writes ordinary user-mode stores,
-+  // so a memory-reference profiler sees the same traffic a memory controller would.
++  // file.read(dst, bytes) has the *kernel* write dst, which Intel Pin cannot observe:
++  // no user-mode load or store executes for a read(2) copy. A memory controller sees
++  // it, and it is the densest traffic there is -- every 64 B word of every
++  // destination page. Staging the data and memcpy-ing it makes those writes ordinary
++  // stores, so a memory-reference profiler sees what the controller would.
 +  //
-+  // Identical bytes, identical layout; only the agent performing the final copy
-+  // differs. The 4 MB staging buffer stays cache-resident.
++  // Identical bytes and layout; only the agent doing the final copy differs. The 4 MB
++  // staging buffer stays cache-resident and adds negligible traffic of its own.
 +  static void ReadUserspace(std::ifstream &in, char *dst, std::streamsize bytes) {
 +    const std::streamsize kChunk = 4 << 20;
 +    std::vector<char> staging(static_cast<size_t>(kChunk));
@@ -66,25 +76,25 @@ Apply with:  git -C bench/gapbs apply ../../benchmarks/patches/gapbs-userspace-l
 +    }
 +  }
 +
++
    explicit Reader(std::string filename) : filename_(filename) {}
-
+ 
    std::string GetSuffix() {
-@@ -287,13 +311,13 @@ class Reader {
-     DestID_ *neighs = new DestID_[num_edges];
-     DestID_ **index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, neighs);
+@@ -287,13 +316,13 @@ class Reader {
+     neighs = new DestID_[num_edges];
+     std::streamsize num_index_bytes = (num_nodes+1) * sizeof(SGOffset);
+     std::streamsize num_neigh_bytes = num_edges * sizeof(DestID_);
 -    file.read(reinterpret_cast<char*>(offsets.data()), num_index_bytes);
 -    file.read(reinterpret_cast<char*>(neighs), num_neigh_bytes);
 +    ReadUserspace(file, reinterpret_cast<char*>(offsets.data()), num_index_bytes);
 +    ReadUserspace(file, reinterpret_cast<char*>(neighs), num_neigh_bytes);
+     index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, neighs);
      if (directed && invert) {
-       pvector<SGOffset> inv_offsets(num_nodes+1);
-       DestID_ *inv_neighs = new DestID_[num_edges];
-       DestID_ **inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(inv_offsets,
-                                                                 inv_neighs);
--      file.read(reinterpret_cast<char*>(inv_offsets.data()), num_index_bytes);
+       inv_neighs = new DestID_[num_edges];
+-      file.read(reinterpret_cast<char*>(offsets.data()), num_index_bytes);
 -      file.read(reinterpret_cast<char*>(inv_neighs), num_neigh_bytes);
-+      ReadUserspace(file, reinterpret_cast<char*>(inv_offsets.data()), num_index_bytes);
++      ReadUserspace(file, reinterpret_cast<char*>(offsets.data()), num_index_bytes);
 +      ReadUserspace(file, reinterpret_cast<char*>(inv_neighs), num_neigh_bytes);
-       file.close();
-       return CSRGraph<NodeID_, DestID_, invert>(num_nodes, index, neighs,
-                                                 inv_index, inv_neighs);
+       inv_index = CSRGraph<NodeID_, DestID_>::GenIndex(offsets, inv_neighs);
+     }
+     file.close();

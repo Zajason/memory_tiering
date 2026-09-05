@@ -230,8 +230,32 @@ That gives two measurements, both legitimate, answering different questions:
 - **with the patch** — the traffic a memory controller would see, which is what M5's
   Figure 4 actually plots.
 
-They are reported separately. Conflating them is how a reproduction ends up with a
-number that cannot be explained.
+They are reported separately (`results/spr-20t/` and `results/spr-20t-ul/`), selected
+with `GAPBS_VARIANT=stock|userspace-load`. Conflating them is how a reproduction ends
+up with a number it cannot explain.
+
+### It closes most of the gap
+
+BFS on kron-23, `P(page has ≤ N of 64 words touched)`:
+
+| N | stock (kernel copies) | **user-space copy** | M5 Fig. 4 | remaining Δ |
+|---|---|---|---|---|
+| 4 | 0.150 | **0.063** | 0.050 | +0.013 |
+| 8 | 0.289 | **0.136** | 0.110 | +0.026 |
+| 16 | 0.588 | **0.265** | 0.170 | +0.095 |
+| 32 | 0.807 | **0.319** | 0.260 | +0.059 |
+| 48 | 0.813 | **0.320** | 0.345 | −0.025 |
+
+Mean unique words goes from 21.9 to 46.9 of 64. The discrepancy at $N=48$ — the point
+where the CDF has almost converged — drops from +0.47 to **−0.025**, which is inside
+the error of reading values off the paper's bar chart.
+
+This was not a parameter that got tuned until the numbers matched. The blind spot was
+hypothesised from the shape of the disagreement, tested in isolation on a
+microbenchmark that does nothing but move 512 MiB two different ways, and only then
+applied to the benchmark. The residual (largest at $N=16$) is consistent with the
+remaining known deviations: the dataset, and the kernel traffic that *cannot* be made
+visible in user space — page-fault zeroing and page-cache population.
 
 ### The general lesson
 

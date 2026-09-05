@@ -46,6 +46,32 @@ for k in bc bfs cc pr sssp tc; do
 done
 echo "   all six kernels built with ROI markers"
 
+# ---------------------------------------------------------------------------
+# Second build: the same code with the graph-load copy moved into user space.
+#
+# Stock GAPBS loads its CSR with file.read(), so the kernel performs the copy and
+# Pin sees none of it -- while M5's counters at the memory controller see all of it,
+# as ~269,000 pages with every one of their 64 words written. That single difference
+# accounts for most of the gap between a naive Pin reproduction and the paper's
+# Figure 4. See docs/methodology.md §3b.
+#
+# Both builds are kept so the two measurements can be compared rather than confused.
+# Select with GAPBS_VARIANT=stock (default) or GAPBS_VARIANT=userspace-load.
+# ---------------------------------------------------------------------------
+GAPBS_UL_DIR="$BENCH_ROOT/gapbs-ul"
+echo ">> building the userspace-load variant"
+rm -rf "$GAPBS_UL_DIR"
+cp -r "$BENCH_ROOT/gapbs" "$GAPBS_UL_DIR"
+rm -rf "$GAPBS_UL_DIR/graphs"   # graphs are shared, not duplicated
+( cd "$GAPBS_UL_DIR" && git apply "$REPO/benchmarks/patches/gapbs-userspace-load.patch" ) \
+  || die "gapbs-userspace-load.patch did not apply"
+grep -q ReadUserspace "$GAPBS_UL_DIR/src/reader.h" || die "patch applied but ReadUserspace is missing"
+make -C "$GAPBS_UL_DIR" -j"$(nproc)" >/dev/null
+for k in bc bfs cc pr sssp tc; do
+  [[ -x "$GAPBS_UL_DIR/$k" ]] || die "userspace-load build produced no $k"
+done
+echo "   built in $GAPBS_UL_DIR"
+
 mkdir -p "$GRAPH_DIR"
 for s in "${SCALES[@]}"; do
   # Kronecker graphs, GAPBS' own generator: 2^s vertices, average degree 16.

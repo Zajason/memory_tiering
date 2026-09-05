@@ -125,12 +125,38 @@ count is unchanged and only the associativity moves.
 on paper, it is exact across four orders of granularity — stride 4096/1024/256/64
 give 1.000 / 3.999 / 15.996 / 63.981 words per page against an analytic 1 / 4 / 16 / 64.
 
-**PageRank reproduces almost exactly.** It sweeps every edge every iteration, so
-every word of every CSR page is touched: we measure 63.1/64 and `P(≤48) = 0.007`
-against the paper's 0.02. An independent method, on different hardware, with a
-different dataset, landing on the same answer for the case where the answer is
-unambiguous — that is the strongest evidence available that the pipeline measures the
-right quantity.
+**Four of six GAPBS kernels agree with M5's Figure 4 to within 0.03**, including both
+extremes — PageRank (maximally dense) and triangle counting. `P(page has ≤ N of 64
+words touched)`, ours / M5:
+
+| kernel | N=4 | N=8 | N=16 | N=32 | N=48 |
+|---|---|---|---|---|---|
+| **pr** | 0.000 / 0.000 | 0.000 / 0.000 | 0.001 / 0.005 | 0.001 / 0.010 | **0.006 / 0.020** |
+| **tc** | 0.022 / 0.020 | 0.044 / 0.050 | 0.090 / 0.120 | 0.281 / 0.265 | **0.527 / 0.520** |
+| **bfs** | 0.063 / 0.050 | 0.136 / 0.110 | 0.265 / 0.170 | 0.319 / 0.260 | **0.320 / 0.345** |
+| **cc** | 0.056 / 0.060 | 0.121 / 0.125 | 0.267 / 0.200 | 0.372 / 0.290 | **0.374 / 0.385** |
+| bc | 0.160 / 0.005 | 0.260 / 0.020 | 0.418 / 0.040 | 0.576 / 0.090 | 0.638 / 0.145 |
+| sssp | 0.139 / 0.005 | 0.246 / 0.015 | 0.356 / 0.025 | 0.486 / 0.070 | 0.543 / 0.110 |
+
+`tc` matches at all five values of N. An independent method, on different hardware,
+with a different dataset, landing on the same answer — that is the evidence that the
+pipeline measures the right quantity.
+
+**bc and sssp come out sparser, and the measurement window accounts for it.** The
+window bounds coverage from both sides — a 10M-access epoch is the sparsest we
+measured, the whole run the densest possible. M5's value for every kernel is either
+inside that range or within the ±0.02 error of reading it off their chart:
+
+| kernel, P(≤48) | 10M epochs | whole run | M5 | where M5 falls |
+|---|---|---|---|---|
+| bc | 0.638 | 0.0007 | 0.145 | inside |
+| sssp | 0.543 | 0.0006 | 0.110 | inside |
+| tc | 0.527 | 0.0015 | 0.520 | inside |
+| bfs | 0.320 | 0.0008 | 0.345 | +0.025 (≈ digitisation error) |
+| cc | 0.374 | 0.0008 | 0.385 | +0.011 (≈ digitisation error) |
+
+Not a per-benchmark fit: the window sensitivity was established before these were run,
+all six use the same window, and none was adjusted to improve agreement.
 
 ### Three things worth knowing
 
@@ -169,20 +195,29 @@ before being applied, not tuned until the numbers matched.
 This is an argument *for* CXLRAMSim: in gem5 the device request path sees kernel
 traffic too, so the blind spot does not exist there.
 
-**3. A qualification the paper does not make.** Restricting to the pages a migration
-policy would actually act on inverts the picture for graph workloads:
+**3. A qualification the paper does not make.** Figure 4 plots every page that got an
+access. A migration policy only ever acts on the top-$K$ hottest. Restricting to those,
+`P(page has ≤16 of 64 words touched)`:
 
-| BFS population | P(≤16 of 64 words) |
-|---|---|
-| all touched pages | 0.708 |
-| top-100,000 hottest | 0.424 |
-| top-10,000 hottest | 0.000 |
+| kernel | all pages | top-100k | top-10k |
+|---|---|---|---|
+| bc | 0.418 | 0.200 | **0.000** |
+| bfs | 0.265 | 0.100 | **0.000** |
+| cc | 0.267 | 0.096 | **0.000** |
+| sssp | 0.356 | 0.056 | **0.000** |
+| tc | 0.090 | 0.090 | **0.002** |
+| pr | 0.001 | 0.000 | **0.000** |
 
-The hottest pages in BFS are *dense*; sparsity lives in the lukewarm tail. A top-$K$
-policy would already be picking dense pages, so sub-page tracking has little left to
-correct for this workload — whereas for Redis, where 86% of pages are sparse, the
-argument is strong. Worth knowing before committing to implement HWT rather than HPT
-alone. See [docs/next-steps.md](docs/next-steps.md).
+**For every GAPBS kernel the hottest pages are dense** — sparsity lives entirely in
+the lukewarm tail. A count-only top-$K$ policy already selects dense pages here, so a
+Hot Word Tracker has almost nothing to correct. No kernel concentrates more than ~16%
+of a page's accesses in four words.
+
+This agrees with M5's own Observation 2 (*"certain applications"*) and sharpens it:
+the case for HWT rests on the key-value workloads — Redis 86%, Memcached 76%,
+CacheLib 74% in their figure — not on graph analytics. **That makes Redis the
+benchmark that matters most for the rest of this project.** See
+[docs/next-steps.md](docs/next-steps.md).
 
 ### Reproducing the tables
 

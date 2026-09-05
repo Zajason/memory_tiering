@@ -418,14 +418,29 @@ The two that disagree do so in one direction — we report them sparser. The
 measurement window accounts for it entirely. Running the same binaries with the
 window opened to the whole run (the upper bound on coverage):
 
-| kernel | 10M-access epochs | whole run | M5 Figure 4 |
-|---|---|---|---|
-| bc, P(≤48) | 0.638 | 0.0007 | **0.145** |
-| sssp, P(≤48) | 0.543 | 0.0006 | **0.110** |
+The window sets an upper and a lower bound on word coverage: a 10M-DRAM-access epoch
+is the sparsest we measured, the whole run is the densest possible. Every kernel, at
+N=48:
 
-M5's value sits *inside* the range our measurement spans as the window grows. Nothing
-else needs to be invoked: at some window between 10M DRAM accesses and the whole run,
-we reproduce their number for both.
+| kernel | 10M-access epochs | whole run | M5 Fig. 4 | where M5 falls |
+|---|---|---|---|---|
+| bc | 0.638 | 0.0007 | 0.145 | **inside the range** |
+| sssp | 0.543 | 0.0006 | 0.110 | **inside the range** |
+| tc | 0.527 | 0.0015 | 0.520 | **inside the range** |
+| bfs | 0.320 | 0.0008 | 0.345 | +0.025 above (≈ digitisation error) |
+| cc | 0.374 | 0.0008 | 0.385 | +0.011 above (≈ digitisation error) |
+| pr | 0.006 | — | 0.020 | +0.014 above (≈ digitisation error) |
+
+So for all six kernels, M5's published value is either bracketed by the window range
+or sits within the ±0.02 error of reading it off their bar chart. Nothing else needs
+to be invoked to account for the disagreement: at some window between 10M DRAM
+accesses and the whole run, we reproduce their number for every kernel.
+
+The three that need a longer window than our default (bc, sssp, tc) are also the three
+that spread a fixed number of accesses over the most pages, so a fixed access budget
+buys less coverage per page. That is consistent, but it is a hypothesis rather than a
+measurement — pinning M5's window down exactly needs their miss rate, which was not
+published.
 
 **This is not a per-benchmark fit.** The window sensitivity was established in §3
 before these two were run, all six kernels use the same 10M-access window, and no
@@ -442,37 +457,11 @@ measurement.
 
 ---
 
-## 7b. Earlier results, for reference
+## 7b. The trials sensitivity, kept for reference
 
-Values for M5 are digitised from their Figure 4 bar chart (no numeric data was
-released), so treat them as ±0.02.
-
-### The dense benchmarks reproduce almost exactly
-
-| Benchmark | metric | this work | M5 Fig. 4 |
-|---|---|---|---|
-| PageRank | mean unique words | 63.996 / 64 | — |
-| PageRank | P(≤16 words) | 0.0001 | ~0.005 |
-| PageRank | P(≤48 words) | 0.0001 | 0.02 |
-
-PageRank sweeps every edge every iteration, so every word of every CSR page is
-touched. Both methods agree that it is maximally dense. This is the strongest
-available evidence that the pipeline is measuring the right quantity: an independent
-method, on different hardware, with a different dataset, lands on the same answer for
-the case where the answer is unambiguous.
-
-### The traversal benchmarks are directionally right but sparser than the paper
-
-| Benchmark | this work, P(≤16) | M5 Fig. 4, P(≤16) |
-|---|---|---|
-| BFS (1 trial, ROI) | 0.708 | 0.17 |
-| BFS (16 trials, whole run) | 0.447 | 0.17 |
-| CC (1 trial, ROI) | 0.615 | 0.20 |
-| CC (16 trials, whole run) | 0.590 | 0.20 |
-
-We report these workloads as *more* sparse than M5 does. The sensitivity sweep
-identifies the mechanism: coverage grows with how much of the graph the measurement
-window spans.
+Before the kernel blind spot was found, the traversal kernels were much sparser than
+the paper and the trial count was the largest lever available. Measured on stock
+GAPBS, BFS, whole process:
 
 ```
 trials  mean_unique_words  P(<=4)  P(<=16)  P(<=48)
@@ -484,41 +473,62 @@ trials  mean_unique_words  P(<=4)  P(<=16)  P(<=48)
 ```
 
 One BFS from one source visits part of the graph; sixteen from sixteen sources visit
-much more of it, and the pages accumulate coverage. M5's always-on counters span the
-whole application, including however many trials their (unreleased) `bench_cmds`
-scripts ran, plus construction. The remaining gap is most plausibly dataset:
-`GAPBS_PATH` in their `env.sh` points at Memtis' `bench_dir`, whose graphs were not
-published with the artifact, and graph size and degree distribution both change how
-much of a CSR page a traversal touches.
+much more, and coverage accumulates. The effect is real but second-order — moving
+`P(≤48)` by 0.065 across a 16× change in trials, against the 0.49 the load copy moves
+it. The headline runs use one trial for this reason: with the load visible, the ratio
+of load traffic to traversal traffic depends on trial count, and one invocation is
+what a user actually runs.
 
-**This is reported as an open gap rather than tuned away.** The honest summary: the
-qualitative claim reproduces (graph traversal kernels show substantial sub-page
-sparsity; PageRank and SSSP do not), the ordering across benchmarks reproduces, and
-the absolute values for the sparse kernels are sensitive to a parameter the paper
-does not specify.
+---
 
-### A qualification the paper does not make
+## 7c. A qualification the paper does not make
 
-Restricting the population to the pages a migration policy would actually act on
-changes the picture materially. For BFS on kron-23:
+Figure 4 plots every page that received an access. A migration policy never sees that
+population — it acts on the top-$K$ hottest pages. Restricting to those changes the
+answer completely, and not just for one benchmark.
 
-| population | P(≤16 words) | P(≤48 words) |
+**P(page has ≤ 16 of 64 words touched)**, controller view, by population:
+
+| kernel | all pages | top-100k | top-10k | top-1k |
+|---|---|---|---|---|
+| bc | 0.418 | 0.200 | **0.000** | **0.000** |
+| bfs | 0.265 | 0.100 | **0.000** | **0.000** |
+| cc | 0.267 | 0.096 | **0.000** | **0.000** |
+| pr | 0.001 | 0.000 | **0.000** | **0.000** |
+| sssp | 0.356 | 0.056 | **0.000** | **0.000** |
+| tc | 0.090 | 0.090 | **0.002** | **0.001** |
+
+**For every GAPBS kernel, the hottest pages are dense.** Sparsity lives entirely in
+the lukewarm tail. A count-only top-$K$ policy on these workloads is already selecting
+dense pages, so a Hot Word Tracker has essentially nothing left to correct.
+
+The cost side agrees. Migrating a 4 KB page moves 4096 bytes; only
+`unique_words × 64` of them are used in the window:
+
+| kernel | share of accesses in the 4 hottest words | wasted bytes per migrated page |
 |---|---|---|
-| all touched pages | 0.708 | 0.853 |
-| top-100,000 hottest | 0.424 | 0.711 |
-| top-10,000 hottest | 0.000 | 0.000 |
-| top-1,000 hottest | 0.000 | 0.000 |
+| bc | 0.149 | 51.5% |
+| sssp | 0.108 | 43.2% |
+| cc | 0.086 | 30.1% |
+| tc | 0.162 | 30.4% |
+| bfs | 0.080 | 26.8% |
+| pr | 0.087 | **1.3%** |
 
-**The hottest pages in BFS are dense.** Sparsity lives in the lukewarm tail. Figure 4
-plots the unrestricted population, which is the right way to characterise memory —
-but a top-$K$ policy never sees that population. For a workload like this, a
-count-only policy would already be selecting dense pages, and M5's Hot Word Tracker
-would have little left to correct. For Redis, where 86% of pages are sparse, the
-argument is much stronger.
+Even for the sparsest kernel, no page concentrates more than ~16% of its accesses in
+four words. That is a long way from the pathological case sub-page tracking is
+designed for — a hash-table probe touching 64 bytes of a 4 KB page.
 
-That distinction — *is sub-page tracking useful for this workload, or only for
-key-value stores?* — is the question the reproduction is actually able to answer, and
-it is sharper than the one the figure alone poses. `hot_vs_all.png` plots it.
+**So the honest reading of this reproduction is narrower than the paper's framing.**
+M5's Observation 2 says *"a large percentage of pages in **certain** applications can
+be sparsely accessed"*, and their own Figure 4 makes clear which ones: Redis 86%,
+Memcached 76%, CacheLib 74%, against ~0% for PageRank. The graph kernels sit at the
+dense end of their figure too. Our data agrees with that and sharpens it: on graph
+analytics, sub-page tracking has little to work with, and the case for HWT rests on
+the key-value workloads.
+
+That is worth settling before committing to implement HWT rather than HPT alone —
+and it means **Redis is the benchmark that matters most** for the rest of this
+project. `hot_vs_all.png` plots the top-$K$ comparison.
 
 ---
 

@@ -42,7 +42,20 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define VALUE_BYTES 1000 /* YCSB default: 10 fields x 100 bytes */
+/* YCSB's record layout: fieldcount=10, fieldlength=100.
+ *
+ * This is not a cosmetic detail -- it decides the answer. Storing a record as one
+ * 1000 B string means it spans 16 cache lines, so any page holding a touched record
+ * already shows >=16 of its 64 words touched and P(<=8 words) is ~0 by construction.
+ * YCSB instead stores ten independent ~100 B fields (2 lines each), so a 4 KB page
+ * holds fragments of many records and a skewed stream lights up only a few of them.
+ * That layout, not key skew alone, is what produces the sparse tail M5 reports for
+ * Redis (their Figure 4: P(<=4 words) = 0.51).
+ *
+ * FLAT mode keeps the old single-string behaviour for comparison. */
+#define FIELD_COUNT 10
+#define FIELD_BYTES 100
+#define VALUE_BYTES (FIELD_COUNT * FIELD_BYTES) /* flat-mode value size */
 #define PIPELINE 64
 
 static int sock_connect(const char *host, int port) {
@@ -114,7 +127,19 @@ static int try_one_reply(respbuf_t *b) {
         b->start = need;
         return 1;
     }
-    return -1; /* we never issue commands that reply with an array */
+    if (type == '*') {
+        /* HGETALL replies with a flat array of 2*FIELD_COUNT bulk strings. Consume
+         * the header, then that many elements, recursing through the same parser. */
+        long n = strtol(&b->buf[b->start + 1], NULL, 10);
+        size_t save = b->start;
+        b->start = crlf + 2;
+        for (long i = 0; i < n; ++i) {
+            int r = try_one_reply(b);
+            if (r != 1) { b->start = save; return r; }  /* rewind and ask for more */
+        }
+        return 1;
+    }
+    return -1;
 }
 
 /* Consume exactly n replies. */
@@ -179,6 +204,20 @@ static unsigned long zipf_next(zipf_t *z) {
     return r >= z->n ? z->n - 1 : r;
 }
 
+/* Build  HSET user<id> field0 <100B> ... field9 <100B>  as one RESP array. */
+static int build_hset_all(char *out, size_t cap, unsigned long id, const char *val) {
+    int keylen = 4 + snprintf(NULL, 0, "%lu", id);
+    int n = snprintf(out, cap, "*%d\r\n$4\r\nHSET\r\n$%d\r\nuser%lu\r\n",
+                     2 + 2 * FIELD_COUNT, keylen, id);
+    for (int f = 0; f < FIELD_COUNT; ++f) {
+        int flen = snprintf(NULL, 0, "field%d", f);
+        n += snprintf(out + n, cap - (size_t)n,
+                      "$%d\r\nfield%d\r\n$%d\r\n%.*s\r\n",
+                      flen, f, FIELD_BYTES, FIELD_BYTES, val);
+    }
+    return n;
+}
+
 static int send_all(int fd, const char *buf, size_t len);
 
 /* Send  ECHO <marker>  with a correctly computed RESP bulk length. */
@@ -218,6 +257,9 @@ int main(int argc, char **argv) {
     unsigned long ops = strtoul(argv[4], NULL, 10);
     double theta = (argc > 5) ? atof(argv[5]) : 0.99;
     double update_frac = (argc > 6) ? atof(argv[6]) : 0.0;
+    /* FLAT=1 stores each record as a single 1000 B string instead of ten fields.
+     * Kept so the layout's effect on the Figure 4 result can be measured directly. */
+    const int flat = (getenv("FLAT") && atoi(getenv("FLAT")) != 0);
     if (update_frac < 0.0 || update_frac > 1.0) {
         fprintf(stderr, "update fraction must be in [0,1]\n");
         return 1;
@@ -234,14 +276,17 @@ int main(int argc, char **argv) {
     value[VALUE_BYTES] = 0;
 
     /* ---- load phase ---- */
-    fprintf(stderr, "loading %lu records x %d B (~%.1f GB of values)\n", records, VALUE_BYTES,
+    fprintf(stderr, "loading %lu records, %s (~%.1f GB of values)\n", records,
+            flat ? "1 x 1000 B string" : "10 x 100 B hash fields (YCSB layout)",
             (double)records * VALUE_BYTES / 1e9);
     char cmd[VALUE_BYTES + 256];
     int outstanding = 0;
     for (unsigned long i = 0; i < records; ++i) {
-        int n = snprintf(cmd, sizeof(cmd),
-                         "*3\r\n$3\r\nSET\r\n$%d\r\nuser%lu\r\n$%d\r\n%s\r\n",
-                         (int)(4 + snprintf(NULL, 0, "%lu", i)), i, VALUE_BYTES, value);
+        int n = flat
+            ? snprintf(cmd, sizeof(cmd),
+                       "*3\r\n$3\r\nSET\r\n$%d\r\nuser%lu\r\n$%d\r\n%s\r\n",
+                       (int)(4 + snprintf(NULL, 0, "%lu", i)), i, VALUE_BYTES, value)
+            : build_hset_all(cmd, sizeof(cmd), i, value);
         if (send_all(fd, cmd, (size_t)n) != 0) { perror("send"); return 1; }
         if (++outstanding == PIPELINE) {
             if (drain_n(fd, &rb, outstanding) != 0) { fprintf(stderr, "server closed\n"); return 1; }
@@ -278,13 +323,30 @@ int main(int argc, char **argv) {
         int n;
         if (is_update) {
             ++n_updates;
-            n = snprintf(cmd, sizeof(cmd),
-                         "*3\r\n$3\r\nSET\r\n$%d\r\nuser%lu\r\n$%d\r\n%s\r\n",
-                         (int)(4 + snprintf(NULL, 0, "%lu", k)), k, VALUE_BYTES, value);
+            /* YCSB workload A has writeallfields=false: an update rewrites exactly
+             * one randomly chosen field, not the whole record. */
+            mix_rng ^= mix_rng << 13; mix_rng ^= mix_rng >> 7; mix_rng ^= mix_rng << 17;
+            int f = (int)(mix_rng % FIELD_COUNT);
+            n = flat
+                ? snprintf(cmd, sizeof(cmd),
+                           "*3\r\n$3\r\nSET\r\n$%d\r\nuser%lu\r\n$%d\r\n%s\r\n",
+                           (int)(4 + snprintf(NULL, 0, "%lu", k)), k, VALUE_BYTES, value)
+                : snprintf(cmd, sizeof(cmd),
+                           "*4\r\n$4\r\nHSET\r\n$%d\r\nuser%lu\r\n"
+                           "$%d\r\nfield%d\r\n$%d\r\n%.*s\r\n",
+                           (int)(4 + snprintf(NULL, 0, "%lu", k)), k,
+                           (int)snprintf(NULL, 0, "field%d", f), f,
+                           FIELD_BYTES, FIELD_BYTES, value);
         } else {
             ++n_reads;
-            n = snprintf(cmd, sizeof(cmd), "*2\r\n$3\r\nGET\r\n$%d\r\nuser%lu\r\n",
-                         (int)(4 + snprintf(NULL, 0, "%lu", k)), k);
+            /* readallfields=true is the YCSB default, so a read fetches the whole
+             * record: HGETALL, not a single-field HGET. */
+            n = flat
+                ? snprintf(cmd, sizeof(cmd), "*2\r\n$3\r\nGET\r\n$%d\r\nuser%lu\r\n",
+                           (int)(4 + snprintf(NULL, 0, "%lu", k)), k)
+                : snprintf(cmd, sizeof(cmd),
+                           "*2\r\n$7\r\nHGETALL\r\n$%d\r\nuser%lu\r\n",
+                           (int)(4 + snprintf(NULL, 0, "%lu", k)), k);
         }
         if (send_all(fd, cmd, (size_t)n) != 0) { perror("send"); return 1; }
         if (++outstanding == PIPELINE) {

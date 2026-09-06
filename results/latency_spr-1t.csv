@@ -1,0 +1,13 @@
+benchmark,policy,amat_ns,speedup_vs_allcxl,gap_closed,migrations
+redis-ycsba,all-CXL,220.000,1.0000,0.0000,0
+redis-ycsba,all-local,100.000,2.2000,1.0000,0
+redis-ycsba,oracle,138.499,1.5885,0.6792,1704796
+redis-ycsba,count-only,144.346,1.5241,0.6304,1331960
+redis-ycsba,hpt-driven,147.808,1.4884,0.6016,1512357
+redis-ycsba,hwt-driven,149.189,1.4746,0.5901,1395744
+redis-ycsbc,all-CXL,220.000,1.0000,0.0000,0
+redis-ycsbc,all-local,100.000,2.2000,1.0000,0
+redis-ycsbc,oracle,127.951,1.7194,0.7671,440813
+redis-ycsbc,count-only,129.796,1.6950,0.7517,336286
+redis-ycsbc,hpt-driven,136.755,1.6087,0.6937,472776
+redis-ycsbc,hwt-driven,135.778,1.6203,0.7018,462477

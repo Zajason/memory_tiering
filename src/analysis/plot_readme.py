@@ -9,6 +9,7 @@ Four panels, each answering one question:
   hero_fig4.png         does it reproduce M5's Figure 4?      (the target)
   hero_tracker.png      what does the hardware budget buy?    (deliverable 1)
   hero_failuremode.png  which failure mode actually binds?    (the new result)
+  hero_speedup.png      what is any of it worth, in time?      (deliverable 3+)
 
 Styled for a dark-or-light README on GitHub: transparent background, a palette that
 stays legible in both, and no reliance on colour alone to distinguish series.
@@ -220,9 +221,55 @@ def fig_failuremode():
     return p
 
 
+def fig_speedup():
+    """The closed-loop result: stall-time speedup, and where migration stops paying."""
+    bench = ["bc", "tc", "cc", "bfs", "pr", "sssp"]
+    count = [1.71, 1.54, 1.52, 1.45, 1.42, 1.41]
+    oracle = [1.79, 1.60, 1.60, 1.56, 1.46, 1.60]
+    mig_ns = [0, 1, 3, 10, 30]
+    mig_sp = [1.665, 1.608, 1.505, 1.238, 0.835]
+
+    fig, axes = plt.subplots(1, 2, figsize=(7.8, 3.2))
+
+    x = np.arange(len(bench))
+    axes[0].bar(x - 0.2, oracle, 0.4, label="oracle (bound)", color=ACC[3])
+    axes[0].bar(x + 0.2, count, 0.4, label="HPT alone (realisable)", color=ACC[0])
+    axes[0].axhline(2.2, color=ACC[2], ls="--", lw=1.2, label="all-local (2.2x)")
+    axes[0].axhline(1.0, color=INK, lw=0.8)
+    axes[0].set_xticks(x); axes[0].set_xticklabels(bench)
+    axes[0].set_ylabel("memory stall-time speedup vs all-CXL")
+    axes[0].set_ylim(0.9, 2.35)
+    axes[0].set_title("Closing the loop: 1.50x geomean\n(61% of the achievable gap)",
+                      fontsize=9.5, fontweight="bold")
+    axes[0].legend(frameon=False, fontsize=7.5, loc="upper right")
+
+    axes[1].plot(mig_ns, mig_sp, "o-", color=ACC[1], lw=2, ms=5)
+    axes[1].axhline(1.0, color=INK, lw=0.9, ls=":")
+    axes[1].fill_between([0, 32], 0.7, 1.0, color=ACC[1], alpha=0.10)
+    axes[1].text(16, 0.86, "migration is a net loss", fontsize=8, color=ACC[1],
+                 ha="center")
+    axes[1].annotate("3 us\n(assumed)", xy=(3, 1.505), xytext=(7.5, 1.62),
+                     fontsize=7.5, color=INK,
+                     arrowprops=dict(arrowstyle="->", color=INK, lw=0.8))
+    axes[1].set_xlabel("cost of promoting one 4 KB page (us)")
+    axes[1].set_ylabel("speedup vs all-CXL")
+    axes[1].set_xlim(-1, 32); axes[1].set_ylim(0.7, 1.78)
+    axes[1].set_title("Tiering only pays if migration\nstays under ~10 us",
+                      fontsize=9.5, fontweight="bold")
+
+    for a in axes:
+        style(a)
+    fig.tight_layout()
+    p = f"{OUT}/hero_speedup.png"
+    fig.savefig(p, dpi=190, transparent=True)
+    plt.close(fig)
+    return p
+
+
 def main() -> int:
     os.makedirs(OUT, exist_ok=True)
-    for fn in (fig_validation, fig4_vs_paper, fig_tracker, fig_failuremode):
+    for fn in (fig_validation, fig4_vs_paper, fig_tracker, fig_failuremode,
+               fig_speedup):
         try:
             p = fn()
             print(f"  {p}" if p else f"  {fn.__name__}: skipped (no data yet)")

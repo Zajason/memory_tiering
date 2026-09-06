@@ -33,6 +33,16 @@ measurement window bounds them (§ [Results](#results)).
 | **Calibrated first.** Against synthetic workloads with analytically known density, the tool is exact across four orders of granularity. | **M5's Figure 8, reproduced.** A 128-entry HPT (1 KB of SRAM) captures ~74% of the ideal; 8192 entries (68 KB) adds nothing. |
 
 <div align="center">
+<img src="docs/assets/hero_speedup.png" width="94%" alt="Closed-loop speedup">
+</div>
+
+**Closing the loop.** Under a two-tier latency model (local 100 ns, CXL 220 ns,
+migration 3 µs — all sourced from the papers), HPT-alone placement gives a
+**1.50× geomean reduction in memory stall time**, closing **61%** of the gap to
+all-local. And the knife edge: at a 30 µs migration cost tiering becomes a **net
+loss**, which is exactly why the profiling overhead these papers attack matters.
+
+<div align="center">
 <img src="docs/assets/hero_failuremode.png" width="94%" alt="Which failure mode binds">
 </div>
 
@@ -218,6 +228,28 @@ The waste is nonetheless real and large: **81% of every migrated page is never t
 Redis**, 48% for `bc`. Recovering it needs sub-page *migration* or compaction — not the
 re-ranking M5's design performs.
 
+### 4 · A speedup number
+
+[`latency_model.py`](src/analysis/latency_model.py) turns placement quality into time.
+
+```bash
+./.venv/bin/python src/analysis/latency_model.py --config spr-20t --sensitivity
+```
+
+| policy | geomean speedup vs all-CXL | gap closed |
+|---|---|---|
+| all-local (bound) | 2.200× | 100% |
+| oracle | 1.618× | 70% |
+| **count-only (HPT alone)** | **1.505×** | **61%** |
+
+| migration cost | 0 | 1 µs | 3 µs | 10 µs | 30 µs |
+|---|---|---|---|---|---|
+| speedup | 1.665× | 1.608× | **1.505×** | 1.238× | **0.835×** |
+
+Three assumptions, all of which *inflate* the benefit and none of which are hidden: no
+memory-level parallelism (the big one), no bandwidth contention, open-loop trace. These
+are memory **stall time** and an upper bound, not application runtime.
+
 ### 3 · Simulator-ready probe
 
 CXLRAMSim v1.0 **is not released**, so this cannot be a port. [`src/sim/`](src/sim/) is what
@@ -316,6 +348,7 @@ experiments/            runners, sensitivity sweep, stop_runs.sh
 |---|---|
 | [methodology.md](docs/methodology.md) | what is measured, why, and every deviation quantified |
 | [which-failure-mode.md](docs/which-failure-mode.md) | granularity vs timeliness on one instrument |
+| **[handbook.md](docs/handbook.md)** | **everything: architecture, how each piece works, every finding, how to extend it** |
 | [hardware-evaluation.md](docs/hardware-evaluation.md) | deliverables 1 & 2: the trackers, scored; what sub-page info is worth |
 | [tool-reference.md](docs/tool-reference.md) | every knob, output formats, recipes |
 | [next-steps.md](docs/next-steps.md) | what this implies for the CXLRAMSim half |

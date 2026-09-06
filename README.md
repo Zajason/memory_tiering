@@ -88,6 +88,7 @@ experiments/              runners and the sensitivity sweep
 docs/methodology.md       what is measured, why, and where it deviates
 docs/tool-reference.md    every knob, the output formats, recipes
 docs/next-steps.md        what this implies for the CXLRAMSim half
+docs/which-failure-mode.md  granularity vs timeliness, measured on one instrument
 study/                    background notes on CXL, tiering, and the three papers
 ```
 
@@ -217,9 +218,15 @@ of a page's accesses in four words.
 
 This agrees with M5's own Observation 2 (*"certain applications"*) and sharpens it:
 the case for HWT rests on the key-value workloads — Redis 86%, Memcached 76%,
-CacheLib 74% in their figure — not on graph analytics. **That makes Redis the
-benchmark that matters most for the rest of this project.** See
-[docs/next-steps.md](docs/next-steps.md).
+CacheLib 74% in their figure — not on graph analytics.
+
+**4. Which failure mode actually binds.** The same instrument answers NeoMem's
+question too. At a fast tier sized like M5's (512 MB, ≈half the footprint), the cost
+of acting on one-epoch-old information is **10% for triangle counting and 62% for
+PageRank** — while the pages a policy would migrate are already dense, so sub-page
+tracking has nothing to correct. **For graph analytics, timeliness binds and
+granularity does not** — NeoMem's thesis, not M5's. Full analysis and caveats in
+[docs/which-failure-mode.md](docs/which-failure-mode.md).
 
 ### Reproducing the tables
 

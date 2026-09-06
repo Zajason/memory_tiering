@@ -8,8 +8,12 @@
 #
 #   ./run_redis.sh [config] [records] [ops]
 #
+# YCSB_WORKLOAD=a|c selects the read/update mix. M5 ran YCSB-A (paper Table 3:
+# "Redis, In-memory KVS with YCSB-A"), which is 50% read / 50% update. Default here
+# is A, to match; c gives the 100%-read variant for comparison.
+#
 # Defaults: config spr-1t (M5 gave Redis a 1-way, 4 MB CAT partition), 4M records of
-# 1 KB (~4 GB of values), 20M Zipfian GETs.
+# 1 KB (~4 GB of values), 20M Zipfian operations. M5's Redis footprint was 6.0 GB.
 #
 # The server runs under Pin; the client runs natively alongside it. The client sends
 # ECHO HOTSKEW_ROI_BEGIN / _END between the load and query phases, and the patched
@@ -24,6 +28,12 @@ CONFIG="${1:-spr-1t}"
 RECORDS="${2:-4000000}"
 OPS="${3:-20000000}"
 PORT="${REDIS_PORT:-16379}"
+WORKLOAD="${YCSB_WORKLOAD:-a}"
+case "$WORKLOAD" in
+  a) UPDATE_FRAC=0.5 ;;
+  c) UPDATE_FRAC=0.0 ;;
+  *) die "YCSB_WORKLOAD must be a or c" ;;
+esac
 
 CFG_FILE="$REPO/configs/$CONFIG.env"
 [[ -f "$CFG_FILE" ]] || die "no such config: $CFG_FILE"
@@ -44,7 +54,7 @@ fi
 
 OUTDIR="$RESULTS_ROOT/$CONFIG"
 mkdir -p "$OUTDIR"
-OUT="$OUTDIR/redis"
+OUT="$OUTDIR/redis-ycsb$WORKLOAD"
 
 if [[ "$CACHE_OFF" == "1" ]]; then
   CACHE_ARGS=(-cache 0)
@@ -60,12 +70,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-echo "=== redis [$CONFIG]  records=$RECORDS ops=$OPS epoch=${EPOCH_M}M ==="
+echo "=== redis [$CONFIG]  YCSB-${WORKLOAD^^}  records=$RECORDS ops=$OPS epoch=${EPOCH_M}M ==="
 
 # save '' disables RDB snapshotting: a background save would fork the server and
 # double-count its memory traffic. appendonly no for the same reason.
 "$PIN" -t "$TOOL" "${CACHE_ARGS[@]}" -epoch "$EPOCH_M" -dump_pages "$DUMP_PAGES" \
-       -tag redis -o "$OUT" \
+       -tag "redis-ycsb${WORKLOAD}" -o "$OUT" \
        -roi_begin hotskew_roi_begin -roi_end hotskew_roi_end \
        -- "$SERVER" --port "$PORT" --save '' --appendonly no --protected-mode no \
        > "$OUT.server.log" 2>&1 &
@@ -80,19 +90,19 @@ done
   echo "server never came up; log:" >&2; tail -20 "$OUT.server.log" >&2; exit 1; }
 
 if [[ "$USE_YCSB" == "1" ]]; then
-  echo "   driving with YCSB workloadc"
+  echo "   driving with real YCSB, workload${WORKLOAD}"
   ( cd "$YCSB_DIR" && \
-    ./bin/ycsb.sh load redis -s -P workloads/workloadc \
+    ./bin/ycsb.sh load redis -s -P "workloads/workload$WORKLOAD" \
       -p redis.host=127.0.0.1 -p redis.port="$PORT" -p recordcount="$RECORDS" \
       -threads 8 && \
-    ./bin/ycsb.sh run redis -s -P workloads/workloadc \
+    ./bin/ycsb.sh run redis -s -P "workloads/workload$WORKLOAD" \
       -p redis.host=127.0.0.1 -p redis.port="$PORT" -p recordcount="$RECORDS" \
       -p operationcount="$OPS" -threads 8 ) > "$OUT.client.log" 2>&1
   echo "   NOTE: with real YCSB the ROI markers are not sent, so the whole server"
   echo "         lifetime is measured. Use the zipf_client path for ROI-bounded runs."
 else
   echo "   driving with the standalone Zipfian client"
-  "$CLIENT" 127.0.0.1 "$PORT" "$RECORDS" "$OPS" 0.99 2>&1 | tee "$OUT.client.log"
+  "$CLIENT" 127.0.0.1 "$PORT" "$RECORDS" "$OPS" 0.99 "$UPDATE_FRAC" 2>&1 | tee "$OUT.client.log"
 fi
 
 echo "   shutting the server down so the tool writes its summary"

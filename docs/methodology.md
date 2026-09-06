@@ -442,6 +442,53 @@ buys less coverage per page. That is consistent, but it is a hypothesis rather t
 measurement — pinning M5's window down exactly needs their miss rate, which was not
 published.
 
+### The datasets are named in the paper, not in the artifact
+
+The artifact's `env.sh` points `GAPBS_PATH` at a Memtis `bench_dir` that was never
+published, and `testing_scripts/20_threads/bench_cmds/` is empty — which is why the
+input looked like a dead end. But §6 and Table 3 of the paper state it outright:
+
+> *As inputs, we use YCSB-A (Redis), KDD 2012 (Liblinear), **Twitter** (BFS, CC, TC,
+> and PR with undirected graph), and **Google** (BC and SSSP with directed graph). We
+> adjust the size of these input datasets to have a memory footprint close to 8GB.*
+
+Two things follow, and the first is not a coincidence:
+
+1. **BC and SSSP — our only two disagreements — are precisely the two kernels M5 runs
+   on a different graph.** The other four use Twitter; those two use Google, and
+   directed rather than undirected. A directed graph changes what a traversal touches
+   (BC and SSSP walk in-edges and out-edges differently), and a web graph's degree
+   distribution is not a Kronecker graph's. We use synthetic kron-23 throughout.
+
+   That does not *prove* the input explains the gap — §7 already shows the window is
+   sufficient on its own — but it means the two candidate explanations point at exactly
+   the same two benchmarks, which is worth more than either alone.
+
+2. **Footprints are ~6.9 GB**, against our 1.05 GB kron-23. Table 3 in full:
+
+   | benchmark | footprint | cores/ways |
+   |---|---|---|
+   | BC, BFS, CC, PR, SSSP | 6.9 GB | 20 / 10 |
+   | TC | 5.0 GB | 20 / 10 |
+   | Liblinear | 6.0 GB | 20 / 10 |
+   | SPEC CPU2017 | 4.9–6.8 GB | 8 / 4 |
+   | Redis (YCSB-A) | 6.0 GB | 1 / 1 |
+
+   They also cap DDR at 3 GB so *"roughly 50% of the pages can be migrated"*.
+
+**A discrepancy inside M5's own artifact, worth noting.** Table 3 says 20 cores / **10
+ways**, and the setup script's comment agrees (*"20 / 32 * 15 ≈ 10 way"*) — but the CAT
+mask it actually programs, `0x7FC0`, has **9** bits set, granting 9 ways (36 MB, not
+40 MB). We model 9 ways, matching what the hardware was actually configured with
+rather than what the table claims. The difference is small, and §3 shows LLC size
+barely moves this metric under an access-based window anyway.
+
+**Redis: we run YCSB-C, they ran YCSB-A.** Workload A is 50% read / 50% update;
+ours was 100% read. Updates in Redis rewrite values in place, touching the same
+objects a read would, so the *spatial* distribution should be similar — but this is a
+stated deviation, not an equivalence, and `benchmarks/zipf_client.c` takes an update
+fraction so the A mix can be run directly.
+
 **This is not a per-benchmark fit.** The window sensitivity was established in §3
 before these two were run, all six kernels use the same 10M-access window, and no
 kernel's window was adjusted to improve its agreement. The claim is only that the

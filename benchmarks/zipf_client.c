@@ -1,11 +1,12 @@
 /*
- * zipf_client.c -- minimal YCSB-workload-C driver for Redis, no JVM required.
+ * zipf_client.c -- minimal YCSB driver for Redis, no JVM required.
  *
  * Implements the part of YCSB that determines the memory access pattern:
  *   - a keyspace of N records, keys formatted exactly as YCSB does ("user<id>")
  *   - values of a fixed size, as YCSB's default 10 fields x 100 bytes
  *   - a load phase that SETs every key
- *   - a query phase of 100% GETs with Zipfian-distributed key popularity
+ *   - a query phase with Zipfian-distributed key popularity, and a configurable
+ *     read/update mix (workload C = all reads, workload A = 50/50)
  *
  * It does not implement YCSB's latency reporting, multiple workload profiles, or
  * its exact hashing of key ids to the keyspace. Throughput from this driver is not
@@ -18,7 +19,11 @@
  * skew matches.
  *
  * Build: cc -O2 -o zipf_client zipf_client.c -lm
- * Usage: ./zipf_client <host> <port> <records> <ops> [theta]
+ * Usage: ./zipf_client <host> <port> <records> <ops> [theta] [update_fraction]
+ *
+ *   update_fraction 0.0 = YCSB workload C (100% read)      -- default
+ *   update_fraction 0.5 = YCSB workload A (50% read / 50% update), which is what
+ *                         M5 ran (paper Table 3: "Redis, In-memory KVS with YCSB-A")
  *
  * Between the load and query phases it issues  ECHO HOTSKEW_ROI_BEGIN , and after
  * the query phase  ECHO HOTSKEW_ROI_END . setup_redis.sh patches redis-server to
@@ -198,10 +203,12 @@ static int send_all(int fd, const char *buf, size_t len) {
 int main(int argc, char **argv) {
     if (argc < 5) {
         fprintf(stderr,
-                "usage: %s <host> <port> <records> <ops> [theta]\n"
-                "  records: keyspace size (YCSB recordcount)\n"
-                "  ops    : GET operations in the query phase\n"
-                "  theta  : Zipfian skew, default 0.99 (YCSB default)\n",
+                "usage: %s <host> <port> <records> <ops> [theta] [update_fraction]\n"
+                "  records         : keyspace size (YCSB recordcount)\n"
+                "  ops             : operations in the measured query phase\n"
+                "  theta           : Zipfian skew, default 0.99 (YCSB default)\n"
+                "  update_fraction : 0.0 = YCSB-C (all reads, default)\n"
+                "                    0.5 = YCSB-A (50%% read / 50%% update), what M5 ran\n",
                 argv[0]);
         return 1;
     }
@@ -210,6 +217,11 @@ int main(int argc, char **argv) {
     unsigned long records = strtoul(argv[3], NULL, 10);
     unsigned long ops = strtoul(argv[4], NULL, 10);
     double theta = (argc > 5) ? atof(argv[5]) : 0.99;
+    double update_frac = (argc > 6) ? atof(argv[6]) : 0.0;
+    if (update_frac < 0.0 || update_frac > 1.0) {
+        fprintf(stderr, "update fraction must be in [0,1]\n");
+        return 1;
+    }
 
     int fd = sock_connect(host, port);
     if (fd < 0) { perror("connect"); return 1; }
@@ -246,16 +258,34 @@ int main(int argc, char **argv) {
      * Lengths are computed, never hardcoded: a wrong RESP bulk length desynchronises
      * the connection and the failure looks like a hang. */
     send_marker(fd, &rb, "HOTSKEW_ROI_BEGIN");
-    fprintf(stderr, "load done; starting %lu Zipfian GETs (theta=%.2f)\n", ops, theta);
+    fprintf(stderr, "load done; %lu Zipfian ops (theta=%.2f, %.0f%% updates -> YCSB-%c)\n",
+            ops, theta, update_frac * 100.0, (update_frac > 0.0) ? 'A' : 'C');
 
-    /* ---- query phase: 100% read, Zipfian ---- */
+    /* ---- query phase: Zipfian keys, `update_frac` of operations are writes ----
+     *
+     * The read/update decision uses its own RNG stream so that changing
+     * update_frac does not perturb the key sequence -- the two variables stay
+     * independent, which is what makes an A-vs-C comparison meaningful. */
     zipf_t z;
     zipf_init(&z, records, theta, 12345);
+    unsigned long long mix_rng = 0xDEADBEEFCAFEF00DULL;
+    unsigned long n_reads = 0, n_updates = 0;
     outstanding = 0;
     for (unsigned long i = 0; i < ops; ++i) {
         unsigned long k = zipf_next(&z);
-        int n = snprintf(cmd, sizeof(cmd), "*2\r\n$3\r\nGET\r\n$%d\r\nuser%lu\r\n",
+        mix_rng ^= mix_rng << 13; mix_rng ^= mix_rng >> 7; mix_rng ^= mix_rng << 17;
+        int is_update = ((double)(mix_rng >> 11) / 9007199254740992.0) < update_frac;
+        int n;
+        if (is_update) {
+            ++n_updates;
+            n = snprintf(cmd, sizeof(cmd),
+                         "*3\r\n$3\r\nSET\r\n$%d\r\nuser%lu\r\n$%d\r\n%s\r\n",
+                         (int)(4 + snprintf(NULL, 0, "%lu", k)), k, VALUE_BYTES, value);
+        } else {
+            ++n_reads;
+            n = snprintf(cmd, sizeof(cmd), "*2\r\n$3\r\nGET\r\n$%d\r\nuser%lu\r\n",
                          (int)(4 + snprintf(NULL, 0, "%lu", k)), k);
+        }
         if (send_all(fd, cmd, (size_t)n) != 0) { perror("send"); return 1; }
         if (++outstanding == PIPELINE) {
             if (drain_n(fd, &rb, outstanding) != 0) { fprintf(stderr, "server closed\n"); return 1; }
@@ -266,7 +296,9 @@ int main(int argc, char **argv) {
 
     send_marker(fd, &rb, "HOTSKEW_ROI_END");
 
-    fprintf(stderr, "done\n");
+    fprintf(stderr, "done: %lu reads, %lu updates (%.1f%% updates)\n",
+            n_reads, n_updates,
+            (n_reads + n_updates) ? 100.0 * n_updates / (n_reads + n_updates) : 0.0);
     free(value);
     close(fd);
     return 0;

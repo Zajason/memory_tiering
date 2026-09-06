@@ -82,7 +82,12 @@ PY
 
 if [[ ! -x "$REDIS_DIR/src/redis-server" ]] || [[ "$ECHO_SRC" -nt "$REDIS_DIR/src/redis-server" ]]; then
   echo ">> building (this takes a few minutes)"
-  make -C "$REDIS_DIR" -j"$(nproc)" MALLOC=libc
+  # Default to the bundled jemalloc, which is what stock Redis ships with and what
+  # M5 would have run. This is not cosmetic: in a key-value store the allocator
+  # decides which values share a 4 KB page, and therefore how many of that page's
+  # 64 B words a skewed read stream touches -- i.e. it directly moves the number
+  # Figure 4 reports. MALLOC=libc builds faster but measures a different layout.
+  make -C "$REDIS_DIR" -j"$(nproc)" MALLOC="${REDIS_MALLOC:-jemalloc}"
 fi
 n=$(nm "$REDIS_DIR/src/redis-server" 2>/dev/null | grep -c hotskew_roi || true)
 [[ "$n" -ge 2 ]] || die "redis-server has no ROI symbols -- the patch did not take effect"

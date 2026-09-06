@@ -1,0 +1,9 @@
+benchmark,policy,hit_rate,useful_byte_frac
+redis-ycsba,oracle,0.909115,0.231643
+redis-ycsba,count-only,0.809767,0.192413
+redis-ycsba,hpt-driven,0.805125,0.191784
+redis-ycsba,hwt-driven,0.778426,0.191112
+redis-ycsbc,oracle,0.859337,0.504883
+redis-ycsbc,count-only,0.822084,0.459672
+redis-ycsbc,hpt-driven,0.792675,0.433284
+redis-ycsbc,hwt-driven,0.798653,0.434226

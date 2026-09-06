@@ -1,0 +1,116 @@
+# hotskew summary
+benchmark          gapbs-bfs
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                36864 KB, 9-way (shared)
+count_writebacks   yes
+epochs             1
+epoch_len_dram_acc 10000000
+instructions       596438234
+mem_refs_profiled  168833298
+dram_accesses      9640394
+llc_miss_ratio     0.057100  (DRAM accesses per memory ref)
+page_observations  197225   (page x epoch pairs with >=1 access)
+mean_unique_words  18.298 / 64
+top4_word_share    0.1470   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 8: bounded top-K trackers vs the exact counts
+# tracker=Space-Saving  K=128  epochs=1
+# storage assumes a 36-bit tag (48-bit PA, 4 KB pages) + 32-bit counter
+# N, hpt_access_ratio, hpt_recall, hwt_access_ratio, hwt_recall, KB
+50,0.2828,0.0000,0.2168,0.0000,0
+128,0.7365,0.0000,0.5686,0.0000,1
+512,0.7554,0.0000,0.5755,0.0000,4
+2048,0.7603,0.0000,0.5755,0.0000,17
+8192,0.7567,0.0000,0.5727,0.0000,68
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1662
+  8         12.5%   0.3629
+ 16           25%   0.7078
+ 32           50%   0.8514
+ 48           75%   0.8532
+
+# P(page has at least 48 of 64 words accessed) = 0.1468
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,7369
+2,8099
+3,8488
+4,8825
+5,9296
+6,9628
+7,9926
+8,9940
+9,10041
+10,9926
+11,9732
+12,9085
+13,8518
+14,7747
+15,6858
+16,6127
+17,5164
+18,4551
+19,3846
+20,3262
+21,2659
+22,2168
+23,1708
+24,1333
+25,1034
+26,773
+27,614
+28,453
+29,276
+30,228
+31,139
+32,106
+33,72
+34,48
+35,34
+36,33
+37,23
+38,17
+39,17
+40,22
+41,17
+42,8
+43,15
+44,14
+45,12
+46,12
+47,13
+48,6
+49,8
+50,9
+51,12
+52,11
+53,10
+54,7
+55,7
+56,22
+57,5
+58,15
+59,14
+60,11
+61,9
+62,7
+63,12
+64,28784
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,6850
+1,14705
+2,33327
+3,67252
+4,44675
+5,1618
+6,2771
+7,17325
+8,7067
+9,1635

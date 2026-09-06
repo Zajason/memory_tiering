@@ -40,6 +40,7 @@
 
 #include "cache_model.hpp"
 #include "counter_table.hpp"
+#include "tracker.hpp"
 
 using namespace hotskew;
 using std::string;
@@ -105,6 +106,29 @@ KNOB<UINT32> KnobRoiEpoch(KNOB_MODE_WRITEONCE, "pintool", "roi_epoch", "1",
                           "close the current epoch each time the ROI is left, so that one "
                           "epoch never spans two invocations");
 
+// --- bounded top-K trackers: M5's HPT and HWT (tracker.hpp).
+//
+// These are the hardware M5 proposes. Running them next to the exact counters means
+// every profiling run also scores the approximation against ground truth, which is
+// M5's Figure 8 metric and normally needs their FPGA to obtain.
+KNOB<UINT32> KnobTrack(KNOB_MODE_WRITEONCE, "pintool", "track", "0",
+                       "1 = also run bounded top-K trackers (HPT/HWT) and score them "
+                       "against the exact counts at every epoch boundary");
+KNOB<string> KnobTrackAlgo(KNOB_MODE_WRITEONCE, "pintool", "track_algo", "spacesaving",
+                           "spacesaving | cmsketch -- the two families M5 compares");
+KNOB<string> KnobTrackN(KNOB_MODE_WRITEONCE, "pintool", "track_n", "512",
+                        "tracker budget N: entries (Space-Saving) or D*W counters "
+                        "(CM-Sketch). Comma-separated for a sweep, e.g. 50,128,512,2048 "
+                        "-- every budget is fed the same stream in one pass, so the whole "
+                        "accuracy-vs-cost curve costs one run instead of one run per point");
+KNOB<UINT32> KnobTrackK(KNOB_MODE_WRITEONCE, "pintool", "track_k", "128",
+                        "K: how many hot pages the tracker is asked to report");
+KNOB<UINT32> KnobTrackDepth(KNOB_MODE_WRITEONCE, "pintool", "track_depth", "2",
+                            "CM-Sketch rows D (NeoMem uses D=2); width W = track_n / D");
+KNOB<UINT32> KnobTrackWord(KNOB_MODE_WRITEONCE, "pintool", "track_word", "1",
+                           "also run the Hot Word Tracker (64 B granularity), gated on "
+                           "pages the HPT currently holds -- this is M5's HWT");
+
 // --- raw dump control.
 KNOB<UINT32> KnobDumpPages(KNOB_MODE_WRITEONCE, "pintool", "dump_pages", "1",
                            "write the per-page raw records to <prefix>.pages.bin");
@@ -137,6 +161,26 @@ bool g_useCache = true;
 bool g_countWB = true;
 
 CounterTable g_counters;
+
+// HPT/HWT. Guarded by g_lock along with the counter table, since both are updated
+// from the same point in the DRAM path.
+bool g_track = false;
+bool g_trackWord = false;
+bool g_trackCM = false;
+
+// One of these per hardware budget under test. They all see the same access stream
+// in the same run, so the accuracy-vs-cost curve comes from a single execution.
+struct TrackerSlot {
+    UINT32 n = 0;
+    SpaceSaving hpt, hwt;
+    CountMinTopK hptCM, hwtCM;
+    double hptRatioSum = 0.0, hptRecallSum = 0.0;
+    double hwtRatioSum = 0.0, hwtRecallSum = 0.0;
+};
+std::vector<TrackerSlot*> g_slots;
+std::ofstream g_trackCsv;
+UINT32 g_trackEpochs = 0;
+
 CacheLevel g_llc;
 PIN_LOCK g_lock;
 
@@ -175,6 +219,25 @@ ThreadState* threadState(THREADID tid) {
 inline void recordDram(UINT64 lineAddr, bool isWrite) {
     g_counters.record(lineAddr, isWrite);
     ++g_dramAccesses;
+
+    if (g_track) {
+        // HPT is keyed on the 4 KB page. lineAddr is already a 64 B line number, so
+        // the page number is lineAddr >> 6.
+        const UINT64 page = lineAddr >> (kPageShift - kWordShift);
+        for (size_t i = 0; i < g_slots.size(); ++i) {
+            TrackerSlot& t = *g_slots[i];
+            if (g_trackCM) {
+                t.hptCM.access(page);
+                if (g_trackWord) t.hwtCM.access(lineAddr);
+            } else {
+                t.hpt.access(page);
+                // HWT sees a word address only if the HPT currently holds its page.
+                // That gating is what keeps the word tracker small: it never sees
+                // addresses from pages nobody thinks are hot.
+                if (g_trackWord && t.hpt.contains(page)) t.hwt.access(lineAddr);
+            }
+        }
+    }
 }
 
 void finishEpoch();
@@ -342,6 +405,61 @@ void finishEpoch() {
             fwrite(p.word, sizeof(UINT16), kWordsPerPage, g_pagesBin);
         }
     });
+
+    // ---- score HPT/HWT against the exact counts, before they are cleared ----
+    //
+    // This is M5's Figure 8: the access-count ratio of the addresses the bounded
+    // tracker picked, over that of the true top-K. Doing it here, inside the same
+    // epoch the tracker saw, is what makes the comparison exact rather than
+    // approximate -- and it is the measurement their FPGA existed to obtain.
+    if (g_track && pagesThisEpoch > 0) {
+        std::unordered_map<UINT64, UINT64> exactPages, exactWords;
+        exactPages.reserve(pagesThisEpoch * 2);
+        g_counters.forEachTouchedPage([&](UINT64 pageNo, const PageRec& p) {
+            exactPages[pageNo] = p.reads + p.writes;
+            if (g_trackWord) {
+                for (UINT32 w = 0; w < kWordsPerPage; ++w)
+                    if (p.word[w])
+                        exactWords[(pageNo << (kPageShift - kWordShift)) | w] = p.word[w];
+            }
+        });
+
+        const UINT32 K = KnobTrackK.Value();
+        for (size_t i = 0; i < g_slots.size(); ++i) {
+            TrackerSlot& t = *g_slots[i];
+            std::vector<UINT64> picked;
+            if (g_trackCM) t.hptCM.topK(K, picked); else t.hpt.topK(K, picked);
+            TrackerScore hpt = scoreTopK(picked, exactPages, K);
+
+            TrackerScore hwt;
+            if (g_trackWord) {
+                std::vector<UINT64> pickedW;
+                if (g_trackCM) t.hwtCM.topK(K, pickedW); else t.hwt.topK(K, pickedW);
+                hwt = scoreTopK(pickedW, exactWords, K);
+            }
+
+            t.hptRatioSum += hpt.accessCountRatio;
+            t.hptRecallSum += hpt.recall;
+            t.hwtRatioSum += hwt.accessCountRatio;
+            t.hwtRecallSum += hwt.recall;
+
+            if (g_trackCsv.is_open()) {
+                g_trackCsv << g_epochId << "," << K << "," << t.n << ","
+                           << (g_trackCM ? "cmsketch" : "spacesaving") << ","
+                           << std::fixed << std::setprecision(6)
+                           << hpt.accessCountRatio << "," << hpt.recall << ","
+                           << hwt.accessCountRatio << "," << hwt.recall << ","
+                           << exactPages.size() << "," << exactWords.size() << "\n";
+            }
+
+            // Trackers reset with the counters: one epoch is one measurement window
+            // for both, so they stay directly comparable.
+            if (g_trackCM) { t.hptCM.reset(); t.hwtCM.reset(); }
+            else { t.hpt.reset(); t.hwt.reset(); }
+        }
+        if (g_trackCsv.is_open()) g_trackCsv.flush();
+        ++g_trackEpochs;
+    }
 
     g_pagesObserved += pagesThisEpoch;
     g_accessesTotal += accessesThisEpoch;
@@ -544,6 +662,23 @@ void writeSummary() {
           << "   (share of accesses in each page's 4 hottest words)\n";
     }
 
+    if (g_track && g_trackEpochs) {
+        f << "\n# M5 Figure 8: bounded top-K trackers vs the exact counts\n";
+        f << "# tracker=" << (g_trackCM ? "CM-Sketch" : "Space-Saving")
+          << "  K=" << KnobTrackK.Value() << "  epochs=" << g_trackEpochs << "\n";
+        f << "# storage assumes a 36-bit tag (48-bit PA, 4 KB pages) + 32-bit counter\n";
+        f << "# N, hpt_access_ratio, hpt_recall, hwt_access_ratio, hwt_recall, KB\n";
+        for (size_t i = 0; i < g_slots.size(); ++i) {
+            const TrackerSlot& t = *g_slots[i];
+            const UINT64 kb = ((UINT64)t.n * (36 + 32)) / 8192;
+            f << t.n << "," << std::fixed << std::setprecision(4)
+              << (t.hptRatioSum / g_trackEpochs) << ","
+              << (t.hptRecallSum / g_trackEpochs) << ","
+              << (t.hwtRatioSum / g_trackEpochs) << ","
+              << (t.hwtRecallSum / g_trackEpochs) << "," << kb << "\n";
+        }
+    }
+
     f << "\n# M5 Figure 4: P(page has at most N unique 64B words accessed)\n";
     const UINT32 marks[5] = {4, 8, 16, 32, 48};
     const char* pct[5] = {"6.25%", "12.5%", "25%", "50%", "75%"};
@@ -584,6 +719,7 @@ VOID onFini(INT32, VOID*) {
         g_pagesBin = NULL;
     }
     if (g_epochCsv.is_open()) g_epochCsv.close();
+    if (g_trackCsv.is_open()) g_trackCsv.close();
     writeSummary();
 }
 
@@ -639,6 +775,49 @@ int main(int argc, char* argv[]) {
     const string csvPath = g_outPrefix + ".epochs.csv";
     g_epochCsv.open(csvPath.c_str());
     g_epochCsv << "epoch,pages,accesses,mean_unique_words,p_le_4,p_le_8,p_le_16,p_le_32,p_le_48\n";
+
+    g_track = KnobTrack.Value() != 0;
+    g_trackWord = KnobTrackWord.Value() != 0;
+    g_trackCM = (KnobTrackAlgo.Value() == "cmsketch");
+    if (g_track) {
+        // Parse the comma-separated budget list.
+        std::vector<UINT32> budgets;
+        {
+            const string& v = KnobTrackN.Value();
+            size_t i = 0;
+            while (i < v.size()) {
+                size_t j = v.find(',', i);
+                if (j == string::npos) j = v.size();
+                const string tok = v.substr(i, j - i);
+                if (!tok.empty()) {
+                    UINT32 n = (UINT32)strtoul(tok.c_str(), NULL, 10);
+                    if (n) budgets.push_back(n);
+                }
+                i = j + 1;
+            }
+        }
+        if (budgets.empty()) budgets.push_back(512);
+        for (size_t i = 0; i < budgets.size(); ++i) {
+            TrackerSlot* t = new TrackerSlot();
+            t->n = budgets[i];
+            if (g_trackCM) {
+                const UINT32 d = KnobTrackDepth.Value() ? KnobTrackDepth.Value() : 1;
+                const UINT32 w = t->n / d;
+                t->hptCM.init(d, w ? w : 1, KnobTrackK.Value());
+                t->hwtCM.init(d, w ? w : 1, KnobTrackK.Value());
+            } else {
+                t->hpt.init(t->n);
+                t->hwt.init(t->n);
+            }
+            g_slots.push_back(t);
+        }
+        const string tp = g_outPrefix + ".tracker.csv";
+        g_trackCsv.open(tp.c_str());
+        g_trackCsv << "epoch,k,n,algo,hpt_access_ratio,hpt_recall,hwt_access_ratio,"
+                      "hwt_recall,exact_pages,exact_words\n";
+        std::cerr << "[hotskew] tracking " << g_slots.size() << " budget(s), "
+                  << (g_trackCM ? "CM-Sketch" : "Space-Saving") << "\n";
+    }
 
     if (KnobDumpPages.Value()) {
         const string binPath = g_outPrefix + ".pages.bin";

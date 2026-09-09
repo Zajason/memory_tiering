@@ -9,7 +9,7 @@
 // people write — tiering, granularity, bandwidth, latency, page migration,
 // profiling, hot pages, workloads, cache line, etc. Prose kept punchy.
 //
-// ~20 slides, sized for a 30-minute talk.  Run: node scripts/make_deck.js
+// ~20 slides, sized for a 30-minute talk.  Run: node presentation/make_deck.js
 
 const pptxgen = require("pptxgenjs");
 const path = require("path");

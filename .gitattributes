@@ -1,0 +1,13 @@
+# The Greek concept-presentation generator is ~58 KB of literal slide content
+# (pptxgenjs calls, Greek prose, table rows). It is a build script for
+# docs/memory-tiering-cxl-gr.pptx, not part of the profiler, but at 21% of the
+# repository's code bytes it dominated GitHub's language bar and made a systems
+# project read as a JavaScript one.
+#
+# linguist-vendored keeps the file and its history while excluding it from the
+# language statistics. Nothing about how it runs changes: node presentation/make_deck.js
+presentation/** linguist-vendored
+
+# Generated figures and captured results are data, not source.
+docs/assets/** linguist-generated
+results/** linguist-generated

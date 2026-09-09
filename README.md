@@ -348,6 +348,7 @@ experiments/            runners, sensitivity sweep, stop_runs.sh
 |---|---|
 | [methodology.md](docs/methodology.md) | what is measured, why, and every deviation quantified |
 | [which-failure-mode.md](docs/which-failure-mode.md) | granularity vs timeliness on one instrument |
+| **[report.md](docs/report.md)** | **the scientific write-up: abstract, method, results, threats to validity** |
 | **[handbook.md](docs/handbook.md)** | **everything: architecture, how each piece works, every finding, how to extend it** |
 | [hardware-evaluation.md](docs/hardware-evaluation.md) | deliverables 1 & 2: the trackers, scored; what sub-page info is worth |
 | [tool-reference.md](docs/tool-reference.md) | every knob, output formats, recipes |

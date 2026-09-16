@@ -147,9 +147,18 @@ Metwally's original uses a Stream-Summary for O(1); the heap is the standard pra
 simplification and does not change the output.
 
 **Count-Min Sketch**: D rows × W counters, estimate = min over rows, plus a K-entry CAM
-holding the highest estimates. **The CM results came out non-monotone and are flagged
-as a suspect implementation** — see [hardware-evaluation.md](hardware-evaluation.md)
-§1. Likely the CAM eviction policy. Do not quote those numbers.
+holding the highest estimates.
+
+This had a real bug and a real measurement error, and untangling them is instructive.
+The CAM used to cache each entry's estimate at the moment its key was last accessed,
+then compare a *fresh* candidate against those *stale* values — quantities sampled at
+different times, so the comparison meant nothing and an early entry could squat.
+Fixed: estimates are re-read from the sketch before any comparison and unconditionally
+before reporting top-K.
+
+That fix alone did **not** restore monotonicity, and the remaining cause was not in
+the code at all — see §4.4. Current numbers are in
+[hardware-evaluation.md](hardware-evaluation.md) §1 and are now usable.
 
 `scoreTopK()` implements M5's Figure 8 metric — the access-count ratio of the picked
 set over the true top-K.
@@ -176,7 +185,7 @@ reference, including L1 hits.
 
 ---
 
-## 4. The three ideas that make the measurement correct
+## 4. The four things that make the measurement trustworthy
 
 If you internalise nothing else, internalise these. They are the parts most likely to
 be probed, and each was found the hard way.
@@ -243,6 +252,41 @@ page maps to exactly one physical page, so grouping by VPN and by PFN produce th
 The approximation is confined to **L2/LLC set indexing**, which uses bits above 11
 where VA and PA diverge. Standard trace-driven practice; stated rather than hidden.
 
+### 4.4 Tracker results are sensitive to address-space layout
+
+Found while chasing the Count-Min non-monotonicity, and it generalises well past this
+project.
+
+After fixing the CAM bug the curve was still not monotone, so the next question was
+whether the runs were even **deterministic**. They were not: two identical invocations
+gave Count-Min access-count ratios of **0.1726 and 0.1803**.
+
+The cause is ASLR. Trackers are keyed on **page numbers**, and Count-Min *hashes* them,
+so a different address-space layout produces an entirely different collision pattern.
+With a single sample per budget, that run-to-run variance was being read as an
+algorithmic property of the sketch. It was not.
+
+Runs are now pinned with `setarch -R`, wired into `experiments/env.sh` and applied by
+the runners. `NO_ASLR=0` disables it.
+
+**The Figure 4 results are unaffected, and that was verified rather than assumed.**
+`mean_unique_words` and `P(≤16)` measured byte-identical across four runs with ASLR on
+and off:
+
+| | ASLR on | ASLR off |
+|---|---|---|
+| mean unique words | 18.298 / 18.298 | 18.298 / 18.298 |
+| P(≤16) | 0.7078 / 0.7078 | 0.7078 / 0.7078 |
+| CM access-count ratio | 0.1803 / **0.1726** | 0.1724 / **0.1724** |
+
+The reason is §4.3: the metric depends on within-page word offsets, which are
+translation-invariant, so shifting page numbers cannot move it. The VA/PA argument
+predicted this, and there is now an experiment behind it instead of only a derivation.
+
+**The transferable lesson:** establish that a measurement is reproducible before
+interpreting its shape. A curve built from one sample per point can show structure
+that is entirely noise.
+
 ---
 
 ## 5. Running things
@@ -278,7 +322,14 @@ Analysis (needs the venv):
    failure looks like a syntax error on a line that is perfectly valid. This happened
    twice and corrupted a run each time.
 2. **Never relink the `.so` while a run has it mapped.**
-3. **`pkill -f pin` does not work.** Pin rewrites the injected process's `argv` to the
+3. **Pin runs are not reproducible unless you pin the address layout.** See §4.4.
+   Anything keyed on page numbers — every tracker here — varies run to run otherwise.
+4. **The raw dump scales with epochs × touched pages and will fill the disk.**
+   liblinear on kdda produced 984 epochs and 275M page-observations: a **45 GB** file
+   that took the host from 66 GB free to 24 GB. `-dump_max_mb` (default 8 GB) now caps
+   it and records `pages_bin_capped` in the summary. Set `DUMP_PAGES=0` when you only
+   need the summary.
+5. **`pkill -f pin` does not work.** Pin rewrites the injected process's `argv` to the
    *application's*, so a pin-controlled BFS appears in `ps` as plain `bfs`. A stale
    PageRank survived three cleanup attempts and spent 38 minutes appending to a
    `.pages.bin` another run had already written. `experiments/stop_runs.sh` matches on
@@ -293,7 +344,8 @@ Analysis (needs the venv):
 | `<prefix>.summary.txt` | config, Figure 4 CDF, full 65-bin unique-word histogram, log2 histogram of accesses per page (Figure 10), tracker scores |
 | `<prefix>.epochs.csv` | one row per epoch: pages, accesses, mean unique words, the five CDF points |
 | `<prefix>.tracker.csv` | one row per (epoch, budget): HPT/HWT access ratio and recall |
-| `<prefix>.pages.bin` | raw records, 160 bytes each — everything else is derivable from this |
+| `<prefix>.pages.bin` | raw records, 160 bytes each — everything else is derivable from this. Capped by `-dump_max_mb`; check `pages_bin_capped` in the summary |
+| `<prefix>.topk.csv` | with `-dump_topk`: each epoch's tracker top-K, as `epoch,n,kind,rank,key`. Feeds `placement_study.py --tracker-csv` |
 
 `.pages.bin` record, little-endian packed:
 
@@ -351,6 +403,24 @@ that range for both (bc: 0.638 / 0.0007 / **0.145**; sssp: 0.543 / 0.0006 / **0.
 They are also the exact two kernels M5 runs on the **Google** graph rather than
 Twitter (their §6), which we do not have.
 
+### 7.2b Liblinear disagrees, and the reasons are identified
+
+| liblinear, N = | 4 | 8 | 16 | 32 | 48 |
+|---|---|---|---|---|---|
+| ours (kdda) | 0.454 | 0.593 | 0.727 | 0.793 | 0.811 |
+| M5 Figure 4 | 0.06 | 0.10 | 0.15 | 0.25 | 0.38 |
+
+Far sparser than M5. Two causes, neither removable here:
+
+1. **Different dataset.** M5's Table 3 says **KDD2012**; kdda is KDD Cup 2010, a
+   distinct and smaller LIBSVM dataset. The right one is `kdd12`.
+2. **Run length.** 984 epochs at 10M accesses, against 5–30 for the graph kernels, so
+   at a fixed window each epoch covers far less of execution — which §4.1 predicts
+   will read as sparser. The whole-run bound of §7.2 has not been computed for this
+   workload.
+
+Reported as an open disagreement, not a reproduction.
+
 ### 7.3 Redis needed two fixes, both of which move the number directly
 
 - **jemalloc, not `MALLOC=libc`.** In a KV store the allocator decides which values
@@ -365,9 +435,14 @@ Space-Saving, access-count ratio vs the exact top-K:
 
 | workload | N=50 | N=128 | N=512 | N=8192 |
 |---|---|---|---|---|
-| bfs | 0.283 | **0.737** | 0.755 | 0.757 |
-| cc | 0.250 | **0.654** | 0.679 | 0.600 |
+| bfs | 0.292 | **0.757** | 0.766 | 0.767 |
+| cc | 0.250 | **0.657** | 0.680 | 0.600 |
+| tc | 0.139 | 0.357 | 0.415 | 0.448 |
 | storage | 0.4 KB | **1 KB** | 4 KB | 68 KB |
+
+Count-Min, with the CAM fix and ASLR pinned, rises with *N* as it should but is
+markedly worse at equal budget — 0.302 against Space-Saving's 0.767 for BFS at
+N=8192. That is consistent with M5 comparing the two rather than adopting the sketch.
 
 Knee at 1 KB, then flat. And the self-test threshold:
 
@@ -391,9 +466,29 @@ The waste is nonetheless real — **81% of every migrated page is never touched 
 Redis**, 48% for `bc`, 3% for `pr`. Recovering it needs sub-page migration or
 compaction, which M5 explicitly does not do.
 
-Important qualifier: our count-only baseline uses **exact** counts, while a real HPT
-is only ~0.75 accurate (§7.4). Re-running this with tracker-derived scores is the
-honest next experiment and the regime where a second signal should help most.
+**That qualifier was tested, and the null survived it.** The objection was that
+count-only got *exact* counts while a real HPT is only ~0.75 accurate, and M5's
+nominators exist precisely to cover that gap. `-dump_topk` writes each epoch's tracker
+top-K; `placement_study.py --tracker-csv` scores from it. Fast tier at 4% of footprint,
+so capacity stays below the tracker's K (a tracker reporting K pages cannot fill a
+larger tier):
+
+| score source | bfs count-only | best nominator gain |
+|---|---|---|
+| exact counts | 0.114 | −0.015 |
+| HPT N=262144 | 0.110 | −0.051 |
+| HPT N=16384 | 0.092 | −0.049 |
+| HPT N=1024 | 0.031 | −0.005 |
+
+Degrading the tracker degrades count-only as expected (0.114 → 0.031) — but the
+nominators degrade with it and never overtake. The reason is structural: **HWT is
+gated on HPT membership**, so a word address is only tracked when its page is already
+in the HPT. The word signal is *downstream* of the page signal, not independent of it,
+so a weak HPT yields a weak HWT. Sub-page information cannot compensate for the
+deficiency it was hypothesised to cover.
+
+The null now holds under both perfect and realistically degraded information, which is
+a considerably stronger claim than the original.
 
 ### 7.6 On graph analytics, timeliness binds and granularity does not
 
@@ -455,14 +550,15 @@ these as memory *stall time* and as an upper bound.
 | profile something in a simulator | `src/sim/hotskew_probe.hpp` — one call per request |
 | add a metric over raw data | `src/analysis/hotskew.py`, the `Run` class |
 
-### The four experiments I would do next, in order
+### The experiments I would do next, in order
 
-1. **Re-run the placement study with tracker-derived scores** instead of exact counts.
-   This is the fair test of M5's nominators and needs perhaps 50 lines — plumb the
-   tracker's top-K out of the pintool per epoch. *Highest value, lowest effort.*
-2. **Fix the Count-Min CAM** and re-run deliverable 1, so the Space-Saving vs sketch
-   comparison M5 makes can actually be reported.
-3. **Memstrata's axis.** Intel Flat Memory Mode is mechanically a direct-mapped cache
+*(The first two on the original list are done: the tracker-derived placement study is
+§7.5, and the Count-Min CAM is fixed in §3.3.)*
+
+1. **Re-run liblinear on KDD2012**, the dataset M5 actually used, and compute its
+   whole-run window bound. The cheapest way to turn an open disagreement into either a
+   reproduction or a genuine finding.
+2. **Memstrata's axis.** Intel Flat Memory Mode is mechanically a direct-mapped cache
    with 64 B lines indexed `line_addr mod L` — `assoc=1` in the existing model. Needs
    a VA→PA allocator model (which page colouring requires anyway) and two co-running
    traces. That would give all three papers' failure modes on one instrument.
@@ -471,7 +567,10 @@ these as memory *stall time* and as an upper bound.
 
 ### Things that are wrong or unfinished, honestly
 
-- **Count-Min results are non-monotone** and should not be quoted (§3.3).
+- **Count-Min is fixed but still slightly non-monotone on `cc`.** Two causes were
+  found and removed (stale CAM estimates, ASLR); a small residual remains on one
+  workload. Usable now, but do not present the `cc` curve as clean.
+- **liblinear uses the wrong dataset** — kdda rather than M5's KDD2012 (§7.2b).
 - **The `hpt-driven` nominator** uses a median-split to model "pages HPT reported",
   which is a stand-in for a real bounded HPT membership test.
 - **Liblinear is scripted but never run** — `setup_liblinear.sh` downloads a 2.5 GB
@@ -504,3 +603,7 @@ are the ones a reader will probe:
 4. Why Space-Saving's required size depends on the cold tail (§7.4).
 5. Why access count is a sufficient statistic for page-granular placement (§7.5).
 6. Why the migration-cost crossover at ~10 µs is the most actionable number here (§7.7).
+7. Why tracker results move with ASLR while Figure 4 does not (§4.4) — and why that
+   means a curve built from one sample per point can show structure that is noise.
+8. Why HWT cannot rescue a weak HPT: it is gated on HPT membership, so the word signal
+   is downstream of the page signal rather than independent (§7.5).

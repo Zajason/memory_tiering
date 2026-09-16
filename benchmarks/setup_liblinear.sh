@@ -20,19 +20,28 @@ HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/../experiments/env.sh"
 
 DATASET="${1:-kdda}"
-VER="2.47"
-TARBALL="multicore-liblinear-$VER.tar.gz"
-URL="https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/multicore-liblinear/$TARBALL"
+
+# The upstream archive is named liblinear-multicore-<ver>.zip -- note the word order,
+# which is the reverse of the directory name, and .zip rather than .tar.gz. The version
+# also moves. Rather than hardcode it (a 404 that looks like a network problem), scrape
+# the index page for the link and fall back to a known-good version.
+BASE="https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/multicore-liblinear"
+ARCHIVE="$(curl -fsL --retry 2 "$BASE/" 2>/dev/null \
+           | grep -oiE 'liblinear-multicore-[0-9.]+\.zip' | head -1)"
+: "${ARCHIVE:=liblinear-multicore-2.50.zip}"
+URL="$BASE/$ARCHIVE"
+echo ">> upstream archive: $ARCHIVE"
 
 mkdir -p "$BENCH_ROOT"
 
 if [[ ! -d "$LIBLINEAR_DIR" ]]; then
-  echo ">> downloading LIBLINEAR multicore $VER"
-  tmp="$BENCH_ROOT/$TARBALL"
-  curl -fL --retry 3 -o "$tmp" "$URL"
-  tar -xzf "$tmp" -C "$BENCH_ROOT"
-  # The tarball unpacks to multicore-liblinear-<ver>; normalise the name.
-  extracted="$(find "$BENCH_ROOT" -maxdepth 1 -type d -name "*liblinear*$VER*" | head -1)"
+  echo ">> downloading $ARCHIVE"
+  tmp="$BENCH_ROOT/$ARCHIVE"
+  curl -fL --retry 3 -o "$tmp" "$URL" || die "download failed: $URL"
+  command -v unzip >/dev/null || die "unzip not installed (sudo apt install unzip)"
+  unzip -q -o "$tmp" -d "$BENCH_ROOT"
+  # Unpacks to liblinear-multicore-<ver>; normalise the directory name.
+  extracted="$(find "$BENCH_ROOT" -maxdepth 1 -type d -name "*liblinear*multicore*" | head -1)"
   [[ -n "$extracted" ]] || die "could not find the extracted liblinear directory"
   mv "$extracted" "$LIBLINEAR_DIR"
   rm -f "$tmp"

@@ -26,8 +26,9 @@ isolation, moving 512 MiB via `read(2)` yields 5 observed DRAM accesses against
 24.8 million for an equivalent `memcpy`. Correcting for it moves BFS from
 $P(\le 48)=0.813$ to $0.320$ against M5's $0.345$. **Third**, we implement M5's proposed
 bounded top-$K$ trackers and score them against exact ground truth, reproducing their
-Figure 8 methodology without hardware; a 1 KB Space-Saving tracker attains 74% of the
-ideal access-count ratio and 68 KB adds nothing. **Fourth**, closing the loop with a
+Figure 8 methodology without hardware; a 1 KB Space-Saving tracker attains 76% of the
+ideal access-count ratio and 68 KB adds nothing, while Count-Min needs far more for
+less. **Fourth**, closing the loop with a
 two-tier latency model parameterised from the literature, hot-page placement yields a
 1.50× geometric-mean reduction in memory stall time, closing 61% of the gap to
 all-local memory — but the benefit inverts to a net loss once per-page migration cost
@@ -371,7 +372,32 @@ The two workloads that disagree are precisely the two run on a different graph. 
 candidate explanations therefore implicate the same two benchmarks, which is stronger
 evidence than either alone.
 
-### 5.4 Sensitivity analysis
+### 5.4 Liblinear
+
+Liblinear is the twelfth M5 benchmark reachable without a licence. Run on **kdda**
+(KDD Cup 2010, 2.5 GB) with the L1-regularised logistic-regression solver:
+
+| $N$ | 4 | 8 | 16 | 32 | 48 |
+|---|---|---|---|---|---|
+| this work | 0.454 | 0.593 | 0.727 | 0.793 | 0.811 |
+| M5 Figure 4 | 0.06 | 0.10 | 0.15 | 0.25 | 0.38 |
+
+We measure it far sparser. Two identified causes, neither of which we can currently
+remove. First, **the dataset differs**: M5's Table 3 states KDD**2012**, a distinct and
+much larger LIBSVM dataset; kdda is KDD Cup 2010. Second, the run is long — 984 epochs
+at $10^7$ accesses, against 5–30 for the graph kernels — so at a fixed window each
+epoch covers a far smaller slice of execution, which the §3.3 analysis predicts will
+read as sparser. The window-bracketing argument of §5.3 applies, but we have not run
+the whole-run bound for this workload.
+
+Reported as an open disagreement rather than a reproduction.
+
+*Operational note.* This run also exposed a defect in the tool: at 984 epochs and 275M
+page-observations the raw dump reached **45 GB** and took the host from 66 GB free to
+24 GB. A `-dump_max_mb` cap (default 8 GB) now bounds it and records
+`pages_bin_capped` in the summary rather than truncating silently.
+
+### 5.5 Sensitivity analysis
 
 | Axis | Range tested | Effect on mean unique words |
 |---|---|---|
@@ -380,6 +406,7 @@ evidence than either alone.
 | Epoch length | $10^6$ → whole run | $P(\le4)$: 0.403 → 0.166 (factor 2.4) |
 | Graph scale | kron-21 → kron-25 | 21.05 → 19.95 (non-monotone) |
 | Kernel invocations | 1 → 16 | 20.14 → 27.08 |
+| ASLR on vs pinned | — | no effect on Figure 4 (byte-identical); large effect on trackers (§6.1) |
 
 Thread-count invariance justifies single-threaded execution as the default and avoids
 the absence of inter-core coherence in the private-cache model.
@@ -411,13 +438,13 @@ accuracy-versus-cost curve costs one execution.
 
 | Workload | $N{=}50$ | $N{=}128$ | $N{=}512$ | $N{=}2048$ | $N{=}8192$ |
 |---|---|---|---|---|---|
-| BFS | 0.283 | **0.737** | 0.755 | 0.760 | 0.757 |
-| CC | 0.250 | **0.654** | 0.679 | 0.634 | 0.600 |
-| TC | 0.139 | 0.358 | 0.421 | 0.431 | 0.451 |
+| BFS | 0.292 | **0.757** | 0.766 | 0.767 | 0.767 |
+| CC | 0.250 | **0.657** | 0.680 | 0.637 | 0.600 |
+| TC | 0.139 | 0.357 | 0.415 | 0.428 | 0.448 |
 | Storage | 0.4 KB | **1 KB** | 4 KB | 17 KB | 68 KB |
 
 The curve exhibits a knee at $N = 128$ and then saturates: a 1 KB tracker attains
-approximately 74% of the ideal for BFS, and 68× the storage yields no improvement — for
+approximately 76% of the ideal for BFS, and 68× the storage yields no improvement — for
 CC it is marginally worse.
 
 A secondary observation vindicates M5's choice of metric. Set overlap (recall) with the
@@ -604,7 +631,11 @@ pages are equally hot and the ranking is arbitrary. Staleness handles this corre
 6. **No inter-core coherence** in the private-cache model; mitigated by single-threaded
    execution, justified by the thread-count invariance in §5.4.
 7. **Exact-count baseline in §6.3**, which advantages count-only relative to a real HPT.
-8. **Count-Min Sketch implementation is suspect** (§6.1).
+8. **Tracker evaluation is sensitive to address-space layout.** Trackers key on page
+   numbers and CM-Sketch hashes them, so ASLR alters the collision pattern between
+   runs (CM ratio 0.1726 vs 0.1803 on identical invocations). Runs are now pinned with
+   `setarch -R`. The Figure 4 results are unaffected and were verified byte-identical
+   with ASLR on and off, since the metric is translation-invariant.
 9. **Incomplete workload coverage** — SPEC CPU2017 requires a licence; Memcached and
    CacheLib were not attempted; liblinear is scripted but unrun. Four of M5's fourteen
    Figure 4 bars are therefore absent.

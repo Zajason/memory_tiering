@@ -51,6 +51,26 @@ The gap between count-only and density-aware IS the value of sub-page tracking, 
 one number per workload. If it is zero, HWT is not worth its hardware for that
 workload -- which is a result, not a failure.
 
+Exact counts versus tracker output
+---------------------------------
+By default the non-oracle policies score pages by their *exact* previous-epoch access
+count. That is generous: a real HPT is a bounded tracker whose counts are
+approximations, and §1 of docs/hardware-evaluation.md measures how approximate
+(access-count ratio ~0.75, set overlap near zero).
+
+That generosity matters, because M5's HWT-driven nominator exists precisely to
+compensate for an HPT that cannot resolve the hot set on its own. Giving the
+count-only baseline perfect information removes the deficiency the nominator is
+designed to cover, so a null result under exact counts says less than it appears to.
+
+--tracker-csv switches the baseline to what a bounded tracker actually reported,
+epoch by epoch, from <prefix>.topk.csv. Pages the tracker did not report score zero.
+This is the fair test.
+
+One sizing constraint: a tracker reporting K pages cannot fill a fast tier larger
+than K. Run with --fast-frac small enough that capacity <= K, or the comparison
+degenerates into "the tracker had nothing to say about 90% of the tier".
+
 Caveat, stated up front: this is an open-loop trace study. Migrating a page changes
 its latency, not its address, so the access stream stays valid -- but these are
 placement-quality numbers, not runtime. A real speedup needs a timing simulator.
@@ -78,7 +98,30 @@ def select(scores: np.ndarray, capacity: int) -> np.ndarray:
     return np.argpartition(scores, -capacity)[-capacity:]
 
 
-def evaluate(path: str, fast_frac: float, hwt_words_per_page: float = 8.0) -> dict | None:
+def load_tracker_topk(path: str, budget: int | None = None) -> dict:
+    """Parse <prefix>.topk.csv into {epoch: {"hpt": [pages], "hwt": [words]}}.
+
+    Rank order is preserved, so rank 0 is the tracker's hottest. We deliberately do
+    not dump the tracker's own count estimates: for selecting the top-C with C <= K,
+    only the ordering matters, and rank is that ordering exactly."""
+    import csv as _csv
+    out: dict[int, dict[str, list[int]]] = {}
+    budgets_seen = set()
+    with open(path) as fh:
+        for row in _csv.DictReader(fh):
+            n = int(row["n"])
+            budgets_seen.add(n)
+            if budget is not None and n != budget:
+                continue
+            e = int(row["epoch"])
+            out.setdefault(e, {"hpt": [], "hwt": []})[row["kind"]].append(int(row["key"]))
+    if not out and budgets_seen:
+        raise SystemExit(f"no rows for budget {budget}; file has {sorted(budgets_seen)}")
+    return out
+
+
+def evaluate(path: str, fast_frac: float, hwt_words_per_page: float = 8.0,
+             tracker: dict | None = None) -> dict | None:
     """hwt_words_per_page scales the HWT reporting budget: the hot-word list holds
     `capacity * hwt_words_per_page` words, i.e. that many hot words per fast-tier
     page on average. M5's HWT is bounded the same way."""
@@ -122,6 +165,14 @@ def evaluate(path: str, fast_frac: float, hwt_words_per_page: float = 8.0) -> di
 
         prev_count_on_cur = np.where(known, sa[idx], 0.0)
 
+        if tracker is not None:
+            # Replace the exact-count signal with the bounded tracker's ranking of the
+            # *previous* epoch. Rank 0 scores highest; unreported pages score 0.
+            t_prev = tracker.get(int(prev_e), {"hpt": [], "hwt": []})
+            rank = {pg: len(t_prev["hpt"]) - i for i, pg in enumerate(t_prev["hpt"])}
+            prev_count_on_cur = np.array(
+                [float(rank.get(int(pg), 0)) for pg in cur["page"]], dtype=np.float64)
+
         # --- M5's hot-word list: the top-W words of the previous epoch, where W is
         # the HWT's reporting budget. A page's "mask population" is how many of its
         # own words appear in that list -- exactly the 64-bit mask M5 builds.
@@ -137,6 +188,17 @@ def evaluate(path: str, fast_frac: float, hwt_words_per_page: float = 8.0) -> di
 
         so = prev_hotword_pop[order]
         prev_pop_on_cur = np.where(known, so[idx], 0.0)
+
+        if tracker is not None:
+            # HWT-driven under a bounded tracker: a page's score is how many of the
+            # words the HWT actually reported fall inside it. This is M5's 64-bit
+            # mask built from real hot-word addresses rather than from exact counts.
+            t_prev = tracker.get(int(prev_e), {"hpt": [], "hwt": []})
+            pop: dict[int, int] = {}
+            for w in t_prev["hwt"]:
+                pop[w >> 6] = pop.get(w >> 6, 0) + 1
+            prev_pop_on_cur = np.array(
+                [float(pop.get(int(pg), 0)) for pg in cur["page"]], dtype=np.float64)
 
         cand = {
             "oracle": cur_acc,
@@ -177,6 +239,11 @@ def main() -> int:
     ap.add_argument("--fast-frac", type=float, default=0.5,
                     help="fast tier as a fraction of the touched footprint "
                          "(M5 caps DDR so ~50%% of pages can be migrated)")
+    ap.add_argument("--tracker-csv", default=None,
+                    help="score from a bounded tracker's reported top-K instead of "
+                         "exact counts; path may contain {bench}")
+    ap.add_argument("--tracker-n", type=int, default=None,
+                    help="which tracker budget N to use from the csv")
     ap.add_argument("--hwt-words", type=float, default=8.0,
                     help="HWT hot-word budget, as words per fast-tier page")
     ap.add_argument("--csv", default=None, help="also write a CSV here")
@@ -187,8 +254,10 @@ def main() -> int:
         print(f"no results under {d}", file=sys.stderr)
         return 1
 
+    src = (f"bounded tracker (N={args.tracker_n})" if args.tracker_csv
+           else "exact previous-epoch counts")
     print(f"\nPlacement quality, fast tier = {args.fast_frac:.0%} of the touched footprint")
-    print(f"config: {args.config}\n")
+    print(f"config: {args.config}   scores from: {src}\n")
     print(f"{'benchmark':<16}{'oracle':>9}{'count':>9}{'hpt-drv':>9}{'hwt-drv':>9}"
           f"{'  best gain':>12}")
     print("-" * 65)
@@ -201,7 +270,14 @@ def main() -> int:
         if os.path.getsize(path) == 0:
             continue
         bench = name[: -len(".pages.bin")]
-        r = evaluate(path, args.fast_frac, args.hwt_words)
+        tr = None
+        if args.tracker_csv:
+            tcsv = args.tracker_csv.replace("{bench}", bench)
+            if not os.path.exists(tcsv):
+                print(f"  skipping {bench}: no {tcsv}", file=sys.stderr)
+                continue
+            tr = load_tracker_topk(tcsv, args.tracker_n)
+        r = evaluate(path, args.fast_frac, args.hwt_words, tr)
         if r is None:
             continue
         h = r["hit"]

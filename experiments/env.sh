@@ -61,6 +61,26 @@ YCSB_DIR="$BENCH_ROOT/ycsb"
 # Figure 10 at full resolution. Costs ~160 bytes per touched page per epoch.
 : "${DUMP_PAGES:=1}"
 
+# Address-space layout.
+#
+# Trackers key on *page numbers*, and CM-Sketch hashes them, so ASLR changes the
+# entire collision pattern from run to run. Measured on BFS/kron-23, the CM-Sketch
+# access-count ratio moved 0.1726 -> 0.1803 between two otherwise identical runs,
+# while a single sample per configuration made the accuracy-vs-budget curve look
+# non-monotone. Pinning the layout makes tracker runs reproducible.
+#
+# The Figure 4 metric is *not* affected -- it depends on within-page word offsets,
+# which are translation-invariant (docs/methodology.md §2), and it measured
+# byte-identical with ASLR on and off. Pinning is therefore harmless everywhere and
+# necessary only for the trackers.
+#
+# NO_ASLR=0 disables the pinning.
+if [[ "${NO_ASLR:-1}" == "1" ]] && command -v setarch >/dev/null 2>&1; then
+  SETARCH=(setarch "$(uname -m)" -R)
+else
+  SETARCH=()
+fi
+
 have() { command -v "$1" >/dev/null 2>&1; }
 
 die() { echo "error: $*" >&2; exit 1; }

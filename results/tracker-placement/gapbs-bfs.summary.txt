@@ -1,0 +1,112 @@
+# hotskew summary
+benchmark          gapbs-bfs
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                36864 KB, 9-way (shared)
+count_writebacks   yes
+epochs             23
+epoch_len_dram_acc 2000000
+instructions       2523940011
+mem_refs_profiled  727883124
+dram_accesses      43900704
+llc_miss_ratio     0.060313  (DRAM accesses per memory ref)
+page_observations  1739387   (page x epoch pairs with >=1 access)
+mean_unique_words  21.771 / 64
+top4_word_share    0.1524   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 8: bounded top-K trackers vs the exact counts
+# tracker=Space-Saving  K=10000  epochs=23
+# storage assumes a 36-bit tag (48-bit PA, 4 KB pages) + 32-bit counter
+# N, hpt_access_ratio, hpt_recall, hwt_access_ratio, hwt_recall, KB
+1024,0.0868,0.0742,0.0628,0.0336,8
+16384,0.9366,0.8682,0.6062,0.3145,136
+262144,1.0000,1.0000,0.5774,0.2477,2176
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.3046
+  8         12.5%   0.4622
+ 16           25%   0.6469
+ 32           50%   0.7537
+ 48           75%   0.7579
+
+# P(page has at least 48 of 64 words accessed) = 0.2423
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,206664
+2,129448
+3,103572
+4,90168
+5,80743
+6,71761
+7,64275
+8,57287
+9,52173
+10,47892
+11,44078
+12,40827
+13,38153
+14,35788
+15,32669
+16,29767
+17,26947
+18,24028
+19,21606
+20,19096
+21,16729
+22,14599
+23,12425
+24,10591
+25,8869
+26,7665
+27,6346
+28,4998
+29,4024
+30,3293
+31,2477
+32,1973
+33,1474
+34,1246
+35,838
+36,637
+37,477
+38,356
+39,296
+40,260
+41,230
+42,204
+43,181
+44,200
+45,216
+46,205
+47,248
+48,263
+49,343
+50,379
+51,505
+52,605
+53,744
+54,882
+55,933
+56,956
+57,816
+58,815
+59,825
+60,951
+61,1374
+62,3805
+63,19332
+64,387860
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,185406
+1,247083
+2,313591
+3,348953
+4,213363
+5,34312
+6,343985
+7,52694

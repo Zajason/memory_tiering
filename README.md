@@ -30,7 +30,7 @@ measurement window bounds them (§ [Results](#results)).
 | | |
 |---|---|
 | <img src="docs/assets/hero_validation.png" width="100%"> | <img src="docs/assets/hero_tracker.png" width="100%"> |
-| **Calibrated first.** Against synthetic workloads with analytically known density, the tool is exact across four orders of granularity. | **M5's Figure 8, reproduced.** A 128-entry HPT (1 KB of SRAM) captures ~74% of the ideal; 8192 entries (68 KB) adds nothing. |
+| **Calibrated first.** Against synthetic workloads with analytically known density, the tool is exact across four orders of granularity. | **M5's Figure 8, reproduced.** A 128-entry Space-Saving HPT (1 KB of SRAM) captures ~76% of the ideal; 68 KB adds nothing. Count-Min needs far more for less. |
 
 <div align="center">
 <img src="docs/assets/hero_speedup.png" width="94%" alt="Closed-loop speedup">

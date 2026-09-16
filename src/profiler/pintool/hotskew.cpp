@@ -134,6 +134,18 @@ KNOB<UINT32> KnobDumpPages(KNOB_MODE_WRITEONCE, "pintool", "dump_pages", "1",
                            "write the per-page raw records to <prefix>.pages.bin");
 KNOB<UINT64> KnobDumpMinAccesses(KNOB_MODE_WRITEONCE, "pintool", "dump_min", "1",
                                  "only dump pages with at least this many accesses in the epoch");
+// The raw dump is 160 bytes per touched page per epoch, which is fine for a workload
+// with tens of epochs and catastrophic for one with a thousand: liblinear on kdda
+// produced 984 epochs and 275M page-observations, i.e. a 45 GB file that took the
+// host from 66 GB free to 24 GB. Cap it, and say so in the summary rather than
+// silently truncating.
+KNOB<UINT64> KnobDumpMaxMB(KNOB_MODE_WRITEONCE, "pintool", "dump_max_mb", "8192",
+                           "stop writing <prefix>.pages.bin past this size (MB); 0 = no cap");
+
+// --- per-epoch tracker top-K, so a placement study can use what a *bounded* tracker
+// --- would have reported instead of exact counts.
+KNOB<UINT32> KnobDumpTopK(KNOB_MODE_WRITEONCE, "pintool", "dump_topk", "0",
+                          "write each epoch's HPT/HWT top-K to <prefix>.topk.csv");
 
 /* ------------------------------------------------------- global tool state */
 
@@ -176,6 +188,7 @@ struct TrackerSlot {
     CountMinTopK hptCM, hwtCM;
     double hptRatioSum = 0.0, hptRecallSum = 0.0;
     double hwtRatioSum = 0.0, hwtRecallSum = 0.0;
+    double hptUnboundedSum = 0.0;
 };
 std::vector<TrackerSlot*> g_slots;
 std::ofstream g_trackCsv;
@@ -198,6 +211,9 @@ PIN_LOCK g_threadsLock;
 string g_outPrefix, g_tag;
 std::ofstream g_epochCsv;
 FILE* g_pagesBin = NULL;
+UINT64 g_pagesBinBytes = 0;
+bool g_pagesBinCapped = false;
+std::ofstream g_topkCsv;
 
 // Aggregated across epochs: for each N, how many (page, epoch) observations had at
 // most N unique words touched. Index by unique-word-count 0..64.
@@ -396,6 +412,17 @@ void finishEpoch() {
         g_accessesInTopWordsTotal += (UINT64)top[0] + top[1] + top[2] + top[3];
 
         if (g_pagesBin && total >= dumpMin) {
+            const UINT64 cap = KnobDumpMaxMB.Value() * 1024ULL * 1024ULL;
+            if (cap && g_pagesBinBytes >= cap) {
+                if (!g_pagesBinCapped) {
+                    g_pagesBinCapped = true;
+                    std::cerr << "[hotskew] pages.bin hit the " << KnobDumpMaxMB.Value()
+                              << " MB cap at epoch " << g_epochId
+                              << "; further records dropped (-dump_max_mb)\n";
+                }
+                goto skip_dump;
+            }
+            g_pagesBinBytes += 4 + 8 * 3 + 2 * kWordsPerPage;
             // Record: epoch(u32) page(u64) reads(u64) writes(u64) mask(u64) word[64](u16)
             fwrite(&g_epochId, sizeof(UINT32), 1, g_pagesBin);
             fwrite(&pageNo, sizeof(UINT64), 1, g_pagesBin);
@@ -404,6 +431,7 @@ void finishEpoch() {
             fwrite(&p.touchedMask, sizeof(UINT64), 1, g_pagesBin);
             fwrite(p.word, sizeof(UINT16), kWordsPerPage, g_pagesBin);
         }
+    skip_dump:;
     });
 
     // ---- score HPT/HWT against the exact counts, before they are cleared ----
@@ -431,11 +459,44 @@ void finishEpoch() {
             if (g_trackCM) t.hptCM.topK(K, picked); else t.hpt.topK(K, picked);
             TrackerScore hpt = scoreTopK(picked, exactPages, K);
 
+            // Diagnostic for the CM-Sketch only: what the same sketch would achieve
+            // with an unbounded CAM. If this is monotone in N while the real CAM is
+            // not, the CAM is the limiting structure, not the estimates.
+            double hptUnbounded = 0.0;
+            if (g_trackCM) {
+                std::vector<UINT64> keys;
+                keys.reserve(exactPages.size());
+                for (std::unordered_map<UINT64, UINT64>::const_iterator it =
+                         exactPages.begin(); it != exactPages.end(); ++it)
+                    keys.push_back(it->first);
+                std::vector<UINT64> pu;
+                t.hptCM.topKUnbounded(keys.begin(), keys.end(), K, pu);
+                hptUnbounded = scoreTopK(pu, exactPages, K).accessCountRatio;
+            }
+            t.hptUnboundedSum += hptUnbounded;
+
             TrackerScore hwt;
             if (g_trackWord) {
                 std::vector<UINT64> pickedW;
                 if (g_trackCM) t.hwtCM.topK(K, pickedW); else t.hwt.topK(K, pickedW);
                 hwt = scoreTopK(pickedW, exactWords, K);
+            }
+
+            // What a bounded tracker would have told a policy this epoch. The
+            // placement study can then be run on *these* scores rather than on exact
+            // counts, which is the only fair test of a nominator that exists to
+            // compensate for an imprecise HPT.
+            if (g_topkCsv.is_open()) {
+                for (size_t r = 0; r < picked.size(); ++r)
+                    g_topkCsv << g_epochId << "," << t.n << ",hpt," << r << ","
+                              << picked[r] << "\n";
+                if (g_trackWord) {
+                    std::vector<UINT64> pw;
+                    if (g_trackCM) t.hwtCM.topK(K, pw); else t.hwt.topK(K, pw);
+                    for (size_t r = 0; r < pw.size(); ++r)
+                        g_topkCsv << g_epochId << "," << t.n << ",hwt," << r << ","
+                                  << pw[r] << "\n";
+                }
             }
 
             t.hptRatioSum += hpt.accessCountRatio;
@@ -652,6 +713,8 @@ void writeSummary() {
           << (double)g_accessesTotal / (double)g_memRefs << "  (DRAM accesses per memory ref)\n";
     }
     f << "page_observations  " << g_pagesObserved << "   (page x epoch pairs with >=1 access)\n";
+    if (g_pagesBinCapped)
+        f << "pages_bin_capped   yes   (hit -dump_max_mb; the raw dump is incomplete)\n";
     if (g_pagesObserved) {
         f << "mean_unique_words  " << std::fixed << std::setprecision(3)
           << (double)g_wordsTouchedTotal / (double)g_pagesObserved << " / 64\n";
@@ -667,7 +730,8 @@ void writeSummary() {
         f << "# tracker=" << (g_trackCM ? "CM-Sketch" : "Space-Saving")
           << "  K=" << KnobTrackK.Value() << "  epochs=" << g_trackEpochs << "\n";
         f << "# storage assumes a 36-bit tag (48-bit PA, 4 KB pages) + 32-bit counter\n";
-        f << "# N, hpt_access_ratio, hpt_recall, hwt_access_ratio, hwt_recall, KB\n";
+        f << "# N, hpt_access_ratio, hpt_recall, hwt_access_ratio, hwt_recall, KB"
+          << (g_trackCM ? ", hpt_unbounded_cam\n" : "\n");
         for (size_t i = 0; i < g_slots.size(); ++i) {
             const TrackerSlot& t = *g_slots[i];
             const UINT64 kb = ((UINT64)t.n * (36 + 32)) / 8192;
@@ -675,7 +739,9 @@ void writeSummary() {
               << (t.hptRatioSum / g_trackEpochs) << ","
               << (t.hptRecallSum / g_trackEpochs) << ","
               << (t.hwtRatioSum / g_trackEpochs) << ","
-              << (t.hwtRecallSum / g_trackEpochs) << "," << kb << "\n";
+              << (t.hwtRecallSum / g_trackEpochs) << "," << kb;
+            if (g_trackCM) f << "," << (t.hptUnboundedSum / g_trackEpochs);
+            f << "\n";
         }
     }
 
@@ -720,6 +786,7 @@ VOID onFini(INT32, VOID*) {
     }
     if (g_epochCsv.is_open()) g_epochCsv.close();
     if (g_trackCsv.is_open()) g_trackCsv.close();
+    if (g_topkCsv.is_open()) g_topkCsv.close();
     writeSummary();
 }
 
@@ -815,6 +882,11 @@ int main(int argc, char* argv[]) {
         g_trackCsv.open(tp.c_str());
         g_trackCsv << "epoch,k,n,algo,hpt_access_ratio,hpt_recall,hwt_access_ratio,"
                       "hwt_recall,exact_pages,exact_words\n";
+        if (KnobDumpTopK.Value()) {
+            const string tk = g_outPrefix + ".topk.csv";
+            g_topkCsv.open(tk.c_str());
+            g_topkCsv << "epoch,n,kind,rank,key\n";
+        }
         std::cerr << "[hotskew] tracking " << g_slots.size() << " budget(s), "
                   << (g_trackCM ? "CM-Sketch" : "Space-Saving") << "\n";
     }

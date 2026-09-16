@@ -86,7 +86,7 @@ variant=${GAPBS_VARIANT:-stock} ==="
   echo "    $*"
   local log="$OUT.run.log"
   ( cd "$wd" && /usr/bin/time -f "    wall %e s   maxrss %M KB" \
-      "$PIN" -t "$TOOL" "${CACHE_ARGS[@]}" "${COMMON[@]}" -- "$@" ) >"$log" 2>&1
+      "${SETARCH[@]}" "$PIN" -t "$TOOL" "${CACHE_ARGS[@]}" "${COMMON[@]}" -- "$@" ) >"$log" 2>&1
   local rc=$?
   grep -vE "^\[hotskew\] ROI hooked" "$log" | tail -20
   # A benchmark that died still leaves a summary file behind, so check explicitly

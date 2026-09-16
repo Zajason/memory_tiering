@@ -44,7 +44,7 @@ for algo in spacesaving cmsketch; do
     out="$OUTDIR/gapbs-$k.$algo"
     echo "=== $k [$algo]  N in {$BUDGETS}  K=$K ==="
     ( cd "$BENCH_ROOT/gapbs" && \
-      "$PIN" -t "$TOOL" -cache 1 -l1_kb 48 -l1_assoc 12 -l2_kb 2048 -l2_assoc 16 \
+      "${SETARCH[@]}" "$PIN" -t "$TOOL" -cache 1 -l1_kb 48 -l1_assoc 12 -l2_kb 2048 -l2_assoc 16 \
              -l3_kb 36864 -l3_assoc 9 -epoch "${EPOCH_M}" -dump_pages 0 \
              -track 1 -track_algo "$algo" -track_n "$BUDGETS" -track_k "$K" \
              -roi_begin hotskew_roi_begin -roi_end hotskew_roi_end \

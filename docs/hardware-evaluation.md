@@ -56,24 +56,42 @@ ideal access count for BFS; sixty-eight times the storage adds nothing, and for 
 it is slightly *worse*. If that holds up, it is a directly actionable sizing result:
 the tracker should be small.
 
-**Count-Min Sketch — reported, but not trusted:**
+**Count-Min Sketch.** An earlier version of this table was non-monotone in $N$ and was
+reported as a suspect implementation. Two causes were found, and the second one is the
+more important lesson.
 
-| workload | N=50 | N=128 | N=512 | N=2048 | N=8192 |
-|---|---|---|---|---|---|
-| bfs | 0.789 | 0.662 | 0.723 | 0.456 | 0.545 |
-| cc | 0.725 | 0.740 | 0.690 | 0.701 | 0.698 |
-| tc | 0.338 | 0.319 | 0.331 | 0.359 | 0.417 |
+*Cause 1 — a real bug.* CAM entries cached their estimate at the moment their key was
+last accessed, and a fresh candidate was compared against those stale values. Numbers
+sampled at different times are not comparable, so an early entry could squat while
+hotter keys were rejected against it. Fixed: estimates are now re-read from the sketch
+before any comparison, and unconditionally before reporting top-K.
 
-These are **non-monotone**, and they should not be. More counters means fewer hash
-collisions and better estimates, so accuracy ought to rise with N; BFS going 0.789 →
-0.456 as N grows by 40× is not a property one should believe.
+*Cause 2 — the measurement, not the code.* The fix did not restore monotonicity, so we
+checked whether the runs were even deterministic. **They were not.** Two identical
+invocations gave CM ratios of 0.1726 and 0.1803. Trackers key on page *numbers*, and
+CM-Sketch hashes them, so **ASLR changes the entire collision pattern between runs.**
+With a single sample per budget, that variance was being read as an algorithmic
+property. Pinning the layout (`setarch -R`, now the default in `experiments/env.sh`)
+makes tracker runs reproducible.
 
-The likely cause is our CAM maintenance, not the sketch: a key is only offered to the
-top-K CAM at the moment it is accessed, so with fewer collisions (large W) estimates
-are lower and a genuinely hot key can fail to displace a stale CAM entry that was
-inflated earlier. M5 notes the CAM is the limiting structure in this design. **Treat
-the Space-Saving column as the result and the CM-Sketch column as a known-suspect
-implementation** pending a fix to the CAM eviction policy.
+With both corrections, at 10M-access epochs, $K=128$:
+
+| workload | N=50 | N=128 | N=512 | N=2048 | N=8192 | monotone |
+|---|---|---|---|---|---|---|
+| bfs | 0.129 | 0.110 | 0.170 | 0.256 | 0.302 | yes |
+| tc | 0.298 | 0.299 | 0.326 | 0.357 | 0.408 | yes |
+| cc | 0.431 | 0.327 | 0.368 | 0.425 | 0.521 | not quite |
+
+The curves now rise with $N$, as they should. **Space-Saving substantially outperforms
+CM-Sketch at equal budget** on these workloads — 0.767 against 0.302 for BFS at
+N=8192 — which is consistent with M5 choosing to compare the two rather than adopting
+the sketch outright.
+
+*What did not change:* the Figure 4 results are ASLR-invariant, and measured so.
+`mean_unique_words` and `P(≤16)` were byte-identical across four runs with ASLR on and
+off, because the metric depends on within-page word offsets, which are
+translation-invariant (methodology §2). The reproduction in §5 of the report is
+unaffected; only tracker evaluation needed pinning.
 
 ### Recall is ~0 while the ratio is 0.75 — and that vindicates M5's metric choice
 
@@ -166,6 +184,37 @@ this experiment does not reach:
 3. **Sub-page migration or compaction** — gathering hot lines from many sparse pages
    into one dense page. M5 explicitly does *not* do this (they migrate at 4 KB), so
    the waste their own figure identifies is measured but not recovered.
+
+### 2b. The fair test: scoring from a bounded tracker
+
+The objection to §2 was that count-only was handed *exact* counts while a real HPT is
+only ~0.75 accurate, and that M5's nominators exist precisely to cover that
+deficiency. `-dump_topk` now writes each epoch's tracker top-K, and
+`placement_study.py --tracker-csv` scores policies from it instead.
+
+Fast tier at 4% of the touched footprint, so that capacity stays below the tracker's
+$K{=}10{,}000$ — a tracker reporting $K$ pages cannot fill a tier larger than $K$, and
+ignoring that turns the comparison into a measurement of what the tracker never said.
+BFS / CC on kron-23, 23 and 28 epochs:
+
+| score source | oracle | count-only | HPT-driven | HWT-driven | best gain |
+|---|---|---|---|---|---|
+| exact counts | 0.185 / 0.168 | **0.114 / 0.121** | 0.094 / 0.120 | 0.099 / 0.120 | −0.015 / −0.001 |
+| HPT, N=262144 | " | **0.110 / 0.121** | 0.044 / 0.077 | 0.059 / 0.114 | −0.051 / −0.007 |
+| HPT, N=16384 | " | **0.092 / 0.111** | 0.036 / 0.039 | 0.043 / 0.084 | −0.049 / −0.026 |
+| HPT, N=1024 | " | **0.031 / 0.041** | 0.025 / 0.026 | 0.026 / 0.030 | −0.005 / −0.010 |
+
+Degrading the tracker degrades count-only substantially (BFS 0.114 → 0.031), which is
+the expected direction. **But the nominators degrade with it and never overtake.**
+
+The reason is structural and, in hindsight, obvious: **HWT is gated on HPT
+membership** — a word address is only tracked if its page is currently in the HPT. The
+word signal is therefore *downstream* of the page signal, not independent of it. A
+weak HPT produces a weak HWT, so sub-page information cannot compensate for the
+deficiency it was hypothesised to cover.
+
+This closes the loophole in §2 rather than opening one. The null result now holds both
+with perfect information and with realistically degraded information.
 
 ### The waste is real, even though re-ranking does not fix it
 

@@ -177,20 +177,43 @@ class SpaceSaving {
 // for *all* addresses in a compact array and needs only one SRAM access per lookup
 // (pipelineable), whereas Space-Saving must search all its CAM entries in parallel
 // but returns exact identities with no collision noise.
+//
+// CAM staleness -- the bug this had, and why it produced nonsense
+// --------------------------------------------------------------
+// A first version cached each CAM entry's estimate at the moment its key was last
+// accessed, and compared a *fresh* candidate estimate against those *stale* stored
+// ones. Those numbers are sampled at different times, so the comparison is
+// meaningless: a key admitted early with a then-large estimate could squat
+// indefinitely while genuinely hotter keys were rejected against it.
+//
+// The symptom was accuracy that fell as the sketch grew -- 0.789 at N=50 down to
+// 0.456 at N=2048 for BFS -- which is backwards, since more counters means fewer
+// collisions and better estimates. It looked like a property of CM-Sketch and was
+// not; it was this.
+//
+// M5's description is the fix: the sketch "stores the access counts ... while
+// tracking the top-K access counts in the CAM unit, decoupling the access counts
+// from the sorted CAM". The CAM holds addresses; counts come from the sketch. So we
+// re-read every CAM entry's estimate from the sketch before comparing. Doing that on
+// every access would cost O(K*D), so it is amortised: refresh on a fixed interval and
+// unconditionally before reporting top-K.
 class CountMinTopK {
   public:
-    void init(uint32_t depth, uint32_t width, uint32_t k) {
+    void init(uint32_t depth, uint32_t width, uint32_t k, uint32_t refreshInterval = 4096) {
         d_ = depth;
         w_ = width;
         k_ = k;
+        refresh_ = refreshInterval ? refreshInterval : 1;
         counters_.assign((size_t)d_ * w_, 0);
         cam_.clear();
         cam_.reserve(k_);
+        sinceRefresh_ = 0;
     }
 
     void reset() {
         std::fill(counters_.begin(), counters_.end(), 0);
         cam_.clear();
+        sinceRefresh_ = 0;
     }
 
     inline void access(uint64_t key) {
@@ -201,10 +224,18 @@ class CountMinTopK {
             ++c;
             if (c < est) est = c;
         }
+        // Keep the CAM's view of its own entries from drifting too far behind the
+        // sketch. Amortised: O(K*D) every `refresh_` accesses.
+        if (++sinceRefresh_ >= refresh_) {
+            refreshCam();
+            sinceRefresh_ = 0;
+        }
         offerToCam(key, est);
     }
 
-    void topK(uint32_t k, std::vector<uint64_t>& out) const {
+    void topK(uint32_t k, std::vector<uint64_t>& out) {
+        // Always report against current estimates, never cached ones.
+        refreshCam();
         out.clear();
         std::vector<CamEntry> v(cam_);
         const size_t n = std::min((size_t)k, v.size());
@@ -214,6 +245,28 @@ class CountMinTopK {
     }
 
     size_t counterCount() const { return counters_.size(); }
+
+    // Diagnostic: the top-K this sketch would report if its CAM were unbounded, i.e.
+    // if every candidate key were ranked by its current estimate. Comparing this
+    // against topK() separates two failure modes that look identical from outside --
+    // a sketch whose *estimates* are poor, versus a CAM that fails to retain the
+    // best-estimated keys. Not a hardware structure; an upper bound on one.
+    template <typename It>
+    void topKUnbounded(It first, It last, uint32_t k, std::vector<uint64_t>& out) const {
+        std::vector<CamEntry> v;
+        for (It it = first; it != last; ++it) {
+            CamEntry e;
+            e.key = *it;
+            e.est = estimate(e.key);
+            v.push_back(e);
+        }
+        const size_t n = std::min((size_t)k, v.size());
+        if (n == 0) { out.clear(); return; }
+        std::partial_sort(v.begin(), v.begin() + n, v.end(), byEstDesc);
+        out.clear();
+        out.reserve(n);
+        for (size_t i = 0; i < n; ++i) out.push_back(v[i].key);
+    }
 
   private:
     struct CamEntry {
@@ -231,6 +284,21 @@ class CountMinTopK {
         return x ^ (x >> 31);
     }
 
+    // Re-read every CAM entry's count from the sketch, so comparisons are between
+    // quantities sampled at the same instant.
+    inline void refreshCam() {
+        for (size_t i = 0; i < cam_.size(); ++i) cam_[i].est = estimate(cam_[i].key);
+    }
+
+    inline uint64_t estimate(uint64_t key) const {
+        uint64_t est = UINT64_MAX;
+        for (uint32_t r = 0; r < d_; ++r) {
+            const uint64_t c = counters_[(size_t)r * w_ + (uint32_t)(hash(key, r) % w_)];
+            if (c < est) est = c;
+        }
+        return est;
+    }
+
     inline void offerToCam(uint64_t key, uint64_t est) {
         for (size_t i = 0; i < cam_.size(); ++i) {
             if (cam_[i].key == key) {
@@ -246,13 +314,17 @@ class CountMinTopK {
         size_t minIdx = 0;
         for (size_t i = 1; i < cam_.size(); ++i)
             if (cam_[i].est < cam_[minIdx].est) minIdx = i;
-        if (est > cam_[minIdx].est) {
+        // Re-read the incumbent before evicting it: a stale minimum is the whole bug.
+        const uint64_t incumbent = estimate(cam_[minIdx].key);
+        cam_[minIdx].est = incumbent;
+        if (est > incumbent) {
             cam_[minIdx].key = key;
             cam_[minIdx].est = est;
         }
     }
 
-    uint32_t d_ = 0, w_ = 0, k_ = 0;
+    uint32_t d_ = 0, w_ = 0, k_ = 0, refresh_ = 4096;
+    uint64_t sinceRefresh_ = 0;
     std::vector<uint64_t> counters_;
     std::vector<CamEntry> cam_;
 };

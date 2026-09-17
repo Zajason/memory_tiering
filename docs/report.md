@@ -397,6 +397,56 @@ page-observations the raw dump reached **45 GB** and took the host from 66 GB fr
 24 GB. A `-dump_max_mb` cap (default 8 GB) now bounds it and records
 `pages_bin_capped` in the summary rather than truncating silently.
 
+### 5.4b The window is underspecified in the paper, and the metric is acutely sensitive to it
+
+Two experiments in this round changed our understanding of the central parameter.
+
+**Graph scale does not act independently of the window.** Re-running `bc` and `sssp`
+on kron-25 (4.3 GB) instead of kron-23 (1.05 GB), at the same $10^7$-access epoch,
+moved both *away* from M5, not toward it (`bc` $P(\le48)$: 0.638 → 0.902). The cause
+is arithmetic: a 4× larger footprint at a fixed window yields ~4× fewer accesses per
+page per window.
+
+| case | epochs | pages in footprint | accesses/page/window |
+|---|---|---|---|
+| bc, kron-23 | 22 | 256,348 | **39.0** |
+| bc, kron-23 | 108 | 1,037,598 | **9.6** |
+
+So the quantity that governs coverage is **accesses per footprint page per window**,
+not absolute accesses. "Larger dataset" at a fixed window silently means "shorter
+effective window".
+
+Scaling the window with the footprint (40M for kron-25) confirms this **partially**:
+the discrepancy against kron-23 falls from 0.213 to 0.075 for `bc` (65% removed) and
+from 0.312 to 0.193 for `sssp` (38%). A residual remains, so accesses-per-page is a
+large part of the story but not all of it — graph structure also changes with
+Kronecker scale.
+
+**More seriously, M5's own window cannot be determined from the paper.** We previously
+treated `m5_manager -s 10` as a 10 ms measurement window. Re-reading, that is the
+*polling* cadence, not a reset interval, and three statements in §3 pull in different
+directions:
+
+- PAC counters **accumulate** — *"PAC may reset saturated counters after accumulating
+  them into the corresponding 64-bit counters stored in the access-count table"* —
+  so counts are not cleared per poll;
+- a 16-bit count *"saturates only after ~20s"*;
+- WAC *"monitor a 128MB memory region at a time"*, and they *"monitor either (1) all
+  CXL memory regions over multiple intervals during a single run or (2) only one CXL
+  memory region during a single run and repeat it for different CXL memory regions
+  over multiple runs."*
+
+Under (1) with a ~6.9 GB footprint, each 128 MB region is observed for roughly 1/54 of
+a run; under (2), for a whole run. **Those differ by ~54× in a parameter to which the
+metric is acutely sensitive** — our own measurements span $P(\le48)$ from 0.638 to
+0.0007 for `bc` purely by varying it.
+
+This reframes §5.3. The honest statement is not "the window explains the residual
+disagreement" but: **the published information does not determine the window, the
+metric depends on it strongly, and our measurements are consistent with the paper for
+a window inside the plausible range.** Pinning it down would require either the
+authors' configuration or their per-workload miss rates, neither of which is published.
+
 ### 5.5 Sensitivity analysis
 
 | Axis | Range tested | Effect on mean unique words |
@@ -625,7 +675,13 @@ pages are equally hot and the ranking is arbitrary. Staleness handles this corre
    loads; page-fault zeroing and page-cache population cannot be made visible in user
    space at all.
 4. **Datasets differ.** Synthetic Kronecker graphs at 1.05 GB against M5's Twitter and
-   Google graphs at ~6.9 GB.
+   Google graphs at ~6.9 GB. Two candidate fixes were tested and *failed*: making the
+   graph directed (M5 uses directed Google for `bc`/`sssp`) moved both further away,
+   and scaling to kron-25 at a fixed window did too (§5.4b).
+11. **The measurement window is not recoverable from the paper** (§5.4b), and the
+   metric is acutely sensitive to it. This is the largest single source of
+   uncertainty in the comparison and it is a property of the published work, not of
+   this reproduction.
 5. **Virtual addressing in L2/LLC set indexing** (§3.2), affecting the modelled
    conflict-miss pattern.
 6. **No inter-core coherence** in the private-cache model; mitigated by single-threaded

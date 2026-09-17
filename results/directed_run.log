@@ -1,0 +1,23 @@
+########## bc on the DIRECTED graph ##########
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1805
+  8         12.5%   0.2938
+ 16           25%   0.4676
+ 32           50%   0.6362
+ 48           75%   0.7076
+
+# P(page has at least 48 of 64 words accessed) = 0.2974
+mean_unique_words  27.454 / 64
+########## sssp on the DIRECTED graph ##########
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.2243
+  8         12.5%   0.3612
+ 16           25%   0.4919
+ 32           50%   0.6562
+ 48           75%   0.7410
+
+# P(page has at least 48 of 64 words accessed) = 0.2631
+mean_unique_words  26.145 / 64
+DIRECTED_DONE

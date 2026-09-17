@@ -1,0 +1,23 @@
+########## bc on kron-25, epoch 40M (footprint-normalised) ##########
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+  4         6.25%   0.1940
+  8         12.5%   0.3151
+ 16           25%   0.4752
+ 32           50%   0.6664
+ 48           75%   0.7788
+
+# P(page has at least 48 of 64 words accessed) = 0.2295
+epochs             27
+mean_unique_words  25.497 / 64
+########## sssp on kron-25, epoch 42M (footprint-normalised) ##########
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+  4         6.25%   0.2671
+  8         12.5%   0.4233
+ 16           25%   0.5823
+ 32           50%   0.6969
+ 48           75%   0.7661
+
+# P(page has at least 48 of 64 words accessed) = 0.2369
+epochs             16
+mean_unique_words  23.650 / 64
+NORM_DONE

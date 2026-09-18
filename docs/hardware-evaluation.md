@@ -46,7 +46,7 @@ Storage assumes a 36-bit tag (48-bit PA, 4 KB pages) plus a 32-bit counter per e
 
 | workload | N=50 | N=128 | N=512 | N=2048 | N=8192 |
 |---|---|---|---|---|---|
-| bfs | 0.283 | **0.737** | 0.755 | 0.760 | 0.757 |
+| bfs | 0.292 | **0.757** | 0.766 | 0.767 | 0.767 |
 | cc | 0.250 | **0.654** | 0.679 | 0.634 | 0.600 |
 | tc | 0.139 | 0.358 | 0.421 | 0.431 | 0.451 |
 | storage | 0.4 KB | **1 KB** | 4 KB | 17 KB | 68 KB |
@@ -246,7 +246,9 @@ your only lever is which whole page to move.**
 2. **Exact-count baseline.** As above, this gives count-only an advantage M5's HPT
    would not have. The comparison is fair as a statement about the *information*, not
    about the *implementations*.
-3. **CM-Sketch numbers are suspect.** Stated in §1; do not quote them.
+3. **CM-Sketch was corrected, not discarded.** Two causes were found (a stale-estimate
+   bug in the CAM, and ASLR making runs non-deterministic); the curves now rise with
+   $N$ as they should. A small residual non-monotonicity remains on `cc`.
 4. **One fast-tier size.** 50% of footprint, matching M5's DDR cap. The ordering could
    change at much smaller fast tiers, where selection pressure is higher.
 5. **Synthetic graphs.** kron, not the Twitter/Google inputs M5 names in §6.

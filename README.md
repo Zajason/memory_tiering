@@ -22,10 +22,11 @@ and then answers a question the paper does not ask.
 <img src="docs/assets/hero_fig4.png" width="88%" alt="Reproducing M5 Figure 4">
 </div>
 
-**Four of six GAPBS kernels land within 0.03 of M5's published Figure 4, and Redis — the
-sparsest and hardest case — within 0.015.** Green deltas are agreement; the two outliers
-(`bc`, `sssp`) are the exact two kernels M5 runs on a *different graph*, and the
-measurement window bounds them (§ [Results](#results)).
+**Scored across the whole CDF, not a single point: two workloads reproduce to within
+0.03 (PageRank, triangle counting), three to within 0.10 (BFS, CC, Redis), and three
+disagree (BC, SSSP, liblinear).** The tool captures both extremes of M5's figure —
+PageRank at 63/64 words per page, Redis at 9/64. The disagreements are traced to the
+measurement window, which [we show the paper does not determine](docs/report.md).
 
 | | |
 |---|---|
@@ -193,8 +194,8 @@ execution.
 ```
 
 Space-Saving results are clean and monotone; **the Count-Min numbers came out
-non-monotone and are flagged as a suspect implementation rather than reported as a
-finding** — see [hardware-evaluation.md](docs/hardware-evaluation.md).
+non-monotone; two causes were found and fixed — a stale-estimate bug in the CAM and,
+more importantly, ASLR making the runs non-deterministic** — see [hardware-evaluation.md](docs/hardware-evaluation.md).
 
 A sizing result that falls out of the self-test: **the tracker size an HPT needs is set by
 the length of the cold tail, not the size of the hot set.** Space-Saving gives an evicted
@@ -375,6 +376,7 @@ experiments/            runners, sensitivity sweep, stop_runs.sh
 |---|---|
 | [methodology.md](docs/methodology.md) | what is measured, why, and every deviation quantified |
 | [which-failure-mode.md](docs/which-failure-mode.md) | granularity vs timeliness on one instrument |
+| **[claims.md](docs/claims.md)** | **every headline number + the command that regenerates it; `check_claims.sh` verifies them** |
 | **[report.md](docs/report.md)** | **the scientific write-up: abstract, method, results, threats to validity** |
 | **[handbook.md](docs/handbook.md)** | **everything: architecture, how each piece works, every finding, how to extend it** |
 | [hardware-evaluation.md](docs/hardware-evaluation.md) | deliverables 1 & 2: the trackers, scored; what sub-page info is worth |

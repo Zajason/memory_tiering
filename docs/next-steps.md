@@ -94,6 +94,14 @@ HWT rather than HPT alone.
 
 ---
 
+## Already done since this was written
+
+Items 1 and 2 below are complete: the trackers are implemented and scored
+(`docs/hardware-evaluation.md` §1), and the placement study was run both with exact
+counts and with bounded-tracker output (§2b). A granularity sweep over page size and
+word size was added at the professor's suggestion (`report.md` §6.5), and a two-tier
+latency model closes the loop with a speedup number (§6.4).
+
 ## Concrete next steps, roughly in order
 
 1. **Score a top-$K$ tracker offline.** Implement HPT (Misra–Gries over `paddr >> 12`)

@@ -124,7 +124,8 @@ Two consequences:
 
 M5's hardware has the same property and handles it the same way: WAC's counters are
 4 bits wide, are read and reset periodically, and the artifact's PAC daemon dumps
-every 10 ms (`m5_manager -s 10`). Their Figure 4 comes from bounded sampling windows,
+every 10 ms (`m5_manager -s 10` — later found to be the *polling* cadence rather than a
+reset interval; see report §5.4b). Their Figure 4 comes from bounded sampling windows,
 not from whole runs. Their §4.1 says the measurement is repeated *"at 10 different
 random execution points"*.
 
@@ -407,7 +408,9 @@ agreement.
 
 *(each cell is ours / M5)*
 
-**Four of six agree at N=48 to within 0.03**, including the two extremes: PageRank,
+**Four of six agree *at N=48* to within 0.03** — but N=48 is the cheapest point to
+agree at, since the CDF has nearly saturated there. Scored across the whole curve the
+result is weaker: see report §5.1. The rest of this section, including the two extremes: PageRank,
 which is maximally dense, and triangle counting, which the paper puts at 0.52 and we
 measure at 0.527. `tc` matches at all five values of N. That is a strong result for an
 independent method on different hardware with a different dataset.

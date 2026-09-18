@@ -15,10 +15,12 @@ workstation with no CXL device, using Intel Pin coupled to a modelled cache hier
 so that the counted stream matches the post-LLC stream a controller-resident counter
 observes.
 
-We report four results. **First**, the reproduction succeeds on five of seven
-workloads to within 0.03 of M5's published Figure 4, including both extremes —
-PageRank at 63.1 of 64 words per page and Redis at 8.9 — and the two disagreements are
-bounded by an explicitly measured methodological parameter rather than left unexplained.
+We report four results. **First**, the reproduction agrees with M5's published
+Figure 4 to within 0.03 *across the whole CDF* on two of eight workloads (PageRank,
+triangle counting), to within 0.10 on three more (BFS, CC, Redis), and disagrees on
+three (BC, SSSP, liblinear). It captures both extremes of their figure — PageRank at
+63.1 of 64 words per page and Redis at 8.9. The disagreements are traced to the
+measurement window, which we show the paper does not determine (§5.4b).
 **Second**, we identify and quantify a structural limitation of binary instrumentation
 for this class of measurement: memory traffic performed by the kernel on the
 application's behalf is invisible to Pin but fully visible to a memory controller. In
@@ -200,14 +202,17 @@ compulsory misses eventually touch every line the program references. **A sparsi
 figure reported without its measurement window is not reproducible.**
 
 M5's hardware has the same property and addresses it the same way: WAC uses 4-bit
-counters that are read and reset periodically, and their PAC daemon dumps every 10 ms.
+counters that are read periodically. We initially read `m5_manager -s 10` as a 10 ms
+measurement window; §5.4b revises that — it is the polling cadence, and the effective
+window is not recoverable from the paper.
 We bound the window explicitly (`-epoch`, in DRAM accesses; `-epoch_ins`, in
 instructions) and report it with every result.
 
 A further subtlety: a window defined in DRAM accesses normalises away cache size, since
 a smaller cache emits proportionally more accesses and a fixed count therefore spans
 less execution. A window defined in instructions is time-proportional and corresponds
-to M5's 10 ms dumps. Both are provided.
+to a fixed slice of wall-clock time. Both are provided. (§5.4b qualifies how this maps
+onto M5's configuration, which is underdetermined.)
 
 ### 3.4 Region of interest
 
@@ -507,7 +512,7 @@ relevant quantity reports 75% success.
 $N$ (BFS: 0.789 at $N{=}50$, 0.456 at $N{=}2048$), which is not a property one should
 accept — additional counters reduce hash collisions and should improve estimates. We
 attribute this to our top-$K$ CAM maintenance rather than to the sketch, and flag it as
-a known-suspect implementation.
+a since-corrected implementation (§6.1).
 
 ### 6.2 A sizing law for counter-based trackers
 

@@ -7,6 +7,11 @@ Read this once end to end. After that it is a reference — the per-component se
 are self-contained, and § [Extending it](#8-extending-it) tells you which file to open
 for each kind of change.
 
+**Start here if you only read one thing:** [`claims.md`](claims.md) lists every
+headline number with the command that regenerates it, and `./experiments/check_claims.sh`
+verifies the lot. If a number in any other document disagrees with it, that document is
+the bug.
+
 **Companion documents.** This is the "how it works" file.
 [`methodology.md`](methodology.md) is the "why it is correct" file and has the
 deviation analysis; [`which-failure-mode.md`](which-failure-mode.md) and
@@ -207,12 +212,14 @@ compulsory misses eventually touch everything. **A sparsity number without a sta
 window length and kind is not reproducible.**
 
 M5's hardware has the same property — WAC's counters are 4 bits wide and are read and
-reset periodically, and their PAC daemon dumps every 10 ms (`m5_manager -s 10`).
+read periodically. We first read `m5_manager -s 10` as a 10 ms window; that turned out
+to be the polling cadence, and the effective window is not recoverable from the paper
+(report §5.4b).
 
 **Two kinds of window, and it matters.** A window measured in DRAM accesses normalises
 away cache size (a smaller cache emits more accesses, so a fixed count spans less
 execution — the effects cancel exactly). A window measured in *instructions* is the
-time-proportional one and is what M5's 10 ms dumps correspond to. Hence both `-epoch`
+time-proportional one. Hence both `-epoch`
 and `-epoch_ins`.
 
 ### 4.2 Pin cannot see kernel-side memory traffic
@@ -380,7 +387,7 @@ Synthetic workloads with analytically known density (`src/profiler/validate/synt
 Plus mixtures: 10% dense pages / 90% single-word gives mean 7.301 against an analytic
 7.300, and `P(≤4 words) = 0.9000` against 0.90.
 
-### 7.2 M5 Figure 4 reproduces on 5 of 7 workloads
+### 7.2 M5 Figure 4: two workloads reproduce, three are close, three disagree
 
 `P(page has ≤ N of 64 words touched)`, ours / M5:
 
@@ -538,6 +545,44 @@ these as memory *stall time* and as an upper bound.
 
 ---
 
+### 7.8 Granularity is a surface, and M5 measures one cell of it
+
+M5 fixes 4 KB pages and 64 B words. Both axes are sweepable **exactly** from
+`.pages.bin` — a 128 B word is touched iff either 64 B half was; a 2 MB page sums its
+512 sub-pages against a 512× larger denominator. `granularity_sweep.py`.
+
+**64 B is a hard floor**, and that is hardware: a DRAM access transfers one line, so
+sub-line resolution is not information a memory controller has. Only meaningful on the
+architectural stream (`-cache 0`).
+
+*Migration granularity.* Fraction of a migrated page never touched, 64 B tracking:
+
+| | 4 KB | 64 KB | 2 MB |
+|---|---|---|---|
+| pr | 1% | 1% | 5% |
+| bc | 51% | 72% | 76% |
+| redis | 86% | 93% | 93% |
+
+The folklore ("2 MB for one cache line wastes 99.997%") is directionally right and far
+overstated — 4 KB→2 MB roughly doubles waste. And the curve **saturates by 64 KB**, so
+most of the penalty is paid well before 2 MB. Given that migration cost dominates past
+~10 µs (§7.7), an intermediate page size is a real design point.
+
+*Tracking granularity.* A coarser word makes pages look denser, and the distortion is
+**anti-correlated with true density**:
+
+| | true (64 B) | at 512 B | overstated |
+|---|---|---|---|
+| redis | 0.140 | 0.351 | **2.51×** |
+| bc | 0.485 | 0.657 | 1.35× |
+| pr | 0.987 | 1.000 | 1.01× |
+
+So halving HWT's counters is free on PageRank and most expensive on Redis — the
+workload whose sparsity justifies the HWT. **A tracker cheap enough to be attractive
+cannot see the phenomenon it exists for.** This sharpens §7.5.
+
+---
+
 ## 8. Extending it
 
 | you want to… | open |
@@ -549,6 +594,7 @@ these as memory *stall time* and as an upper bound.
 | add a benchmark | `benchmarks/setup_*.sh` + an ROI patch + a case in `run_hotskew.sh` |
 | profile something in a simulator | `src/sim/hotskew_probe.hpp` — one call per request |
 | add a metric over raw data | `src/analysis/hotskew.py`, the `Run` class |
+| sweep page/word granularity | `src/analysis/granularity_sweep.py` — edit `PAGE_SIZES` / `WORD_SIZES`; no re-runs needed |
 
 ### The experiments I would do next, in order
 

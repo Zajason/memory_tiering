@@ -607,6 +607,83 @@ characterisation back to the motivation for the hardware.
 
 ---
 
+## 6.5 Granularity as a two-dimensional space
+
+M5 measures one point: a **4 KB page** divided into **64 B words**. Neither number is
+derived — 4 KB is Linux's mapping unit, 64 B is the cache line. Sweeping both axes
+turns the paper's single bar into a surface, and the two axes answer different
+questions.
+
+Both are computed **exactly** from data already collected: `.pages.bin` records which
+of a page's sixty-four 64 B words were touched, and coarser granularities are
+re-bucketings of that (a 128 B word is touched iff either of its 64 B halves was; a
+2 MB page's count is the sum over its 512 sub-pages, with a 512× larger denominator).
+Nothing is estimated and nothing was re-run.
+
+**64 B is a hard floor**, and this is a property of the hardware rather than the tool.
+A DRAM access transfers exactly one 64 B line, so "which 32 B half was touched" is not
+information a memory controller possesses. Finer granularity is only meaningful on the
+architectural stream (`-cache 0`), which answers a different question.
+
+### 6.5.1 Migration granularity: the real cost of huge pages
+
+Fraction of each migrated page that is **never touched**, at 64 B tracking:
+
+| workload | 4 KB | 16 KB | 64 KB | 2 MB |
+|---|---|---|---|---|
+| pr | 1% | 1% | 1% | **5%** |
+| bfs | 27% | 33% | 36% | **41%** |
+| cc | 30% | 37% | 40% | **44%** |
+| tc | 30% | 38% | 41% | **50%** |
+| sssp | 43% | 58% | 68% | **74%** |
+| bc | 51% | 65% | 72% | **76%** |
+| redis (YCSB-A) | 86% | 91% | 93% | **93%** |
+
+The folklore objection to huge pages — *"a 2 MB page promoted for one hot cache line
+wastes 99.997% of the transfer"* — is **directionally right and quantitatively far
+overstated**. Moving from 4 KB to 2 MB roughly doubles the waste on the sparse
+workloads (bc 51%→76%, sssp 43%→74%) and barely moves PageRank (1%→5%). No workload
+approaches the worst case.
+
+A second observation: **the curve saturates**. Redis is at 93% by 64 KB and gains
+nothing from 2 MB; bc and sssp are within a few points of their 2 MB value by 64 KB.
+So most of the huge-page penalty is already paid at 64 KB, and the 4 KB → 64 KB step
+costs more than 64 KB → 2 MB. If migration cost pushes toward larger units — and §6.4
+shows it dominates past ~10 µs — an intermediate size captures most of the amortisation
+for a fraction of the marginal waste.
+
+### 6.5.2 Tracking granularity: what a cheaper tracker hides
+
+A coarser word makes a page *look* denser, because a word counts as touched if any of
+its constituent lines was. Apparent touched fraction at 4 KB pages:
+
+| workload | true (64 B) | 256 B | 512 B | 1 KB | 512 B overstates by |
+|---|---|---|---|---|---|
+| **redis (YCSB-A)** | **0.140** | 0.246 | 0.351 | 0.508 | **2.51×** |
+| bc | 0.485 | 0.592 | 0.657 | 0.744 | 1.35× |
+| sssp | 0.568 | 0.624 | 0.675 | 0.750 | 1.19× |
+| cc | 0.699 | 0.774 | 0.827 | 0.879 | 1.18× |
+| bfs | 0.732 | 0.793 | 0.837 | 0.887 | 1.14× |
+| pr | 0.987 | 0.999 | 1.000 | 1.000 | 1.01× |
+
+**The distortion is strongly anti-correlated with true density, and that is the
+uncomfortable part.** Halving HWT's counter count by doubling the word size costs
+almost nothing on PageRank (1% error) and costs the most on Redis (151% error) — and
+Redis is precisely the workload whose sparsity motivates building an HWT at all.
+
+So the hardware-cost lever and the workload that justifies the hardware pull in
+opposite directions: **a tracker cheap enough to be attractive is one that cannot see
+the phenomenon it was built for.** At 512 B a tracker would report Redis as 35% dense
+when it is 14% dense — and 35% is dense enough that a density-aware policy would stop
+treating it as a special case.
+
+This is a result the paper's single operating point cannot expose, and it sharpens the
+§6.3 finding: sub-page tracking is not merely of limited value on graph analytics, it
+is also the workload class where its cost can be reduced safely, while the one that
+needs it tolerates no reduction at all.
+
+---
+
 ## 7. Which failure mode binds?
 
 The instrument that answers M5's question also answers NeoMem's, on identical workloads.

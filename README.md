@@ -228,6 +228,33 @@ The waste is nonetheless real and large: **81% of every migrated page is never t
 Redis**, 48% for `bc`. Recovering it needs sub-page *migration* or compaction — not the
 re-ranking M5's design performs.
 
+### 5 · Granularity as a surface, not a point
+
+M5 measures one cell: 4 KB pages, 64 B words. Sweeping both axes — exactly, from data
+already on disk — turns the bar into a surface.
+
+<div align="center">
+<img src="docs/assets/gran_surface.png" width="78%" alt="Granularity surface">
+</div>
+
+```bash
+./.venv/bin/python src/analysis/granularity_sweep.py --config spr-20t-ul
+./.venv/bin/python src/analysis/plot_granularity.py
+```
+
+**Huge pages cost less than folklore claims.** The standard objection — *a 2 MB page
+promoted for one cache line wastes 99.997%* — is directionally right but far
+overstated. 4 KB → 2 MB roughly doubles waste on sparse workloads (bc 51%→76%) and
+barely moves PageRank (1%→5%). And the curve **saturates by 64 KB**, so most of the
+penalty is paid well before 2 MB.
+
+**A cheaper tracker hides exactly what it was built to find.** Doubling HWT's word size
+to 512 B overstates density by 1.01× on PageRank and **2.51× on Redis** — and Redis is
+the workload whose sparsity justifies building an HWT. At 512 B a tracker reports Redis
+as 35% dense when it is 14%: dense enough that a density-aware policy would stop
+treating it as special. The hardware-cost lever and the motivating workload pull in
+opposite directions.
+
 ### 4 · A speedup number
 
 [`latency_model.py`](src/analysis/latency_model.py) turns placement quality into time.

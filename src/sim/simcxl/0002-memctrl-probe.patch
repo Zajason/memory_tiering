@@ -1,0 +1,108 @@
+diff --git a/src/mem/MemCtrl.py b/src/mem/MemCtrl.py
+index da7103d..2e779df 100644
+--- a/src/mem/MemCtrl.py
++++ b/src/mem/MemCtrl.py
+@@ -63,6 +63,20 @@ class MemCtrl(QoSMemCtrl):
+     # bus in front of the controller for multiple ports
+     port = ResponsePort("This port responds to memory requests")
+ 
++    # Hot-skewness profiling of the post-LLC request stream. This is the same
++    # quantity the Pin profiler calls "dram_accesses" (LLC misses + writebacks),
++    # but with physical addresses and kernel traffic included.
++    hotskew_enable = Param.Bool(False, "Profile hot skewness at this controller")
++    hotskew_out = Param.String(
++        "hotskew", "Output file, relative to the gem5 output dir")
++    hotskew_epoch = Param.UInt64(
++        10000000, "Close a measurement epoch every N requests (0 = at exit only)")
++    hotskew_topk = Param.UInt32(128, "Hot pages the bounded tracker reports")
++    hotskew_budgets = VectorParam.UInt32(
++        [128, 512, 2048, 8192], "Tracker entry budgets evaluated concurrently")
++    hotskew_countmin = Param.Bool(
++        False, "Use Count-Min Sketch (NeoMem) instead of Space-Saving")
++
+     # Interface to memory media
+     dram = Param.MemInterface(
+         "Memory interface, can be a DRAMor an NVM interface "
+diff --git a/src/mem/mem_ctrl.cc b/src/mem/mem_ctrl.cc
+index 1aff36a..77ed9b7 100644
+--- a/src/mem/mem_ctrl.cc
++++ b/src/mem/mem_ctrl.cc
+@@ -40,7 +40,9 @@
+ 
+ #include "mem/mem_ctrl.hh"
+ 
++#include "base/output.hh"
+ #include "base/trace.hh"
++#include "sim/core.hh"
+ #include "debug/DRAM.hh"
+ #include "debug/Drain.hh"
+ #include "debug/MemCtrl.hh"
+@@ -94,6 +96,22 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
+     if (p.disable_sanity_check) {
+         port.disableSanityCheck();
+     }
++    hotskewEnabled = p.hotskew_enable;
++    if (hotskewEnabled) {
++        hotskew::ProbeConfig cfg;
++        cfg.trackerBudgets.assign(p.hotskew_budgets.begin(),
++                                  p.hotskew_budgets.end());
++        cfg.topK = p.hotskew_topk;
++        cfg.useCountMin = p.hotskew_countmin;
++        cfg.epochAccesses = p.hotskew_epoch;
++        hotskewProbe.init(cfg);
++        hotskewOut = simout.resolve(p.hotskew_out);
++        registerExitCallback([this]() {
++            hotskewProbe.endEpoch();          // do not drop the final partial epoch
++            hotskewProbe.writeSummary(hotskewOut);
++        });
++    }
++
+ }
+ 
+ void
+@@ -483,6 +501,14 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
+         }
+     }
+ 
++    // Hot-skewness probe. This is the only path on which the request is
++    // accepted; the two "return false" paths above set retryRdReq/retryWrReq
++    // and the requestor RE-SENDS, so counting on function entry would count a
++    // request once per retry. That inflated the CXL-bridge numbers 2.89x while
++    // leaving pages and words/page correct -- see src/sim/simcxl/README.md.
++    if (hotskewEnabled)
++        hotskewProbe.onRequest(pkt->getAddr(), pkt->isWrite());
++
+     return true;
+ }
+ 
+diff --git a/src/mem/mem_ctrl.hh b/src/mem/mem_ctrl.hh
+index c1bbe7f..2af3a7c 100644
+--- a/src/mem/mem_ctrl.hh
++++ b/src/mem/mem_ctrl.hh
+@@ -55,6 +55,7 @@
+ #include "base/callback.hh"
+ #include "base/statistics.hh"
+ #include "enums/MemSched.hh"
++#include "mem/hotskew/hotskew_probe.hpp"
+ #include "mem/qos/mem_ctrl.hh"
+ #include "mem/qport.hh"
+ #include "params/MemCtrl.hh"
+@@ -791,6 +792,18 @@ class MemCtrl : public qos::MemCtrl
+     bool recvFunctionalLogic(PacketPtr pkt, MemInterface* mem_intr);
+     Tick recvAtomicLogic(PacketPtr pkt, MemInterface* mem_intr);
+ 
++
++  public:
++    /* Hot-skewness profiling. Placed at the memory controller rather than the
++     * CXL bridge because the stock gem5 kernel does not enumerate the CXL range
++     * as a NUMA node (E820 type 20 is treated as reserved without the CXL
++     * driver), so nothing would reach the bridge. This point carries the same
++     * stream the Pin profiler measures: post-LLC, physical addresses, and kernel
++     * traffic included. See src/sim/simcxl/README.md.
++     */
++    hotskew::Probe hotskewProbe;
++    bool hotskewEnabled = false;
++    std::string hotskewOut;
+ };
+ 
+ } // namespace memory

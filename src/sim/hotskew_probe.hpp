@@ -93,6 +93,10 @@ struct EpochResult {
     // Indexed the same as ProbeConfig::trackerBudgets.
     std::vector<double> hptAccessRatio;
     std::vector<double> hwtAccessRatio;
+    // uniqueHist[w] = pages touching exactly w distinct 64B words this epoch.
+    // This is what Figure 4 is a CDF of; without it the summary cannot be
+    // compared against M5 at all.
+    std::vector<uint64_t> uniqueHist = std::vector<uint64_t>(kWordsPerPage + 1, 0);
 };
 
 class Probe {
@@ -154,7 +158,9 @@ class Probe {
             exactPages[pageNo] = tot;
             r.pages++;
             r.accesses += tot;
-            words += (uint64_t)__builtin_popcountll(p.touchedMask);
+            const uint32_t uw = (uint32_t)__builtin_popcountll(p.touchedMask);
+            words += uw;
+            ++r.uniqueHist[uw];
             if (cfg_.trackWords) {
                 for (uint32_t w = 0; w < kWordsPerPage; ++w)
                     if (p.word[w])
@@ -214,6 +220,16 @@ class Probe {
         f << "dram_accesses      " << acc << "\n";
         f << "mean_unique_words  " << std::fixed << std::setprecision(3)
           << (mu / results_.size()) << " / 64\n";
+        // Section name and "words,count" shape must match what the pintool
+        // writes, because src/analysis/hotskew.py:load_summary() keys off this
+        // exact header to build the Figure 4 CDF.
+        f << "\n# full unique-word histogram (words,pages)\n";
+        for (uint32_t w = 0; w <= kWordsPerPage; ++w) {
+            uint64_t n = 0;
+            for (size_t i = 0; i < results_.size(); ++i) n += results_[i].uniqueHist[w];
+            f << w << "," << n << "\n";
+        }
+
         f << "\n# N, hpt_access_ratio, hwt_access_ratio\n";
         for (size_t b = 0; b < cfg_.trackerBudgets.size(); ++b) {
             double hp = 0.0, hw = 0.0;

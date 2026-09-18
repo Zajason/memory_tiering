@@ -130,7 +130,7 @@ Worth keeping visible — these are not open questions.
 | liblinear dataset | we used kdda; M5 used KDD2012 |
 | SPEC CPU2017, Memcached, CacheLib | not run (licence / not attempted) |
 | Memstrata interference axis | not measured |
-| CXLRAMSim port | simulator not released |
+| CXLRAMSim port | simulator still unreleased — but **SimCXL/CXL-DMSim is public** and has the needed hook (`cxl_bridge.cc:219`); see next-steps.md |
 
 ---
 

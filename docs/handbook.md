@@ -371,215 +371,34 @@ result, which is how a failed run becomes a "finding".
 
 ---
 
-## 7. Every finding, with its evidence
+## 7. Findings
 
-### 7.1 The tool is calibrated
+**The findings live in [`report.md`](report.md) §4–§7, and in [`claims.md`](claims.md)
+as a table with the command that regenerates each number.** They are not repeated here.
 
-Synthetic workloads with analytically known density (`src/profiler/validate/synth.c`):
+That is deliberate. An earlier version of this handbook carried a full copy of the
+results, and keeping two copies in sync failed: when the accuracy summary, the
+Count-Min result and the window story were each revised, stale numbers survived in
+whichever document was not being edited. One canonical location, plus a checker, is
+worth more than two readable ones.
 
-| stride | analytic | measured |
-|---|---|---|
-| 4096 B | 1 | 1.000 |
-| 1024 B | 4 | 3.999 |
-| 256 B | 16 | 15.996 |
-| 64 B | 64 | 63.981 |
+Quick index of where each result lives:
 
-Plus mixtures: 10% dense pages / 90% single-word gives mean 7.301 against an analytic
-7.300, and `P(≤4 words) = 0.9000` against 0.90.
-
-### 7.2 M5 Figure 4: two workloads reproduce, three are close, three disagree
-
-`P(page has ≤ N of 64 words touched)`, ours / M5:
-
-| workload | N=4 | N=8 | N=16 | N=32 | N=48 |
-|---|---|---|---|---|---|
-| pr | 0.000/0.000 | 0.000/0.000 | 0.001/0.005 | 0.001/0.010 | 0.006/0.020 |
-| tc | 0.022/0.020 | 0.044/0.050 | 0.090/0.120 | 0.281/0.265 | 0.527/0.520 |
-| bfs | 0.063/0.050 | 0.136/0.110 | 0.265/0.170 | 0.319/0.260 | 0.320/0.345 |
-| cc | 0.056/0.060 | 0.121/0.125 | 0.267/0.200 | 0.372/0.290 | 0.374/0.385 |
-| redis | 0.495/0.510 | 0.680/0.765 | 0.805/0.865 | 0.958/0.925 | 0.987/0.940 |
-| bc | 0.160/0.005 | … | 0.418/0.040 | … | 0.638/0.145 |
-| sssp | 0.139/0.005 | … | 0.356/0.025 | … | 0.543/0.110 |
-
-Landing on **both extremes** — PageRank at 63.1/64 words and Redis at 8.9/64 — is the
-evidence the tool measures the right quantity.
-
-`bc` and `sssp` are **bounded, not unexplained**: a 10M-access epoch is the sparsest
-window measured and the whole run the densest possible, and M5's value falls inside
-that range for both (bc: 0.638 / 0.0007 / **0.145**; sssp: 0.543 / 0.0006 / **0.110**).
-They are also the exact two kernels M5 runs on the **Google** graph rather than
-Twitter (their §6), which we do not have.
-
-### 7.2b Liblinear disagrees, and the reasons are identified
-
-| liblinear, N = | 4 | 8 | 16 | 32 | 48 |
-|---|---|---|---|---|---|
-| ours (kdda) | 0.454 | 0.593 | 0.727 | 0.793 | 0.811 |
-| M5 Figure 4 | 0.06 | 0.10 | 0.15 | 0.25 | 0.38 |
-
-Far sparser than M5. Two causes, neither removable here:
-
-1. **Different dataset.** M5's Table 3 says **KDD2012**; kdda is KDD Cup 2010, a
-   distinct and smaller LIBSVM dataset. The right one is `kdd12`.
-2. **Run length.** 984 epochs at 10M accesses, against 5–30 for the graph kernels, so
-   at a fixed window each epoch covers far less of execution — which §4.1 predicts
-   will read as sparser. The whole-run bound of §7.2 has not been computed for this
-   workload.
-
-Reported as an open disagreement, not a reproduction.
-
-### 7.3 Redis needed two fixes, both of which move the number directly
-
-- **jemalloc, not `MALLOC=libc`.** In a KV store the allocator decides which values
-  share a page.
-- **YCSB's real record layout: 10 × 100 B hash fields, not 1 × 1000 B string.** A
-  1000 B value spans 16 cache lines, so `P(≤8 words) ≈ 0` *by construction*. This one
-  change moved `P(≤4)` from 0.263 → **0.495** against M5's 0.510.
-
-### 7.4 A bounded HPT is small — and its size is set by the cold tail
-
-Space-Saving, access-count ratio vs the exact top-K:
-
-| workload | N=50 | N=128 | N=512 | N=8192 |
-|---|---|---|---|---|
-| bfs | 0.292 | **0.757** | 0.766 | 0.767 |
-| cc | 0.250 | **0.657** | 0.680 | 0.600 |
-| tc | 0.139 | 0.357 | 0.415 | 0.448 |
-| storage | 0.4 KB | **1 KB** | 4 KB | 68 KB |
-
-Count-Min, with the CAM fix and ASLR pinned, rises with *N* as it should but is
-markedly worse at equal budget — 0.302 against Space-Saving's 0.767 for BFS at
-N=8192. That is consistent with M5 comparing the two rather than adopting the sketch.
-
-Knee at 1 KB, then flat. And the self-test threshold:
-
-$$N > n_\text{hot} + \frac{n_\text{cold}}{\text{hits per hot page}}$$
-
-because an evicted slot inherits `min+1`, so cold entries inflate to ≈ `n_cold/N`.
-**The tracker size you need is set by the cold tail, not the hot set.** Measured: 256
-entries loses a 64-page hot set entirely (0.002); 512 recovers it exactly.
-
-Recall is ~0 while the ratio is 0.75 — the tracker picks pages that are *as hot* but
-not the *same* pages. That is precisely why M5 reports an access-count ratio.
-
-### 7.5 Sub-page information does not improve placement, and there is a reason
-
-M5's two nominators against count-only, at a 50% fast tier: **no gain on any workload,
-including Redis** (their Guideline 4 case). Structural reason: with page-granular
-migration a page costs 4096 bytes whether 2 or 64 of its words are hot, so **access
-count is a sufficient statistic** for selection.
-
-The waste is nonetheless real — **81% of every migrated page is never touched for
-Redis**, 48% for `bc`, 3% for `pr`. Recovering it needs sub-page migration or
-compaction, which M5 explicitly does not do.
-
-**That qualifier was tested, and the null survived it.** The objection was that
-count-only got *exact* counts while a real HPT is only ~0.75 accurate, and M5's
-nominators exist precisely to cover that gap. `-dump_topk` writes each epoch's tracker
-top-K; `placement_study.py --tracker-csv` scores from it. Fast tier at 4% of footprint,
-so capacity stays below the tracker's K (a tracker reporting K pages cannot fill a
-larger tier):
-
-| score source | bfs count-only | best nominator gain |
-|---|---|---|
-| exact counts | 0.114 | −0.015 |
-| HPT N=262144 | 0.110 | −0.051 |
-| HPT N=16384 | 0.092 | −0.049 |
-| HPT N=1024 | 0.031 | −0.005 |
-
-Degrading the tracker degrades count-only as expected (0.114 → 0.031) — but the
-nominators degrade with it and never overtake. The reason is structural: **HWT is
-gated on HPT membership**, so a word address is only tracked when its page is already
-in the HPT. The word signal is *downstream* of the page signal, not independent of it,
-so a weak HPT yields a weak HWT. Sub-page information cannot compensate for the
-deficiency it was hypothesised to cover.
-
-The null now holds under both perfect and realistically degraded information, which is
-a considerably stronger claim than the original.
-
-### 7.6 On graph analytics, timeliness binds and granularity does not
-
-At K=128,000 pages (512 MB, M5's size), concentration is ~1.0, so any shortfall is
-pure lag cost:
-
-| kernel | tc | bc | bfs | cc | sssp | pr |
-|---|---|---|---|---|---|---|
-| staleness | 0.902 | 0.850 | 0.841 | 0.830 | 0.602 | **0.381** |
-
-**10% to 62% of the achievable benefit lost to acting one epoch late** — while the
-pages a policy would migrate are already dense (`P(≤16 words) = 0.000` for every
-kernel among the top 10k). That is NeoMem's thesis, not M5's.
-
-Caveat: `retention` is unreliable under near-ties. PageRank shows retention 0.086 with
-concentration 1.000, because most pages are equally hot and the ranking is arbitrary.
-Read the staleness column.
-
-### 7.7 The closed-loop number
-
-Two-tier latency model (`latency_model.py`): local 100 ns, CXL 220 ns, migration 3 µs.
-Sources: NeoMem Fig. 1 measures local DDR at 118 ns and notes the field assumes CXL at
-170–250 ns; Memstrata states CXL is "roughly 200–220% the latency of local memory".
-
-| policy | geomean speedup vs all-CXL | gap closed |
-|---|---|---|
-| all-local (bound) | 2.200× | 100% |
-| oracle | 1.618× | 70% |
-| **count-only (HPT alone)** | **1.505×** | **61%** |
-| hwt-driven | 1.475× | 59% |
-| hpt-driven | 1.412× | 53% |
-
-Redis: 1.607× for count-only, 69% of the gap.
-
-**Migration cost is the knife edge:**
-
-| L_migrate | 0 | 1 µs | 3 µs | 10 µs | 30 µs |
-|---|---|---|---|---|---|
-| speedup | 1.665× | 1.608× | **1.505×** | 1.238× | **0.835×** |
-
-At 30 µs migration is a **net loss**. Tiering only pays if a promotion stays under
-~10 µs — which is exactly why the profiling overhead M5 and NeoMem attack matters.
-
-**Three assumptions, all inflating the benefit:** no memory-level parallelism (the big
-one — real cores overlap misses), no bandwidth contention, open-loop trace. Report
-these as memory *stall time* and as an upper bound.
-
----
-
-### 7.8 Granularity is a surface, and M5 measures one cell of it
-
-M5 fixes 4 KB pages and 64 B words. Both axes are sweepable **exactly** from
-`.pages.bin` — a 128 B word is touched iff either 64 B half was; a 2 MB page sums its
-512 sub-pages against a 512× larger denominator. `granularity_sweep.py`.
-
-**64 B is a hard floor**, and that is hardware: a DRAM access transfers one line, so
-sub-line resolution is not information a memory controller has. Only meaningful on the
-architectural stream (`-cache 0`).
-
-*Migration granularity.* Fraction of a migrated page never touched, 64 B tracking:
-
-| | 4 KB | 64 KB | 2 MB |
-|---|---|---|---|
-| pr | 1% | 1% | 5% |
-| bc | 51% | 72% | 76% |
-| redis | 86% | 93% | 93% |
-
-The folklore ("2 MB for one cache line wastes 99.997%") is directionally right and far
-overstated — 4 KB→2 MB roughly doubles waste. And the curve **saturates by 64 KB**, so
-most of the penalty is paid well before 2 MB. Given that migration cost dominates past
-~10 µs (§7.7), an intermediate page size is a real design point.
-
-*Tracking granularity.* A coarser word makes pages look denser, and the distortion is
-**anti-correlated with true density**:
-
-| | true (64 B) | at 512 B | overstated |
-|---|---|---|---|
-| redis | 0.140 | 0.351 | **2.51×** |
-| bc | 0.485 | 0.657 | 1.35× |
-| pr | 0.987 | 1.000 | 1.01× |
-
-So halving HWT's counters is free on PageRank and most expensive on Redis — the
-workload whose sparsity justifies the HWT. **A tracker cheap enough to be attractive
-cannot see the phenomenon it exists for.** This sharpens §7.5.
+| finding | where |
+|---|---|
+| calibration against analytic ground truth | report §4.1 |
+| the kernel blind spot, and its correction | report §4.2 |
+| Figure 4 reproduction, scored across the whole CDF | report §5.1 |
+| Redis: allocator and record layout | report §5.2 |
+| liblinear disagreement | report §5.4 |
+| the window is underspecified in the paper | report §5.4b |
+| bounded trackers scored against ground truth | report §6.1, hardware-evaluation §1 |
+| the cold-tail sizing law | report §6.2 |
+| what sub-page information is worth | report §6.3, hardware-evaluation §2–2b |
+| the closed-loop speedup | report §6.4 |
+| granularity as a 2-D surface | report §6.5 |
+| which failure mode binds | report §7, which-failure-mode.md |
+| hypotheses tested and **refuted** | claims.md |
 
 ---
 

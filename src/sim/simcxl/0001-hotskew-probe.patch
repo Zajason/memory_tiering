@@ -1,0 +1,117 @@
+diff --git a/src/mem/Bridge.py b/src/mem/Bridge.py
+index 2449d17..41f6852 100644
+--- a/src/mem/Bridge.py
++++ b/src/mem/Bridge.py
+@@ -65,6 +65,7 @@ class Bridge(ClockedObject):
+         [AllMemory], "Address ranges to pass through the bridge"
+     )
+ 
++
+ class CXLBridge(ClockedObject):
+     type = "CXLBridge"
+     cxx_header = "mem/cxl_bridge.hh"
+@@ -90,3 +91,15 @@ class CXLBridge(ClockedObject):
+     ranges = VectorParam.AddrRange(
+         [AllMemory], "Address ranges to pass through the bridge"
+     )
++
++    # Hot-skewness profiling of the CXL request stream.
++    hotskew_enable = Param.Bool(False, "Profile hot skewness at this bridge")
++    hotskew_out = Param.String(
++        "hotskew", "Output prefix, relative to the gem5 output dir")
++    hotskew_epoch = Param.UInt64(
++        10000000, "Close a measurement epoch every N requests (0 = at exit only)")
++    hotskew_topk = Param.UInt32(128, "Hot pages the bounded tracker reports")
++    hotskew_budgets = VectorParam.UInt32(
++        [128, 512, 2048, 8192], "Tracker entry budgets to evaluate concurrently")
++    hotskew_countmin = Param.Bool(
++        False, "Use Count-Min Sketch (NeoMem) instead of Space-Saving")
+diff --git a/src/mem/cxl_bridge.cc b/src/mem/cxl_bridge.cc
+index ff89ae7..c2be0a1 100644
+--- a/src/mem/cxl_bridge.cc
++++ b/src/mem/cxl_bridge.cc
+@@ -46,7 +46,9 @@
+ 
+ #include "mem/cxl_bridge.hh"
+ 
++#include "base/output.hh"
+ #include "base/trace.hh"
++#include "sim/core.hh"
+ #include "debug/Bridge.hh"
+ #include "params/Bridge.hh"
+ #include "debug/CXLMemCtrl.hh"
+@@ -93,6 +95,25 @@ CXLBridge::CXLBridge(const Params &p)
+                 ticksToCycles(p.bridge_lat), ticksToCycles(p.proto_proc_lat), p.req_fifo_depth),      
+       stats(*this)
+ {
++    hotskewEnabled = p.hotskew_enable;
++    if (hotskewEnabled) {
++        hotskew::ProbeConfig cfg;
++        cfg.trackerBudgets.assign(p.hotskew_budgets.begin(),
++                                  p.hotskew_budgets.end());
++        cfg.topK = p.hotskew_topk;
++        cfg.useCountMin = p.hotskew_countmin;
++        cfg.epochAccesses = p.hotskew_epoch;
++        hotskewProbe.init(cfg);
++        hotskewOut = simout.resolve(p.hotskew_out);
++
++        // Flush at exit. The final partial epoch is closed first, otherwise the
++        // tail of the run is silently dropped -- the same mistake that made an
++        // early GAPBS run report zero observations.
++        registerExitCallback([this]() {
++            hotskewProbe.endEpoch();
++            hotskewProbe.writeSummary(hotskewOut);
++        });
++    }
+ }
+ 
+ CXLBridge::CXLBridgeStats::CXLBridgeStats(CXLBridge &_bridge)
+@@ -257,6 +278,16 @@ CXLBridge::BridgeResponsePort::recvTimingReq(PacketPtr pkt)
+         }
+ 
+         if (!retryReq) {
++            // Hot-skewness probe: count the request here, not at the top of
++            // this function. A request that finds the queue full is rejected
++            // with false and RE-SENT by the requestor, so counting on entry
++            // counts it once per retry. That inflated DRAM accesses ~3x in the
++            // first traffic-generator run while leaving the page set correct,
++            // which is exactly the shape of error that looks plausible.
++            // Physical address, and kernel traffic included.
++            if (bridge.hotskewEnabled)
++                bridge.hotskewProbe.onRequest(pkt->getAddr(), pkt->isWrite());
++
+             // technically the packet only reaches us after the header
+             // bridge_lat, and typically we also need to deserialise any
+             // payload (unless the two sides of the bridge are
+diff --git a/src/mem/cxl_bridge.hh b/src/mem/cxl_bridge.hh
+index 89a19e5..3f5de4d 100644
+--- a/src/mem/cxl_bridge.hh
++++ b/src/mem/cxl_bridge.hh
+@@ -52,6 +52,7 @@
+ #include "base/types.hh"
+ #include "base/statistics.hh"
+ #include "mem/port.hh"
++#include "mem/hotskew/hotskew_probe.hpp"
+ #include "params/CXLBridge.hh"
+ #include "sim/clocked_object.hh"
+ 
+@@ -356,6 +357,19 @@ class CXLBridge : public ClockedObject
+     typedef CXLBridgeParams Params;
+ 
+     CXLBridge(const Params &p);
++
++    /* Hot-skewness profiling.
++     *
++     * The counters sit here rather than behind a modelled cache because this is
++     * the CXL device's request path: addresses are physical, and kernel traffic
++     * (page-fault zeroing, read(2), DMA) is visible. Those are exactly the two
++     * things the Pin-based profiler cannot see -- see the memory_tiering repo,
++     * docs/report.md Sec 4.2, where kernel-side copies moved BFS P(<=48) from
++     * 0.813 to 0.320 against M5's published 0.345.
++     */
++    hotskew::Probe hotskewProbe;
++    bool hotskewEnabled = false;
++    std::string hotskewOut;
+ };
+ 
+ } // namespace gem5

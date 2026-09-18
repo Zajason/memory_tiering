@@ -174,7 +174,7 @@ substitutions *are* the engineering.
 | **Single-threaded by default** | thread count was swept and barely moves the metric (18.298 → 18.353 across 1→16 threads) |
 | **Epoch-bounded measurement** (10M DRAM accesses) | finding #1 — an unbounded window makes the question ill-posed |
 | **`experiments/stop_runs.sh`** matches `/proc/PID/maps` | Pin rewrites the injected process's `argv` to the *application's*, so `pkill -f pin` silently misses it. A stale PageRank once ran 38 minutes into a result file another run had already written |
-| **CXLRAMSim not used** | **it is not released** — the paper says *"We plan to open-source"*. `src/sim/` is the simulator-ready probe instead |
+| **SimCXL used, not CXLRAMSim** | CXLRAMSim **is not released** — the paper says *"We plan to open-source"*. [SimCXL/CXL-DMSim](https://github.com/ferry-hhh/CXL-DMSim) is public, models a CXL Type 3 expander, and takes the same probe unchanged — see [`src/sim/simcxl/`](src/sim/simcxl/) |
 
 ---
 
@@ -278,17 +278,45 @@ Three assumptions, all of which *inflate* the benefit and none of which are hidd
 memory-level parallelism (the big one), no bandwidth contention, open-loop trace. These
 are memory **stall time** and an upper bound, not application runtime.
 
-### 3 · Simulator-ready probe
+### 3 · Probe running inside a real CXL simulator
 
-CXLRAMSim v1.0 **is not released**, so this cannot be a port. [`src/sim/`](src/sim/) is what
-makes the port small: one header, no Pin dependency, one call per request.
+CXLRAMSim v1.0 is still unreleased, so the port went to **SimCXL / CXL-DMSim** (gem5 23.1),
+which is public and models a CXL Type 3 memory expander. The probe moved across with **no
+change to the counting code** — the design claim, tested.
+
+It sits on the CXL device's request path, which is the whole point: addresses are
+**physical**, and **kernel traffic is visible** (`read(2)`, page-fault zeroing, DMA). Those
+are precisely the two things Pin cannot see, and the kernel blind spot is the leading
+explanation for where we still disagree with M5.
 
 ```cpp
-bool recvTimingReq(PacketPtr pkt) override {
-    probe.onRequest(pkt->getAddr(), pkt->isWrite());   // <-- the entire integration
-    return next_port.sendTimingReq(pkt);
-}
+if (!retryReq) {                                      // <-- not at function entry
+    if (bridge.hotskewEnabled)
+        bridge.hotskewProbe.onRequest(pkt->getAddr(), pkt->isWrite());
 ```
+
+Verified against analytic ground truth — a linear 64 B sweep must touch every word of
+every page exactly once:
+
+```
+page_observations  474
+dram_accesses      30321        # == 473x64 + 49, i.e. one access per unique line
+mean_unique_words  63.968 / 64
+```
+
+Hooking the obvious place — the top of `recvTimingReq` — reported **87 558** accesses
+instead of 30 321, because a queue-full request is rejected and **re-sent**, and gets
+counted once per retry. The page set and the words/page stayed correct throughout, so
+every headline number still looked plausible. Only the accesses-equal-unique-lines
+identity exposed it.
+
+**Built on Ubuntu 26.04 / gcc 15 / Python 3.14** — all newer than upstream asks for; the
+documented `gcc-12` requirement turned out to be unnecessary. Build traps and the patch
+are in [`src/sim/simcxl/README.md`](src/sim/simcxl/README.md).
+
+What is *not* done: a real-workload campaign. That needs full-system mode (kernel + disk
+image) and hours-to-days per workload against ~40 minutes under Pin. **The instrument is
+ported and verified; the campaign is not run.**
 
 ```bash
 make -C src/sim test     # self-test: proves the counters run outside Pin
@@ -365,7 +393,8 @@ src/profiler/pintool/   hotskew.cpp        instrumentation, epochs, output
                         tracker.hpp        HPT + HWT — Space-Saving and Count-Min
 src/profiler/validate/  synthetic workloads with analytically known density,
                         plus kernel_blindspot.c (finding #2, measured in isolation)
-src/sim/                simulator-ready probe: no Pin, one call per request
+src/sim/                simulator probe: no Pin, one call per request
+src/sim/simcxl/         the SimCXL/gem5 integration -- patch, config, build notes
 src/analysis/           readers, plots, placement study, turnover analysis
 benchmarks/             fetch / patch / build, ROI patches, Zipfian YCSB client
 configs/                cache geometries incl. M5's CAT partitions

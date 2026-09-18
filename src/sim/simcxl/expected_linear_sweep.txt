@@ -1,0 +1,10 @@
+# hotskew probe summary (simulator-driven)
+epochs             1
+page_observations  474
+dram_accesses      30321
+mean_unique_words  63.968 / 64
+
+# N, hpt_access_ratio, hwt_access_ratio
+128,0.9982,1.0000
+512,1.0000,1.0000
+2048,1.0000,1.0000

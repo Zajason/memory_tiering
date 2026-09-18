@@ -109,6 +109,15 @@ is an upper bound, not an application speedup.
 | 512 B tracker overstates Redis by | 2.51× | " |
 | …overstates PageRank by | 1.01× | " |
 
+## Simulator port (SimCXL / CXL-DMSim, gem5 23.1)
+
+| claim | value | source |
+|---|---|---|
+| builds on Ubuntu 26.04 / gcc 15 / Python 3.14 | yes, 0 errors | `src/sim/simcxl/README.md` |
+| linear 64B sweep, mean words/page | 63.968 / 64 | `cxl_hotskew_test.py` |
+| …accesses == unique lines | 30,321 == 473x64+49 | " |
+| retry double-count, if hooked at function entry | 87,558 (2.89x inflated) | " |
+
 ## Claims that were tested and **refuted**
 
 Worth keeping visible — these are not open questions.
@@ -130,7 +139,7 @@ Worth keeping visible — these are not open questions.
 | liblinear dataset | we used kdda; M5 used KDD2012 |
 | SPEC CPU2017, Memcached, CacheLib | not run (licence / not attempted) |
 | Memstrata interference axis | not measured |
-| CXLRAMSim port | simulator still unreleased — but **SimCXL/CXL-DMSim is public** and has the needed hook (`cxl_bridge.cc:219`); see next-steps.md |
+| CXLRAMSim port | CXLRAMSim still unreleased. **Ported to SimCXL/CXL-DMSim instead and verified** — see `src/sim/simcxl/`. Instrument works; no workload campaign run (needs full-system kernel + disk image) |
 
 ---
 

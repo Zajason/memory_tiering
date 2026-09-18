@@ -120,38 +120,25 @@ latency model closes the loop with a speedup number (§6.4).
    the neighbours per cache line and roughly double the lines touched per traversal.
    The second is cheap to test and would be worth knowing.
 
-4. **Port the counters into a public CXL simulator — and it need not be CXLRAMSim.**
+4. **~~Port the counters into a public CXL simulator~~ — DONE, 2026-09-18.**
 
-   CXLRAMSim is still unreleased; no repository exists under any obvious name. But
-   **SimCXL** (https://github.com/ferry-hhh/CXL-DMSim, which absorbed CXL-DMSim) is
-   public, gem5-based, full-system and cycle-level, and models a **CXL Type 3 memory
-   expander** over CXL.io + CXL.mem. That is everything this work actually needs.
+   Ported to **SimCXL / CXL-DMSim** (gem5 23.1) and verified against analytic ground
+   truth. See `src/sim/simcxl/` for the patch, the config, and the build notes.
+   The probe sits in `BridgeResponsePort::recvTimingReq`, where addresses are
+   physical and kernel traffic is visible — the two things Pin cannot give us.
 
-   The hook point already exists and matches the probe's design exactly:
+   Built clean on Ubuntu 26.04 / gcc 15 / Python 3.14, all newer than upstream
+   asks for. gcc-12 turned out to be unnecessary.
 
-   ```
-   src/mem/cxl_bridge.cc:219
-     CXLBridge::BridgeResponsePort::recvTimingReq(PacketPtr pkt)
-   ```
+   **What remains is the campaign, not the instrument.** Running real workloads
+   needs full-system mode: an x86 kernel and disk image (several GB), plus
+   simulation time measured in hours-to-days per workload against ~40 minutes
+   under Pin. That is the next real decision: whether the physical-address and
+   kernel-visibility gain is worth that factor for the workloads where we
+   currently disagree with M5 (`sssp` 0.433, `bc` 0.493, `liblinear` 0.577).
 
-   One line inside it — `probe.onRequest(pkt->getAddr(), pkt->isWrite())` — puts the
-   counters where physical addresses and kernel traffic are both visible, which is the
-   whole argument for moving off Pin (report §4.2).
-
-   **On architectural fidelity:** the CXLRAMSim paper criticises CXL-DMSim for
-   attaching CXL to the MemBus rather than the IOBus and enumerating it as a PCI
-   memory controller. That critique is about *timing* fidelity. It does not affect
-   which addresses reach the device, which is the only property this measurement
-   depends on. For counter placement, SimCXL is adequate today; if CXLRAMSim is
-   released later, the probe moves across unchanged.
-
-   **Build constraint on this machine:** SimCXL targets gem5 23.10 on Ubuntu
-   20.04/22.04 with gcc 9.4+. This workstation is Ubuntu 26.04 with only gcc 15
-   installed, and gem5 23.10 will not build against it. Two options, neither
-   requiring new hardware: install an older gcc alongside (`apt install gcc-12
-   g++-12`, then `scons CC=gcc-12 CXX=g++-12`), or use gem5's official
-   `ubuntu-22.04_all-dependencies` container image — no container runtime is
-   installed here yet.
+   Those three are the interesting test, because the kernel blind spot is the
+   leading explanation for the gap and the simulator is the only way to settle it.
 
 5. **Port to CXLRAMSim if and when it is released.** `counter_table.hpp` is deliberately free of
    Pin dependencies — it takes a line address and a direction. Hooking it to the CXL

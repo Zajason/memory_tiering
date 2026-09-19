@@ -109,6 +109,33 @@ is an upper bound, not an application speedup.
 | 512 B tracker overstates Redis by | 2.51× | " |
 | …overstates PageRank by | 1.01× | " |
 
+## Full-system campaign (gem5 23.1, probe at MemCtrl::recvTimingReq)
+
+Single core, 48kB/12 L1d, 2MB/16 L2, 36MB/9 L3 (= spr-20t), kron-23, measurement
+from the CPU switch onward so the data load is included. Scored as max error
+across all five N, same as the Pin column.
+
+| workload | Pin vs M5 | gem5 vs M5 | moved | source |
+|---|---|---|---|---|
+| sssp | 0.433 | **0.391** | −0.042 | `compare_sim.py --workload sssp` |
+| bc | 0.493 | **0.331** | −0.162 | `compare_sim.py --workload bc` |
+| liblinear | 0.577 | running | — | 19 GB guest, `--big-mem` |
+
+| claim | value | source |
+|---|---|---|
+| sssp: epochs / DRAM accesses | 45 / 447,210,722 | `results/simcxl/` |
+| sssp: mean words/page | 48.278 / 64 | " |
+| bc: epochs / DRAM accesses | 46 / 451,441,535 | " |
+| bc: mean words/page | 46.851 / 64 | " |
+
+**Both moved toward M5, neither reached it.** The kernel blind spot is real and
+is worth 0.042 (sssp) and 0.162 (bc), but it is not the whole explanation. The
+residual is concentrated at small N: M5 reports P(<=4) = 0.005 while we measure
+0.135 (sssp) and 0.109 (bc) — we still see a population of sparsely-touched
+pages that M5 does not. That is the shape the **measurement-window** ambiguity
+predicts (counters reset every 10M accesses here; M5's accumulate), and a
+single-window run is queued to test it.
+
 ## Simulator port (SimCXL / CXL-DMSim, gem5 23.1)
 
 | claim | value | source |

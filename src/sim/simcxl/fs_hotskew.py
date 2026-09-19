@@ -110,6 +110,18 @@ ap.add_argument("--workload", required=True, choices=["sssp", "bc", "liblinear"]
 ap.add_argument("--fs-dir", default="/home/zajason/dev/advarch/fs_image")
 ap.add_argument("--epoch", type=int, default=10_000_000)
 ap.add_argument("--max-epochs", type=int, default=12)
+ap.add_argument("--max-ticks", type=int, default=0,
+                help="absolute tick limit; 0 = run to workload completion. "
+                     "Boot costs ~3.32e12 ticks and is very repeatable "
+                     "(two runs differed by 2e6), so a budget of "
+                     "boot + N is predictable.")
+ap.add_argument("--big-mem", action="store_true",
+                help="expose the high memory region as plain RAM for workloads "
+                     "that need more than X86Board's 3GB (liblinear: 11.94GB)")
+ap.add_argument("--high-mem-gb", type=int, default=16,
+                help="PCI BAR size must be a power of two -- 13GB fails with "
+                     "\"Illegal size ... for bar\". 16GB + 3GB low = 19GB, "
+                     "enough for liblinear's 11.94GB peak.")
 ap.add_argument("--max-exits", type=int, default=4,
                 help="stop on this m5_exit; 4 = boot + roi_begin + roi_end + script end")
 ap.add_argument("--outfile", default=None)
@@ -128,6 +140,18 @@ cache_hierarchy = PrivateL1PrivateL2SharedL3CacheHierarchy(
 # 11.94 GB and does NOT; see README.md.
 memory = SingleChannelDDR4_3200(size="3GB")
 
+# Workloads that need more than 3GB (liblinear peaks at 11.94GB) get the
+# high region above the 4GB hole. The board already places a memory system
+# there -- it calls it "cxl_memory" and marks it E820 type 20, which Linux
+# treats as reserved unless a CXL driver claims it. With is_asic=False that
+# region is reached through the CXLBridge, so re-typing the E820 entry as
+# type 1 (normal RAM) makes the stock kernel use it as ordinary memory and
+# routes the traffic through the CXL device path -- which is where M5 puts
+# its counters anyway.
+high_memory = SingleChannelDDR4_3200(
+    size=f"{args.high_mem_gb}GB" if args.big_mem else "1GB"
+)
+
 processor = SimpleSwitchableProcessor(
     starting_core_type=CPUTypes.ATOMIC,
     switch_core_type=CPUTypes.TIMING,
@@ -142,22 +166,38 @@ board = TwoDiskX86Board(
     processor=processor,
     memory=memory,
     cache_hierarchy=cache_hierarchy,
-    cxl_memory=SingleChannelDDR4_3200(size="1GB"),
-    is_asic=True,
+    cxl_memory=high_memory,
+    is_asic=not args.big_mem,
     data_image=f"{args.fs_dir}/data.img",
 )
 
-# Enable the probe on every memory controller behind this board's memory.
+if args.big_mem:
+    # Retype the high region from 20 (reserved / special-purpose) to 1 (usable
+    # RAM). Done after construction because the entry is built inside
+    # _setup_io_devices, which is far too large to override for one field.
+    flipped = 0
+    for e in board.workload.e820_table.entries:
+        if int(e.range_type) == 20:
+            e.range_type = 1
+            flipped += 1
+    print(f"hotskew: big-mem on -- retyped {flipped} E820 entry to usable RAM, "
+          f"total guest RAM ~= {3 + args.high_mem_gb} GB")
+
+# Enable the probe on every memory controller. With --big-mem there are two
+# memory systems, so there are two summaries; Figure 4 is a distribution over
+# pages and every 4KB page lies wholly within one range, so the histograms add.
 out = args.outfile or f"hotskew-{args.workload}"
+systems = [("", memory)] + ([(".high", high_memory)] if args.big_mem else [])
 n_enabled = 0
-for ctrl in memory.get_memory_controllers():
-    ctrl.hotskew_enable = True
-    ctrl.hotskew_out = out
-    ctrl.hotskew_epoch = args.epoch
-    ctrl.hotskew_topk = 128
-    ctrl.hotskew_budgets = [128, 512, 2048, 8192]
-    n_enabled += 1
-print(f"hotskew: probe enabled on {n_enabled} memory controller(s) -> {out}")
+for suffix, sysmem in systems:
+    for ctrl in sysmem.get_memory_controllers():
+        ctrl.hotskew_enable = True
+        ctrl.hotskew_out = out + suffix
+        ctrl.hotskew_epoch = args.epoch
+        ctrl.hotskew_topk = 128
+        ctrl.hotskew_budgets = [128, 512, 2048, 8192]
+        n_enabled += 1
+print(f"hotskew: probe enabled on {n_enabled} memory controller(s) -> {out}*")
 
 command = (
     "m5 exit;"                       # hand back so we can switch to the detailed CPU
@@ -221,5 +261,9 @@ simulator = Simulator(
     board=board,
     on_exit_event={ExitEvent.EXIT: on_exit()},
 )
-simulator.run()
+if args.max_ticks:
+    print(f"hotskew: tick budget {args.max_ticks:.3g}", flush=True)
+    simulator.run(max_ticks=args.max_ticks)
+else:
+    simulator.run()
 print("hotskew: run complete; summary written by the exit callback")

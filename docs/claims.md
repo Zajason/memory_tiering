@@ -128,6 +128,27 @@ across all five N, same as the Pin column.
 | bc: epochs / DRAM accesses | 46 / 451,441,535 | " |
 | bc: mean words/page | 46.851 / 64 | " |
 
+### The measurement window dominates
+
+Re-running `bc` with a single window instead of 46 windows of 10M accesses,
+same workload, same 451,441,535 DRAM accesses:
+
+| N | M5 | Pin | gem5, 46x10M | gem5, 1 window |
+|---|---|---|---|---|
+| 4 | 0.005 | 0.160 | 0.109 | **0.002** |
+| 8 | 0.020 | 0.260 | 0.142 | 0.004 |
+| 16 | 0.040 | 0.418 | 0.192 | 0.005 |
+| 32 | 0.090 | 0.576 | 0.310 | 0.006 |
+| 48 | 0.145 | 0.638 | 0.476 | 0.008 |
+| **max err** | | 0.493 | 0.331 | **0.137** |
+
+mean words/page: 46.851 (46 windows) -> **63.603** (1 window), of 64.
+
+**M5's published curve sits between our two windows at every N.** The short
+window is too sparse, the long window too dense, and M5 is bracketed. This is
+not a tuning knob we chose badly -- it is the free parameter the paper never
+specifies, and it moves P(<=4) from 0.109 to 0.002 while M5 reports 0.005.
+
 **Both moved toward M5, neither reached it.** The kernel blind spot is real and
 is worth 0.042 (sssp) and 0.162 (bc), but it is not the whole explanation. The
 residual is concentrated at small N: M5 reports P(<=4) = 0.005 while we measure

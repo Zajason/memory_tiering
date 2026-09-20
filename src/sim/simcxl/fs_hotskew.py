@@ -122,6 +122,13 @@ ap.add_argument("--high-mem-gb", type=int, default=16,
                 help="PCI BAR size must be a power of two -- 13GB fails with "
                      "\"Illegal size ... for bar\". 16GB + 3GB low = 19GB, "
                      "enough for liblinear's 11.94GB peak.")
+ap.add_argument("--switch-at-roi", action="store_true",
+                help="stay on ATOMIC through the data load and switch to the "
+                     "detailed CPU at hotskew_roi_begin instead of at boot. The "
+                     "probe only counts recvTimingReq, so an ATOMIC load is "
+                     "invisible to it -- which is the point. Needed for liblinear: "
+                     "parsing kdda is ~15G instructions, >6h at 718 KIPS, so a "
+                     "detailed load never reaches the training kernel at all.")
 ap.add_argument("--max-exits", type=int, default=4,
                 help="stop on this m5_exit; 4 = boot + roi_begin + roi_end + script end")
 ap.add_argument("--outfile", default=None)
@@ -227,33 +234,46 @@ class Phase:
 def on_exit():
     """Every m5_exit lands here, in order:
 
-      #1  the boot script's handback  -> switch ATOMIC -> TimingSimpleCPU
-      #2  hotskew_roi_begin()         -> the binary entering its timed kernel
-      #3  hotskew_roi_end()           -> leaving it
-      #4  the boot script's final exit -> workload done, stop
+      #1  the boot script's handback
+      #2  hotskew_roi_begin()   -- the binary entering its timed kernel
+      #3  hotskew_roi_end()     -- leaving it
+      #4  the boot script's final exit
 
-    The ROI markers are recorded but do NOT gate the measurement: the probe
-    counts from the CPU switch onward, so the data load is included. That is
-    deliberate (see the header).
+    WHERE we switch to the detailed CPU decides what gets measured, because the
+    probe hooks recvTimingReq and an ATOMIC CPU issues recvAtomic instead:
 
-    Stopping on #4 matters. Without it the guest sits at an idle shell forever
-    and the run never writes a summary.
+      default          switch at #1. The data load runs in detail and IS
+                       counted. That is what we want for GAPBS, where load
+                       visibility is the hypothesis under test (worth 26.7 of
+                       the 28.6 words/page difference).
+
+      --switch-at-roi  switch at #2. The load runs under ATOMIC and is
+                       invisible; only the timed kernel is measured. Required
+                       for liblinear, whose kdda parse is ~15G instructions and
+                       ate a 2h50m budget without ever reaching the training
+                       kernel -- observed, not predicted. It also matches what
+                       the Pin run measured for liblinear, keeping the two
+                       comparable.
     """
     while True:
         Phase.exits += 1
-        if not Phase.switched:
-            print(f"hotskew: boot done at tick {m5.curTick()}, "
-                  f"switching to TimingSimpleCPU", flush=True)
+        switch_now = (
+            Phase.exits >= 2 if args.switch_at_roi else Phase.exits == 1
+        )
+        if switch_now and not Phase.switched:
+            print(f"hotskew: switching to TimingSimpleCPU at exit "
+                  f"#{Phase.exits}, tick {m5.curTick()}", flush=True)
             processor.switch()
             Phase.switched = True
             yield False
-        elif Phase.exits >= args.max_exits:
+        elif Phase.switched and Phase.exits >= args.max_exits:
             print(f"hotskew: exit #{Phase.exits} at tick {m5.curTick()} "
                   f"-- stopping, summary follows", flush=True)
             yield True
         else:
-            print(f"hotskew: ROI marker (exit #{Phase.exits}) at "
-                  f"tick {m5.curTick()}", flush=True)
+            state = "measuring" if Phase.switched else "not measuring yet"
+            print(f"hotskew: exit #{Phase.exits} at tick {m5.curTick()} "
+                  f"({state})", flush=True)
             yield False
 
 

@@ -38,9 +38,10 @@ implements the bounded hardware trackers M5 proposes and scores them against exa
 ground truth, measures what the sub-page information is worth for placement, and
 converts the whole thing into a time number.
 
-The eventual target is CXLRAMSim (a gem5-based CXL simulator), which is **not yet
-released** — so `src/sim/` is built to make that port small rather than pretending to
-have done it.
+CXLRAMSim (the gem5-based CXL simulator the brief named) is **still unreleased**, so
+the port went to **SimCXL / CXL-DMSim** instead — public, gem5 23.1, models a CXL
+Type 3 memory expander. `src/sim/` made that port small, and the port has now been
+done and run: see `src/sim/simcxl/` and §7.
 
 ---
 
@@ -80,12 +81,13 @@ have done it.
    └────────────────────────────────────────────────────────────────┘
 
    src/sim/   the same counters and trackers, Pin-free, one call per
-              request — ready to drop into a simulator's device port
+              request — dropped into gem5 unchanged (src/sim/simcxl/)
 ```
 
 The **key structural idea**: the counting code (`counter_table.hpp`, `tracker.hpp`) has
 no dependency on Pin. It takes a line address and a direction. That is what lets the
-same code run under Pin today and inside a simulator later.
+same code run under Pin and, unchanged, inside gem5. That was a design claim until
+the full-system campaign tested it; only the *placement* of the call changed.
 
 ---
 
@@ -242,8 +244,10 @@ That is ~269,000 pages M5 records as perfectly dense and Pin records as nothing.
 staging buffer, and it moves BFS's `P(≤48)` from **0.813 → 0.320** against M5's
 **0.345**.
 
-**This is also the strongest argument for the simulator**: in gem5 the device request
-path sees kernel traffic too, and the blind spot does not exist.
+**This was the strongest argument for the simulator, and it was tested.** In gem5 the
+request path sees kernel traffic and the blind spot does not exist. It moved `bc`
+from 0.493 to **0.331** against M5 and `sssp` from 0.433 to **0.391** — real, and
+not sufficient. §7 and `docs/claims.md` carry the numbers.
 
 ### 4.3 Virtual addresses are exact for this metric
 
@@ -399,6 +403,9 @@ Quick index of where each result lives:
 | granularity as a 2-D surface | report §6.5 |
 | which failure mode binds | report §7, which-failure-mode.md |
 | hypotheses tested and **refuted** | claims.md |
+| **the gem5 port, and what it cost to build** | `src/sim/simcxl/README.md` |
+| **full-system results: `bc` 0.493→0.331, `sssp` 0.433→0.391** | claims.md, "Full-system campaign" |
+| **the measurement window brackets M5** | claims.md, "The measurement window dominates" |
 
 ---
 
@@ -412,6 +419,8 @@ Quick index of where each result lives:
 | change the latency model | `latency_model.py`; migration cost is the least certain input |
 | add a benchmark | `benchmarks/setup_*.sh` + an ROI patch + a case in `run_hotskew.sh` |
 | profile something in a simulator | `src/sim/hotskew_probe.hpp` — one call per request |
+| run the gem5 full-system campaign | `src/sim/simcxl/README.md` — patches, config, build traps |
+| change what the simulator measures | `fs_hotskew.py`, `--switch-at-roi`: switching CPU at boot counts the data load, switching at the ROI marker does not. The probe hooks `recvTimingReq`, and an ATOMIC CPU issues `recvAtomic`, so an ATOMIC phase is invisible to it |
 | add a metric over raw data | `src/analysis/hotskew.py`, the `Run` class |
 | sweep page/word granularity | `src/analysis/granularity_sweep.py` — edit `PAGE_SIZES` / `WORD_SIZES`; no re-runs needed |
 
@@ -438,9 +447,20 @@ Quick index of where each result lives:
 - **liblinear uses the wrong dataset** — kdda rather than M5's KDD2012 (§7.2b).
 - **The `hpt-driven` nominator** uses a median-split to model "pages HPT reported",
   which is a stand-in for a real bounded HPT membership test.
-- **Liblinear is scripted but never run** — `setup_liblinear.sh` downloads a 2.5 GB
-  dataset from an academic host that is often slow.
+- **liblinear has no full-system result.** It runs fine under Pin (max error 0.577,
+  in the scorecard), but three gem5 attempts produced `STATUS NO DATA`. The cause is
+  measured, not guessed: parsing 2.67 GB of kdda through a simulated IDE disk is
+  I/O-bound, so the ATOMIC fast-forward saves far less than the instruction count
+  suggests, and the run never reaches `hotskew_roi_begin`. Needs an uninterrupted
+  multi-hour stretch.
 - **SPEC CPU2017 is absent** (licence), so 4 of M5's 14 Figure 4 bars are missing.
+- **The three full-system runs are not one uniform experiment.** `sssp` and `bc`
+  measure *through* the data load, because load visibility is the hypothesis under
+  test. liblinear cannot — its load is out of reach in detail — so it would test the
+  physical-address effect only. Do not average the three.
+- **The window sweep has two points, not a curve.** 10M-access windows and one
+  unbounded window bracket M5; the window that actually reproduces M5 is somewhere
+  between and was not searched for.
 - **Everything is single-threaded.** Thread count was swept and barely moves the
   Figure 4 metric (18.298 → 18.353 across 1→16 threads), but the multithreaded cache
   model has no coherence between per-thread L1/L2, so MT numbers would need that first.

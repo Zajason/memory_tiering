@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Cache-line hot skewness for CXL memory tiering</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Reproducing M5 (ASPLOS 25) Figure 4 with a
+purpose-built Intel Pin tool, then showing the residual disagreement is dominated
+by the measurement window the paper never specifies.">
+<style>
+:root { --bg:#fbfbfa; --fg:#1a1a1a; --mut:#666; --line:#e2e2df; --card:#fff;
+        --ok:#1a7f4b; --mid:#b06f00; --bad:#b3261e; --acc:#2563a8; }
+@media (prefers-color-scheme: dark) { :root { --bg:#14161a; --fg:#e8e8e6;
+  --mut:#9aa0a6; --line:#2a2d33; --card:#1b1e24; --ok:#4ade80; --mid:#fbbf24;
+  --bad:#f87171; --acc:#7dd3fc; } }
+:root[data-theme="dark"] { --bg:#14161a; --fg:#e8e8e6; --mut:#9aa0a6;
+  --line:#2a2d33; --card:#1b1e24; --ok:#4ade80; --mid:#fbbf24; --bad:#f87171;
+  --acc:#7dd3fc; }
+:root[data-theme="light"] { --bg:#fbfbfa; --fg:#1a1a1a; --mut:#666;
+  --line:#e2e2df; --card:#fff; --ok:#1a7f4b; --mid:#b06f00; --bad:#b3261e;
+  --acc:#2563a8; }
+* { box-sizing:border-box }
+body { margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;
+  overflow-x:hidden; }
+.wrap { max-width:860px; margin:0 auto; padding:0 20px 80px }
+header { padding:64px 0 28px; border-bottom:1px solid var(--line); margin-bottom:36px }
+h1 { font-size:clamp(26px,4.4vw,38px); line-height:1.18; margin:0 0 12px; letter-spacing:-.02em }
+.sub { color:var(--mut); font-size:17px; margin:0 }
+.meta { color:var(--mut); font-size:13px; margin-top:18px; font-variant-numeric:tabular-nums }
+h2 { font-size:21px; margin:52px 0 6px; letter-spacing:-.01em }
+h2 .n { color:var(--mut); font-weight:400; margin-right:8px }
+.lede { color:var(--mut); margin:0 0 18px }
+.cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; margin:26px 0 }
+.card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px 18px }
+.card .big { font-size:27px; font-weight:650; letter-spacing:-.02em; font-variant-numeric:tabular-nums }
+.card .lab { color:var(--mut); font-size:13px; margin-top:4px; line-height:1.45 }
+.tbl { overflow-x:auto; margin:18px 0 }
+table { border-collapse:collapse; width:100%; font-size:14.5px }
+th,td { text-align:left; padding:8px 12px; border-bottom:1px solid var(--line); white-space:nowrap }
+th { color:var(--mut); font-weight:600; font-size:12.5px; text-transform:uppercase; letter-spacing:.05em }
+td.num { text-align:right; font-variant-numeric:tabular-nums }
+td.good { color:var(--ok); font-weight:600 }
+.pill { font-size:12px; padding:2px 9px; border-radius:20px; font-weight:600 }
+.pill.ok { background:color-mix(in srgb,var(--ok) 15%,transparent); color:var(--ok) }
+.pill.mid { background:color-mix(in srgb,var(--mid) 16%,transparent); color:var(--mid) }
+.pill.bad { background:color-mix(in srgb,var(--bad) 14%,transparent); color:var(--bad) }
+figure { margin:22px 0; }
+figure img { border:1px solid var(--line); border-radius:8px; background:#fff; display:block }
+figcaption { color:var(--mut); font-size:13px; margin-top:8px; line-height:1.5 }
+blockquote { margin:20px 0; padding:14px 18px; border-left:3px solid var(--acc);
+  background:var(--card); border-radius:0 8px 8px 0 }
+blockquote p { margin:0 }
+code { font:13.5px ui-monospace,SFMono-Regular,Menlo,monospace;
+  background:color-mix(in srgb,var(--fg) 7%,transparent); padding:1.5px 5px; border-radius:4px }
+pre { background:var(--card); border:1px solid var(--line); border-radius:8px;
+  padding:14px 16px; overflow-x:auto }
+pre code { background:none; padding:0 }
+a { color:var(--acc) }
+ul { padding-left:20px } li { margin:6px 0 }
+footer { margin-top:60px; padding-top:22px; border-top:1px solid var(--line);
+  color:var(--mut); font-size:13.5px }
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Cache-line hot skewness for CXL memory tiering</h1>
+  <p class="sub">Reproducing M5 (ASPLOS&nbsp;’25) Figure&nbsp;4 with a purpose-built Intel&nbsp;Pin tool —
+  then finding that the headline disagreements are dominated by a parameter the paper never states.</p>
+  <p class="meta">Advanced Computer Architecture · NTUA / CSLab ·
+  33 commits · <code>00c601b</code> · built 2026-09-22</p>
+</header>
+
+<div class="cards">
+  <div class="card"><div class="big">2 / 8</div>
+    <div class="lab">workloads reproduced (max error ≤ 0.05); 3 more within 0.10</div></div>
+  <div class="card"><div class="big">5 vs 24.8M</div>
+    <div class="lab">DRAM accesses Pin sees for 512 MiB moved by <code>read(2)</code> vs <code>memcpy</code></div></div>
+  <div class="card"><div class="big">63.98 / 64</div>
+    <div class="lab">measured vs analytic ground truth, 64 B stride — the instrument is calibrated, not assumed</div></div>
+</div>
+
+<h2><span class="n">1</span>The measurement</h2>
+<p class="lede">M5 argues CXL tiering should track <em>sub-page</em> hotness: within a
+4 KB page, only a few 64 B lines are hot. Figure 4 is the distribution of how many
+distinct 64 B words each page touches. Reproducing it needs a tool that records
+<em>which</em> words are touched — not just cache hits and misses.</p>
+<figure><img src="assets/hero_fig4.png" alt="Our reproduction against M5's published Figure 4." style="width:100%"><figcaption>Our reproduction against M5's published Figure 4.</figcaption></figure>
+<figure><img src="assets/fig4_original_vs_ours.png" alt="Side by side with the paper's own figure." style="width:100%"><figcaption>Side by side with the paper's own figure.</figcaption></figure>
+
+<h2><span class="n">2</span>Calibration first</h2>
+<p class="lede">No result is trustworthy until the instrument is. The tool was run
+against access patterns whose answer is known analytically, across four orders of
+granularity — it lands within 0.02% at every point.</p>
+<figure><img src="assets/hero_validation.png" alt="Measured vs analytic words-per-page." style="width:100%"><figcaption>Measured vs analytic words-per-page.</figcaption></figure>
+
+<h2><span class="n">3</span>Reproduction scorecard</h2>
+<p class="lede">Scored as <strong>maximum error across all five N</strong>, not at one
+convenient point. At N=48 alone most workloads agree — but that is where the CDF has
+nearly saturated and is the cheapest place to agree.</p>
+<div class="tbl"><table>
+<thead><tr><th>Workload</th><th style="text-align:right">Max error</th><th>Verdict</th></tr></thead>
+<tbody><tr><td>PageRank</td><td class='num'>0.014</td><td><span class='pill ok'>reproduced</span></td></tr><tr><td>Triangle counting</td><td class='num'>0.030</td><td><span class='pill ok'>reproduced</span></td></tr><tr><td>Connected components</td><td class='num'>0.082</td><td><span class='pill mid'>close</span></td></tr><tr><td>Redis (YCSB-A)</td><td class='num'>0.085</td><td><span class='pill mid'>close</span></td></tr><tr><td>BFS</td><td class='num'>0.095</td><td><span class='pill mid'>close</span></td></tr><tr><td>SSSP</td><td class='num'>0.433</td><td><span class='pill bad'>disagrees</span></td></tr><tr><td>Betweenness</td><td class='num'>0.493</td><td><span class='pill bad'>disagrees</span></td></tr><tr><td>liblinear</td><td class='num'>0.577</td><td><span class='pill bad'>disagrees</span></td></tr></tbody></table></div>
+
+<h2><span class="n">4</span>The kernel blind spot</h2>
+<p class="lede">Pin instruments user-space instructions. When the kernel moves data on
+the program's behalf, Pin sees nothing — and for these benchmarks that is most of the
+traffic.</p>
+<blockquote><p>512 MiB via <code>read(2)</code>: <strong>5</strong> DRAM accesses observed.<br>
+The same 512 MiB via <code>memcpy</code>: <strong>24,838,154</strong>.</p></blockquote>
+<p>Routing the graph load through user space moves BFS's P(≤48) from
+<strong>0.813 → 0.320</strong>, against M5's published <strong>0.345</strong>.
+That single effect accounts for 26.7 of the 28.6 words/page difference.</p>
+
+<h2><span class="n">5</span>Full-system simulation</h2>
+<p class="lede">The natural test: run the same counters where the blind spot cannot
+exist. CXLRAMSim is unreleased, so the probe was ported to
+<a href="https://github.com/ferry-hhh/CXL-DMSim">SimCXL / CXL-DMSim</a> (gem5 23.1) —
+physical addresses, kernel traffic included, counting code unchanged.</p>
+<div class="tbl"><table>
+<thead><tr><th>Workload</th><th style="text-align:right">Pin vs M5</th>
+<th style="text-align:right">gem5 vs M5</th><th style="text-align:right">Δ</th></tr></thead>
+<tbody><tr><td>SSSP</td><td class='num'>0.433</td><td class='num'>0.391</td><td class='num good'>-0.043</td></tr><tr><td>Betweenness</td><td class='num'>0.493</td><td class='num'>0.331</td><td class='num good'>-0.163</td></tr></tbody></table></div>
+<p>Both moved <em>toward</em> M5 — the hypothesis is real. Neither reached agreement —
+it is not sufficient.</p>
+
+<h2><span class="n">6</span>What actually dominates</h2>
+<p class="lede">The residual sat entirely at small N, the signature of the
+<em>measurement window</em>. Re-running the identical workload with one window instead
+of 46 — same run, same 451441535 DRAM accesses:</p>
+<div class="tbl"><table>
+<thead><tr><th style="text-align:right">N</th><th style="text-align:right">M5</th>
+<th style="text-align:right">Pin</th><th style="text-align:right">gem5 46×10M</th>
+<th style="text-align:right">gem5 1 window</th></tr></thead>
+<tbody><tr><td class='num'>4</td><td class='num'>0.005</td><td class='num'>0.160</td><td class='num'>0.109</td><td class='num good'>0.002</td></tr><tr><td class='num'>8</td><td class='num'>0.020</td><td class='num'>0.260</td><td class='num'>0.142</td><td class='num good'>0.004</td></tr><tr><td class='num'>16</td><td class='num'>0.040</td><td class='num'>0.418</td><td class='num'>0.192</td><td class='num good'>0.005</td></tr><tr><td class='num'>32</td><td class='num'>0.090</td><td class='num'>0.576</td><td class='num'>0.310</td><td class='num good'>0.006</td></tr><tr><td class='num'>48</td><td class='num'>0.145</td><td class='num'>0.638</td><td class='num'>0.476</td><td class='num good'>0.008</td></tr></tbody></table></div>
+<figure><img src="assets/sim_window_bracket.png" alt="M5's curve lies inside the envelope spanned by our two window choices at every N." style="width:100%"><figcaption>M5's curve lies inside the envelope spanned by our two window choices at every N.</figcaption></figure>
+<p>Mean words/page moves from <strong>46.851 / 64</strong> to <strong>63.603 / 64</strong>.
+<strong>M5's published curve sits between our two windows at every single N.</strong>
+We do not match M5 by choosing better — we bracket it. Window choice moves the answer
+further than the instrument does, and the paper never states which window it used.</p>
+
+<h2><span class="n">7</span>Beyond reproduction</h2>
+<figure><img src="assets/hero_tracker.png" alt="Bounded top-K trackers scored against exact counts: 68x the SRAM buys about 1% accuracy." style="width:100%"><figcaption>Bounded top-K trackers scored against exact counts: 68x the SRAM buys about 1% accuracy.</figcaption></figure>
+<figure><img src="assets/hero_speedup.png" alt="Closed-loop latency model. Memory stall time, not application runtime — an upper bound." style="width:100%"><figcaption>Closed-loop latency model. Memory stall time, not application runtime — an upper bound.</figcaption></figure>
+<figure><img src="assets/gran_surface.png" alt="Page size x word size as a 2-D surface. Huge-page folklore is overstated; coarse trackers distort worst where sparsity matters most." style="width:100%"><figcaption>Page size x word size as a 2-D surface. Huge-page folklore is overstated; coarse trackers distort worst where sparsity matters most.</figcaption></figure>
+
+<h2><span class="n">8</span>Tested and refuted</h2>
+<p class="lede">Kept visible because they are results, not gaps.</p>
+<ul>
+<li>Directed graphs explain the bc/sssp gap — <strong>no</strong>, made it worse</li>
+<li>A larger graph (kron-25) closes it — <strong>no</strong></li>
+<li>Real <code>web-Google</code> is usable — <strong>no</strong>, 125× below M5's footprint</li>
+<li>One window fits all workloads — <strong>no</strong>, the best window varies 1×–8×</li>
+<li>A fixed <em>time</em> window explains the spread — <strong>no</strong> (Spearman 0.086)</li>
+<li>HWT compensates for a weak HPT — <strong>no</strong>, it is gated on HPT membership</li>
+</ul>
+
+<h2><span class="n">9</span>Reproducing this</h2>
+<pre><code>make reproduce        # build, validate, fetch, profile, analyse, check
+make determinism      # demonstrate reproducibility rather than assert it
+./experiments/check_claims.sh</code></pre>
+<p>Every headline number lives in <a href="claims.md">claims.md</a> with the command
+that regenerates it, and <code>check_claims.sh</code> re-derives them from
+<code>results/</code> so documentation drift is caught rather than discovered by a reader.</p>
+
+<footer>
+<p><a href="report.md">Scientific report</a> ·
+<a href="handbook.md">Handbook</a> ·
+<a href="methodology.md">Methodology</a> ·
+<a href="claims.md">Claims ledger</a> ·
+<a href="https://github.com/Zajason/memory_tiering">Source</a></p>
+<p>Every number on this page is recomputed from <code>results/</code> at build time by
+<code>src/analysis/build_site.py</code>. AI-assisted pair programming; direction and
+scoping the author's.</p>
+</footer>
+</div>

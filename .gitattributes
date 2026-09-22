@@ -11,3 +11,8 @@ presentation/** linguist-vendored
 # Generated figures and captured results are data, not source.
 docs/assets/** linguist-generated
 results/** linguist-generated
+
+# docs/index.html is the generated GitHub Pages site, not hand-written HTML.
+# Without this it shows up as the repo's largest "HTML" file and skews the
+# language bar away from the C++ that is the actual work.
+docs/index.html linguist-generated

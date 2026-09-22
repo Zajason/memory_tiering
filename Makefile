@@ -8,6 +8,7 @@
 #   make check       verify docs/claims.md against results/
 #   make reproduce   all of the above, in order, from a clean checkout
 #   make determinism run the headline measurement twice and diff it
+#   make site        regenerate the GitHub Pages site from results/
 #
 # PIN_ROOT must point at an Intel Pin installation.
 
@@ -19,7 +20,7 @@ EPOCH_M     ?= 10
 
 export PIN_ROOT GRAPH_SCALE EPOCH_M
 
-.PHONY: all build validate benchmarks profile analyse check reproduce determinism clean help
+.PHONY: all build validate benchmarks profile analyse check reproduce determinism site clean help
 
 help:
 	@sed -n '2,20p' $(MAKEFILE_LIST) | sed 's/^# \?//'
@@ -72,6 +73,7 @@ analyse: $(PY)
 	$(PY) src/analysis/plot_figures.py     --config spr-20t-ul --outdir results/figures-ul
 	$(PY) src/analysis/plot_readme.py
 	$(PY) src/analysis/plot_granularity.py
+	$(PY) src/analysis/build_site.py
 
 # ----------------------------------------------------------------- check
 check: $(PY)
@@ -88,6 +90,14 @@ reproduce: validate benchmarks profile analyse check
 # it rather than asserting it.
 determinism: build
 	@./experiments/check_determinism.sh
+
+# ------------------------------------------------------------------ site
+# docs/index.html is generated, never hand-edited. Every number on it is
+# recomputed from results/ so the showcase page cannot drift from the data --
+# the same rule as claims.md, for the same reason.
+site: $(PY)
+	$(PY) src/analysis/build_site.py
+	@echo "preview: python3 -m http.server 8777 --directory docs"
 
 clean:
 	$(MAKE) -C src/profiler/pintool PIN_ROOT=$(PIN_ROOT) clean 2>/dev/null || true

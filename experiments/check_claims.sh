@@ -23,7 +23,8 @@ FAIL=0
 
 ok()   { printf '  \033[32mOK  \033[0m %-46s %s\n' "$1" "$2"; }
 bad()  { printf '  \033[31mFAIL\033[0m %-46s %s\n' "$1" "$2"; FAIL=$((FAIL+1)); }
-skip() { printf '  \033[33m--  \033[0m %-46s %s\n' "$1" "$2"; }
+SKIPPED=0
+skip() { SKIPPED=$((SKIPPED+1)); printf '  \033[33m--  \033[0m %-46s %s\n' "$1" "$2"; }
 
 # close <label> <actual> <expected> <tol>
 close() {
@@ -88,8 +89,12 @@ skip "cold-tail law 256->0.002, 512->1.000" "make -C src/sim test"
 skip "calibration strides 1/4/16/64"        "src/profiler/validate/run_validation.sh"
 
 echo
-if [[ $FAIL -eq 0 ]]; then
+if [[ $FAIL -eq 0 && $SKIPPED -eq 0 ]]; then
   echo -e "\033[32mclaims.md is consistent with results/\033[0m"
+elif [[ $FAIL -eq 0 ]]; then
+  # Reporting "consistent" while quietly skipping unverifiable rows is how the
+  # latency claims went stale without anyone noticing.
+  echo -e "\033[33mno claim DISAGREES, but $SKIPPED were not checked -- see the -- lines above\033[0m"
 else
   echo -e "\033[31m$FAIL claim(s) disagree with results/ -- fix claims.md or re-run\033[0m"
 fi

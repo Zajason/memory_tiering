@@ -91,6 +91,15 @@ non-monotone on `cc`; do not present that curve as clean.**
 **The speedup is memory *stall time* with no memory-level parallelism modelled.** It
 is an upper bound, not an application speedup.
 
+**Both latency rows are currently UNVERIFIABLE and one is disputed.**
+`latency_model.py` reads the per-page dumps, which were pruned from `results/`, so it
+now exits with `no usable data` and `check_claims.sh` was silently skipping these two
+rows while still printing "consistent". A linear extrapolation from the surviving
+`results/latency_spr-20t.csv` reproduces 1.505x at the model's default 3 us but gives
+**0.956x at 30 us, not 0.835x**. One of the two is wrong and neither can be re-derived
+without re-running the profiler with `DUMP_PAGES=1`. Do not quote the 30 us figure
+until that is done.
+
 ## Failure-mode comparison
 
 | claim | value | source |

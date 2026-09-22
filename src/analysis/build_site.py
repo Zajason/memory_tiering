@@ -110,6 +110,96 @@ def make_campaign_figure(sim):
     return "assets/sim_window_bracket.png"
 
 
+def collect_data():
+    """Everything the interactive views need, straight from results/.
+
+    Emitted as one JSON blob inlined into the page: no fetch(), so the page
+    works from file:// as well as from Pages, and there is no second request
+    to get out of sync with the HTML.
+    """
+    import csv
+    # latency_model.py's default L_migrate, already baked into amat_ns.
+    d = {"nice": {}, "m5": {}, "m5key": {}, "epochs": {}, "oneWindow": {},
+         "grain": [], "tracker": {}, "latency": [], "migrateBaselineUs": 3.0}
+
+    # per-epoch CDF points -- the window view
+    for k, rel in PIN.items():
+        ep = p(rel.replace(".summary.txt", ".epochs.csv"))
+        if not os.path.exists(ep):
+            continue
+        key = os.path.basename(rel).replace(".summary.txt", "")
+        rows = []
+        for r in csv.DictReader(open(ep)):
+            rows.append({"pages": int(r["pages"]),
+                         "mean_unique_words": float(r["mean_unique_words"]),
+                         **{f"p_le_{n}": float(r[f"p_le_{n}"]) for n in H.FIG4_N}})
+        if rows:
+            d["epochs"][key] = rows
+            d["nice"][key] = NICE[k]
+            d["m5key"][key] = M5KEY[k]
+            d["m5"][M5KEY[k]] = {str(n): H.M5_FIGURE4[M5KEY[k]][n] for n in H.FIG4_N}
+
+    # the genuinely-longer-window result, drawn as a reference line
+    wrel = "results/simcxl/hotskew-bc-window.summary.txt"
+    if os.path.exists(p(wrel)):
+        c = H.figure4_from_summary(p(wrel))
+        d["oneWindow"]["gapbs-bc"] = {str(n): c[n] for n in H.FIG4_N}
+
+    g = p("results/granularity.csv")
+    if os.path.exists(g):
+        for r in csv.DictReader(open(g)):
+            d["grain"].append({"benchmark": r["benchmark"],
+                               "page_bytes": int(r["page_bytes"]),
+                               "word_bytes": int(r["word_bytes"]),
+                               "mean_touched_frac": float(r["mean_touched_frac"]),
+                               "wasted_frac": float(r["wasted_frac"])})
+
+    tdir = p("results/trackers")
+    if os.path.isdir(tdir):
+        for f in sorted(os.listdir(tdir)):
+            if not f.endswith(".spacesaving.summary.txt"):
+                continue
+            key = f.split(".")[0]
+            rows = []
+            sec = False
+            for line in open(os.path.join(tdir, f)):
+                if line.startswith("# N, hpt"):
+                    sec = True
+                    continue
+                if sec:
+                    if not line.strip():
+                        break
+                    parts = line.strip().split(",")
+                    if len(parts) >= 6:
+                        rows.append({"N": int(parts[0]), "hpt": float(parts[1]),
+                                     "hwt": float(parts[3]), "kb": int(parts[5])})
+            if rows:
+                d["tracker"][key] = rows
+                d["nice"].setdefault(key, key.replace("gapbs-", ""))
+
+    # migration break-even: needs accesses to amortise the cost over
+    lat = p("results/latency_spr-20t.csv")
+    if os.path.exists(lat):
+        by = {}
+        for r in csv.DictReader(open(lat)):
+            by.setdefault(r["benchmark"], {})[r["policy"]] = r
+        for b, pol in by.items():
+            base = pol.get("all-CXL")
+            # count-only specifically, not "whichever policy wins". The repo's
+            # headline number (claims.md: 1.505x geomean, 0.835x at 30us) is the
+            # count-only geomean, and a widget that quietly used the best policy
+            # would show 0.943x at 30us and contradict the ledger.
+            best = pol.get("count-only")
+            acc = meta(f"results/spr-20t/{b}.summary.txt", "dram_accesses")
+            if base and best and acc:
+                d["latency"].append({
+                    "name": b, "amat": float(best["amat_ns"]),
+                    "amat_allcxl": float(base["amat_ns"]),
+                    "migrations": float(best["migrations"]),
+                    "accesses": float(str(acc).split()[0])})
+    return d
+
+
 def esc(s):
     return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
@@ -180,6 +270,10 @@ def main():
             f"<td class='num good'>{sim['bc-window'][n]:.3f}</td></tr>"
             for n in H.FIG4_N)
 
+    data = collect_data()
+    import json
+    datajs = json.dumps(data, separators=(",", ":"))
+
     mw_ep = meta("results/simcxl/hotskew-bc.summary.txt", "mean_unique_words")
     mw_win = meta("results/simcxl/hotskew-bc-window.summary.txt", "mean_unique_words")
 
@@ -244,6 +338,23 @@ pre {{ background:var(--card); border:1px solid var(--line); border-radius:8px;
 pre code {{ background:none; padding:0 }}
 a {{ color:var(--acc) }}
 ul {{ padding-left:20px }} li {{ margin:6px 0 }}
+.widget {{ background:var(--card); border:1px solid var(--line); border-radius:10px;
+  padding:18px; margin:20px 0 }}
+.ctl {{ display:flex; flex-wrap:wrap; gap:14px 18px; align-items:center; margin-bottom:14px }}
+.ctl label {{ font-size:13px; color:var(--mut); display:flex; align-items:center; gap:7px }}
+select {{ background:var(--bg); color:var(--fg); border:1px solid var(--line);
+  border-radius:6px; padding:5px 8px; font:inherit; font-size:13.5px }}
+input[type=range] {{ accent-color:var(--acc); width:150px }}
+.readout {{ font-size:13.5px; margin-top:12px; line-height:1.9; font-variant-numeric:tabular-nums }}
+.readout b {{ font-variant-numeric:tabular-nums }}
+.note {{ font-size:12.5px; color:var(--mut); margin-top:8px; line-height:1.55 }}
+.legend {{ display:flex; flex-wrap:wrap; gap:16px; margin-top:10px; font-size:12.5px; color:var(--mut) }}
+.legend i {{ display:inline-block; width:11px; height:11px; border-radius:3px;
+  margin-right:6px; vertical-align:-1px }}
+table.heat {{ font-size:12.5px; width:100% }}
+table.heat th {{ text-transform:none; letter-spacing:0; font-size:12px }}
+table.heat td {{ text-align:right; border-bottom:1px solid var(--line);
+  font-variant-numeric:tabular-nums; padding:6px 8px }}
 footer {{ margin-top:60px; padding-top:22px; border-top:1px solid var(--line);
   color:var(--mut); font-size:13.5px }}
 </style>
@@ -320,15 +431,71 @@ of 46 — same run, same {meta("results/simcxl/hotskew-bc.summary.txt","dram_acc
 <th style="text-align:right">gem5 1 window</th></tr></thead>
 <tbody>{win}</tbody></table></div>
 {fig(campaign_fig or "", "M5's curve lies inside the envelope spanned by our two window choices at every N.") if campaign_fig else ""}
+<div class="widget">
+  <div class="ctl">
+    <label>workload
+      <select id="w-bench"></select></label>
+    <label>from epoch <input type="range" id="w-lo"></label>
+    <label>to epoch <input type="range" id="w-hi"></label>
+  </div>
+  <div id="w-chart"></div>
+  <div class="readout" id="w-read"></div>
+  <div class="note" id="w-note"></div>
+  <p class="note"><strong>What this is and is not.</strong> The sliders choose
+  <em>which</em> epochs are aggregated, page-weighted — exactly how the reported
+  numbers are computed. They do not synthesise a longer window: a longer window
+  unions each page's touched-word set and makes pages denser, which averaging
+  cannot reproduce. The genuinely-longer-window result is the separate gem5 run
+  drawn as the dashed line.</p>
+</div>
+
 <p>Mean words/page moves from <strong>{mw_ep}</strong> to <strong>{mw_win}</strong>.
 <strong>M5's published curve sits between our two windows at every single N.</strong>
 We do not match M5 by choosing better — we bracket it. Window choice moves the answer
 further than the instrument does, and the paper never states which window it used.</p>
 
 <h2><span class="n">7</span>Beyond reproduction</h2>
-{fig("assets/hero_tracker.png", "Bounded top-K trackers scored against exact counts: 68x the SRAM buys about 1% accuracy.")}
-{fig("assets/hero_speedup.png", "Closed-loop latency model. Memory stall time, not application runtime — an upper bound.")}
-{fig("assets/gran_surface.png", "Page size x word size as a 2-D surface. Huge-page folklore is overstated; coarse trackers distort worst where sparsity matters most.")}
+<p class="lede">M5 proposes bounded hardware trackers. Scored against exact counts,
+the accuracy-vs-area curve is almost flat — which is the useful finding, because it
+says the cheap tracker is the right one.</p>
+<div class="widget">
+  <div class="ctl"><label>workload <select id="t-bench"></select></label></div>
+  <div id="t-chart"></div>
+  <div class="readout" id="t-read"></div>
+</div>
+
+<p class="lede">Tiering only pays if migration is cheap. Drag the migration cost and
+watch the break-even move — this is the same arithmetic as
+<code>latency_model.py</code>, over the measured access counts.</p>
+<div class="widget">
+  <div class="ctl">
+    <label>migration cost
+      <input type="range" id="l-cost" min="0" max="400" step="5" value="10"></label>
+  </div>
+  <div id="l-chart"></div>
+  <div class="readout" id="l-out"></div>
+  <p class="note">Memory <em>stall time</em> with no memory-level parallelism
+  modelled — an upper bound, not an application speedup. The curve is a linear
+  extrapolation from the measured migration counts, and it is <em>not</em>
+  currently cross-checked against the full model: <code>latency_model.py</code>
+  needs the per-page dumps, which were pruned from the tree. At 30&nbsp;µs it
+  gives 0.956× where <a href="claims.md">claims.md</a> records 0.835×. Treat the
+  break-even <em>region</em> as the result, not the exact crossing point.</p>
+</div>
+
+<p class="lede">Page size against word size, as a surface. Coarser tracking granularity
+wastes the most bandwidth exactly where pages are sparsest.</p>
+<div class="widget">
+  <div class="ctl">
+    <label>workload <select id="g-bench"></select></label>
+    <label>metric <select id="g-metric">
+      <option value="wasted_frac">wasted fraction</option>
+      <option value="mean_touched_frac">mean touched fraction</option>
+    </select></label>
+  </div>
+  <div id="g-grid" class="tbl"></div>
+  <p class="note">Rows are page size, columns are tracking word size. Darker is higher.</p>
+</div>
 
 <h2><span class="n">8</span>Tested and refuted</h2>
 <p class="lede">Kept visible because they are results, not gaps.</p>
@@ -349,6 +516,12 @@ make determinism      # demonstrate reproducibility rather than assert it
 that regenerates it, and <code>check_claims.sh</code> re-derives them from
 <code>results/</code> so documentation drift is caught rather than discovered by a reader.</p>
 
+<script id="hotskew-data" type="application/json">{{DATAJSON}}</script>
+<script>const DATA = JSON.parse(document.getElementById("hotskew-data").textContent);
+for (const k in DATA.m5) {{ const o = {{}}; for (const n in DATA.m5[k]) o[+n] = DATA.m5[k][n]; DATA.m5[k] = o; }}
+for (const k in DATA.oneWindow) {{ const o = {{}}; for (const n in DATA.oneWindow[k]) o[+n] = DATA.oneWindow[k][n]; DATA.oneWindow[k] = o; }}</script>
+<script src="app.js"></script>
+
 <footer>
 <p><a href="report.md">Scientific report</a> ·
 <a href="handbook.md">Handbook</a> ·
@@ -361,6 +534,9 @@ scoping the author's.</p>
 </footer>
 </div>
 """
+    # Substituted after formatting so no brace in the JSON can be read as a
+    # format field.
+    html = html.replace("{DATAJSON}", datajs)
     with open(os.path.join(OUT, "index.html"), "w") as f:
         f.write(html)
     open(os.path.join(OUT, ".nojekyll"), "w").close()

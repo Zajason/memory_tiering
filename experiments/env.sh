@@ -4,7 +4,7 @@
 REPO="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
 : "${PIN_ROOT:=$HOME/dev/advarch/pin}"
-: "${BENCH_ROOT:=$REPO/bench}"
+: "${BENCH_ROOT:=$REPO/workloads}"
 : "${RESULTS_ROOT:=$REPO/results}"
 
 PIN="$PIN_ROOT/pin"
@@ -12,9 +12,9 @@ TOOL="$REPO/src/profiler/pintool/obj-intel64/hotskew.so"
 
 # Two GAPBS builds, differing only in who copies the graph during loading.
 #
-#   bench/gapbs     stock: file.read(), so the kernel performs the copy and Pin
+#   workloads/gapbs     stock: file.read(), so the kernel performs the copy and Pin
 #                   cannot see it. Measures the application's own access pattern.
-#   bench/gapbs-ul  patched: the copy goes through a user-space staging buffer, so
+#   workloads/gapbs-ul  patched: the copy goes through a user-space staging buffer, so
 #                   the destination writes are visible. Measures what a memory
 #                   controller -- and therefore M5's PAC/WAC -- would have seen.
 #

@@ -32,7 +32,7 @@ Use this to measure what M5's hardware would have seen. Leave it off to measure 
 the application's own steady-state access pattern. Both are legitimate and answer
 different questions; docs/methodology.md reports both.
 
-Apply with:  git -C bench/gapbs apply ../../benchmarks/patches/gapbs-userspace-load.patch
+Apply with:  git -C workloads/gapbs apply ../../benchmarks/patches/gapbs-userspace-load.patch
 diff --git a/src/reader.h b/src/reader.h
 index 4544ba3..f5be7a3 100644
 --- a/src/reader.h

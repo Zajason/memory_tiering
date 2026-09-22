@@ -1,4 +1,0 @@
-########## liblinear (stock, ROI on solver) ##########
-=== liblinear [spr-20t]  threads=1 epoch=10M variant=stock ===
-    ./train -s 6 -m 1 -e 0.01 /home/zajason/dev/advarch/memory_tiering/bench/liblinear-multicore/data/kdda
-LIBLINEAR_DONE

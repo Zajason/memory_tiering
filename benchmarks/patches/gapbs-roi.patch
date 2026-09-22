@@ -5,7 +5,7 @@ GAPBS itself reports as "Trial Time". Graph construction, CSR building, the squi
 pass and verification all stay outside. No kernel code is touched and no compiler
 flags change, so the measured access pattern is the stock one.
 
-Apply with:  git -C bench/gapbs apply ../../benchmarks/patches/gapbs-roi.patch
+Apply with:  git -C workloads/gapbs apply ../../benchmarks/patches/gapbs-roi.patch
 
 --- a/src/benchmark.h
 +++ b/src/benchmark.h

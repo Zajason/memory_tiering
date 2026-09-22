@@ -28,7 +28,7 @@ fi
 echo ">> installing ROI markers"
 cp "$REPO/src/profiler/roi/hotskew_roi.h" "$GAPBS_DIR/src/"
 if ! grep -q hotskew_roi "$GAPBS_DIR/src/benchmark.h"; then
-  git -C "$GAPBS_DIR" apply "$REPO/benchmarks/patches/gapbs-roi.patch"
+  git -C "$GAPBS_DIR" apply "$REPO/workloadsmarks/patches/gapbs-roi.patch"
   echo "   patch applied"
 else
   echo "   already patched"
@@ -63,7 +63,7 @@ echo ">> building the userspace-load variant"
 rm -rf "$GAPBS_UL_DIR"
 cp -r "$BENCH_ROOT/gapbs" "$GAPBS_UL_DIR"
 rm -rf "$GAPBS_UL_DIR/graphs"   # graphs are shared, not duplicated
-( cd "$GAPBS_UL_DIR" && git apply "$REPO/benchmarks/patches/gapbs-userspace-load.patch" ) \
+( cd "$GAPBS_UL_DIR" && git apply "$REPO/workloadsmarks/patches/gapbs-userspace-load.patch" ) \
   || die "gapbs-userspace-load.patch did not apply"
 grep -q ReadUserspace "$GAPBS_UL_DIR/src/reader.h" || die "patch applied but ReadUserspace is missing"
 make -C "$GAPBS_UL_DIR" -j"$(nproc)" >/dev/null

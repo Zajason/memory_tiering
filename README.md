@@ -399,7 +399,15 @@ src/analysis/           readers, plots, placement study, turnover analysis
 benchmarks/             fetch / patch / build, ROI patches, Zipfian YCSB client
 configs/                cache geometries incl. M5's CAT partitions
 experiments/            runners, sensitivity sweep, stop_runs.sh
+results/                summaries, epoch CSVs, figures (data, not source)
+docs/                   prose + the generated GitHub Pages site
+papers/                 index of the four papers; PDFs gitignored
+workloads/              fetched benchmark sources and datasets (gitignored)
 ```
+
+`benchmarks/` holds *our* setup scripts and patches; `workloads/` holds the
+third-party trees they fetch and build. They used to be `benchmarks/` and
+`bench/`, which was one character of difference for two unrelated things.
 
 | doc | what it covers |
 |---|---|
@@ -411,13 +419,12 @@ experiments/            runners, sensitivity sweep, stop_runs.sh
 | [hardware-evaluation.md](docs/hardware-evaluation.md) | deliverables 1 & 2: the trackers, scored; what sub-page info is worth |
 | [tool-reference.md](docs/tool-reference.md) | every knob, output formats, recipes |
 | [next-steps.md](docs/next-steps.md) | what this implies for the CXLRAMSim half |
-| [study/](study/00-roadmap.md) | background notes on CXL, tiering, and the three papers |
 
 ---
 
 ## Papers
 
-PDFs are gitignored; [`study/papers/README.md`](study/papers/README.md) has the fetch commands.
+PDFs are gitignored; [`papers/README.md`](papers/README.md) has the fetch commands.
 
 - **M5** — Sun et al., ASPLOS '25 · [artifact](https://github.com/ece-fast-lab/ASPLOS-2025-M5) — the reproduction target
 - **NeoMem** — Zhou et al., MICRO '24 — count-min sketch profiling in the CXL controller

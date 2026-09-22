@@ -44,7 +44,7 @@ function lineChart(mount, series, opts = {}) {
   const X = v => m.l + ((v - xmin) / (xmax - xmin || 1)) * iw;
   const Y = v => m.t + (1 - v) * ih;
 
-  const fg = css("--fg"), mut = css("--mut"), line = css("--line");
+  const mut = css("--mut"), line = css("--line");
   // grid + y axis
   for (let i = 0; i <= 5; i++) {
     const v = i / 5;
@@ -217,6 +217,9 @@ function initTracker() {
   });
   sel.value = Object.keys(DATA.tracker)[0];
 
+  // The summary reports integer KB, so small trackers round to "0 KB".
+  const area = r => r.kb >= 1 ? `${r.kb} KB` : "<1 KB";
+
   function draw() {
     const rows = DATA.tracker[sel.value];
     const xs = rows.map(r => r.N);
@@ -227,8 +230,8 @@ function initTracker() {
     const first = rows[0], last = rows[rows.length - 1];
     const grow = last.kb && first.kb ? (last.kb / Math.max(first.kb, 1)) : null;
     read.innerHTML =
-      `N=${first.N} (${first.kb} KB) → <b>${first.hpt.toFixed(3)}</b> · ` +
-      `N=${last.N} (${last.kb} KB) → <b>${last.hpt.toFixed(3)}</b>` +
+      `N=${first.N} (${area(first)}) → <b>${first.hpt.toFixed(3)}</b> · ` +
+      `N=${last.N} (${area(last)}) → <b>${last.hpt.toFixed(3)}</b>` +
       (grow ? ` · <b>${grow.toFixed(0)}×</b> the SRAM for ` +
               `<b>${((last.hpt - first.hpt) * 100).toFixed(1)}</b> points` : "");
   }

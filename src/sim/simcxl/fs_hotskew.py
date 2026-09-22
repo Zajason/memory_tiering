@@ -28,7 +28,8 @@
 #
 # Flow
 # ----
-#   1. boot under KVM (near-native speed)
+#   1. boot under ATOMIC. KVM boots to a blank console on this host and never
+#      reports an error, so it is not used.
 #   2. the boot script m5-exits; we switch to TimingSimpleCPU
 #   3. the workload runs in detail, INCLUDING its data load -- that is
 #      deliberate. The user-space-load experiment showed load visibility is
@@ -36,7 +37,8 @@
 #      reproduce the pintool's blind spot in a simulator that does not have one.
 #   4. the binaries' hotskew_roi_begin/end markers m5-exit too; those are
 #      recorded as epoch boundaries, not used to gate the measurement.
-#   5. we stop at --max-epochs and write the summary.
+#   5. we stop at --max-exits (the workload's own final exit) or --max-ticks,
+#      whichever comes first, and the summary is written either way.
 
 import argparse
 import m5
@@ -109,7 +111,6 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--workload", required=True, choices=["sssp", "bc", "liblinear"])
 ap.add_argument("--fs-dir", default="/home/zajason/dev/advarch/fs_image")
 ap.add_argument("--epoch", type=int, default=10_000_000)
-ap.add_argument("--max-epochs", type=int, default=12)
 ap.add_argument("--max-ticks", type=int, default=0,
                 help="absolute tick limit; 0 = run to workload completion. "
                      "Boot costs ~3.32e12 ticks and is very repeatable "
@@ -165,8 +166,9 @@ processor = SimpleSwitchableProcessor(
     isa=ISA.X86,
     num_cores=1,
 )
-for proc in []:  # usePerf only applies to KVM
-    proc.core.usePerf = False
+# NOTE: KVM would need `proc.core.usePerf = False` here, but KVM boots to a
+# blank console on this host with no error, so the starting core is ATOMIC and
+# there is nothing to configure.
 
 board = TwoDiskX86Board(
     clk_freq="3GHz",

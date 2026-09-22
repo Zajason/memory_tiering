@@ -13,10 +13,10 @@ SIM="${SIMCXL_DIR:-$REPO/../simcxl}"
 M5A="$SIM/util/m5/build/x86/out/libm5.a"
 [[ -f "$M5A" ]] || { echo "build m5ops first: (cd $SIM/util/m5 && scons build/x86/out/libm5.a)"; exit 1; }
 
-rm -rf "$REPO/bench/gapbs-gem5"; mkdir -p "$REPO/bench/gapbs-gem5"
-cp -r "$REPO/bench/gapbs/src" "$REPO/bench/gapbs/Makefile" "$REPO/bench/gapbs-gem5/"
-cp "$REPO/src/sim/simcxl/hotskew_roi_m5.h" "$REPO/bench/gapbs-gem5/src/hotskew_roi.h"
-cd "$REPO/bench/gapbs-gem5"
+rm -rf "$REPO/workloads/gapbs-gem5"; mkdir -p "$REPO/workloads/gapbs-gem5"
+cp -r "$REPO/workloads/gapbs/src" "$REPO/workloads/gapbs/Makefile" "$REPO/workloads/gapbs-gem5/"
+cp "$REPO/src/sim/simcxl/hotskew_roi_m5.h" "$REPO/workloads/gapbs-gem5/src/hotskew_roi.h"
+cd "$REPO/workloads/gapbs-gem5"
 # The GAPBS rule puts $(CXX_FLAGS) before $<, so a static archive added there
 # would be scanned before the objects that need it. Compile directly instead.
 for k in sssp bc; do

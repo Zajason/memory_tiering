@@ -1,18 +1,18 @@
-# The Greek concept-presentation generator is ~58 KB of literal slide content
-# (pptxgenjs calls, Greek prose, table rows). It is a build script for
-# docs/memory-tiering-cxl-gr.pptx, not part of the profiler, but at 21% of the
-# repository's code bytes it dominated GitHub's language bar and made a systems
-# project read as a JavaScript one.
+# Keep GitHub's language bar pointing at the actual work.
 #
-# linguist-vendored keeps the file and its history while excluding it from the
-# language statistics. Nothing about how it runs changes: node presentation/make_deck.js
-presentation/** linguist-vendored
+# The profiler is C++ and the analysis is Python, but generated artefacts are
+# far larger by byte count and would otherwise dominate the statistics and make
+# a systems project read as something else.
 
 # Generated figures and captured results are data, not source.
 docs/assets/** linguist-generated
 results/** linguist-generated
 
-# docs/index.html is the generated GitHub Pages site, not hand-written HTML.
-# Without this it shows up as the repo's largest "HTML" file and skews the
-# language bar away from the C++ that is the actual work.
+# docs/index.html is the generated GitHub Pages site, built by
+# src/analysis/build_site.py, not hand-written HTML.
 docs/index.html linguist-generated
+
+# docs/app.js draws the interactive views. It is hand-written, but at ~13 KB it
+# would still read as "this is a JavaScript project" next to the C++ that
+# matters. Vendored, not generated: it is source, just not the point.
+docs/app.js linguist-vendored

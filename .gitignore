@@ -1,5 +1,5 @@
 # Papers (large PDFs, freely available online — see README links)
-study/papers/*.pdf
+papers/*.pdf
 
 # Simulator artifacts
 *.o
@@ -29,13 +29,18 @@ venv/
 *.swp
 
 # Benchmark sources and datasets (fetched by benchmarks/setup_*.sh)
-bench/
+workloads/
 
 # Pintool build output
 src/profiler/pintool/obj-intel64/
 src/profiler/validate/synth
 benchmarks/zipf_client
 benchmarks/zipf_selftest
+
+# Run logs are regenerable console output, not results. The older rule only
+# covered results/**/*.run.log, so 16 top-level *_run.log files were committed
+# before this was noticed.
+results/*.log
 
 # Raw per-page dumps are large; keep summaries, CSVs and figures
 results/**/*.pages.bin

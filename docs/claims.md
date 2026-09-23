@@ -137,6 +137,26 @@ across all five N, same as the Pin column.
 | bc: epochs / DRAM accesses | 46 / 451,441,535 | " |
 | bc: mean words/page | 46.851 / 64 | " |
 
+### Measured at the CXL device port
+
+`bc` re-run with `--big-mem`, which makes the board instantiate a CXLBridge and
+places the high memory region behind it. Counted at three points simultaneously:
+
+| N | M5 | Pin | gem5 MemCtrl | gem5 high MemCtrl | **gem5 CXL device port** |
+|---|---|---|---|---|---|
+| 4 | 0.005 | 0.160 | 0.109 | 0.110 | **0.110** |
+| 16 | 0.040 | 0.418 | 0.192 | 0.194 | **0.194** |
+| 48 | 0.145 | 0.638 | 0.476 | 0.475 | **0.475** |
+| **max err** | | 0.493 | 0.331 | 0.330 | **0.330** |
+
+**The CXL device port and the memory controller behind it agree to a maximum
+difference of 0.00033**, and mean words/page to 47.111 vs 47.110 of 64. The
+docs previously asserted the two placements are equivalent for a distribution
+over addresses; this measures it instead of arguing it.
+
+It also means the counters now sit where M5 and NeoMem describe them -- on the
+CXL device's request path -- and the answer did not move.
+
 ### The measurement window dominates
 
 Re-running `bc` with a single window instead of 46 windows of 10M accesses,

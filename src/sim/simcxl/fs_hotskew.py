@@ -108,7 +108,12 @@ class TwoDiskX86Board(X86Board):
         self.pc.south_bridge.ide.disks = disks
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--workload", required=True, choices=["sssp", "bc", "liblinear"])
+ap.add_argument("--workload", required=True,
+                choices=["bc", "bfs", "cc", "pr", "sssp", "tc", "liblinear"])
+ap.add_argument("--data-image", default="data2.img",
+                help="data disk built by mkfs.ext4 -d. data2.img carries all six "
+                     "GAPBS kernels plus kron-21 for tc, which is superlinear in "
+                     "edges and was run at scale 21 under Pin too.")
 ap.add_argument("--fs-dir", default="/home/zajason/dev/advarch/fs_image")
 ap.add_argument("--epoch", type=int, default=10_000_000)
 ap.add_argument("--max-ticks", type=int, default=0,
@@ -177,7 +182,7 @@ board = TwoDiskX86Board(
     cache_hierarchy=cache_hierarchy,
     cxl_memory=high_memory,
     is_asic=not args.big_mem,
-    data_image=f"{args.fs_dir}/data.img",
+    data_image=f"{args.fs_dir}/{args.data_image}",
 )
 
 if args.big_mem:

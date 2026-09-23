@@ -206,7 +206,22 @@ for suffix, sysmem in systems:
         ctrl.hotskew_topk = 128
         ctrl.hotskew_budgets = [128, 512, 2048, 8192]
         n_enabled += 1
-print(f"hotskew: probe enabled on {n_enabled} memory controller(s) -> {out}*")
+# With --big-mem the board builds a CXLBridge (is_asic=False) and the high
+# memory region is reached through it. Counting AT the bridge is the placement
+# the project is actually about -- it is where M5 and NeoMem put their counters,
+# on the CXL device's request path, rather than at the DRAM controller behind
+# it. The two see the same stream for memory traffic; the bridge additionally
+# carries IO, so the summaries are kept separate rather than merged.
+if args.big_mem and hasattr(board, "bridge"):
+    board.bridge.hotskew_enable = True
+    board.bridge.hotskew_out = out + ".bridge"
+    board.bridge.hotskew_epoch = args.epoch
+    board.bridge.hotskew_topk = 128
+    board.bridge.hotskew_budgets = [128, 512, 2048, 8192]
+    n_enabled += 1
+    print("hotskew: CXL device port instrumented (BridgeResponsePort::recvTimingReq)")
+
+print(f"hotskew: probe enabled at {n_enabled} point(s) -> {out}*")
 
 command = (
     "m5 exit;"                       # hand back so we can switch to the detailed CPU

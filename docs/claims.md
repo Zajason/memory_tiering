@@ -178,6 +178,35 @@ window is too sparse, the long window too dense, and M5 is bracketed. This is
 not a tuning knob we chose badly -- it is the free parameter the paper never
 specifies, and it moves P(<=4) from 0.109 to 0.002 while M5 reports 0.005.
 
+### The full sweep contradicts the two-workload reading
+
+Extending the simulator to all six GAPBS kernels:
+
+| workload | Pin | gem5 | moved |
+|---|---|---|---|
+| pr | 0.014 reproduced | **0.011** reproduced | −0.003 |
+| tc | 0.030 reproduced | **0.385 disagrees** | +0.355 |
+| cc | 0.082 close | **0.271 disagrees** | +0.189 |
+| bfs | 0.095 close | **0.165 disagrees** | +0.069 |
+| sssp | 0.433 disagrees | 0.391 disagrees | −0.043 |
+| bc | 0.493 disagrees | 0.331 disagrees | −0.163 |
+
+mean words/page rises in **every** case: tc 44.6→57.6, cc 44.8→59.9, bfs
+46.9→56.1, sssp 36.3→48.3, bc 31.1→46.9, pr 63.2→63.5 (already saturated).
+
+**This is one systematic densifying shift, not an accuracy gain.** It helps the
+two workloads where Pin read too sparse and breaks three that Pin had right.
+Read on two workloads it looked like the kernel blind spot explaining the gap;
+read on six it does not support that.
+
+**The comparison is also confounded and should not be quoted as-is.** The gem5
+runs measure from the CPU switch onward, so the data load is inside the window.
+The Pin `-ul` runs measure inside the ROI only. So the two differ in *both*
+kernel visibility *and* window extent, and this table cannot separate them.
+The controlled run is gem5 with `--switch-at-roi`, which measures the timed
+kernel only; until that exists, treat the simulator column as "a denser
+window", not as "the same measurement with the blind spot removed".
+
 **Both moved toward M5, neither reached it.** The kernel blind spot is real and
 is worth 0.042 (sssp) and 0.162 (bc), but it is not the whole explanation. The
 residual is concentrated at small N: M5 reports P(<=4) = 0.005 while we measure

@@ -178,6 +178,36 @@ window is too sparse, the long window too dense, and M5 is bracketed. This is
 not a tuning knob we chose badly -- it is the free parameter the paper never
 specifies, and it moves P(<=4) from 0.109 to 0.002 while M5 reports 0.005.
 
+### Controlled attribution: kernel visibility vs window (bc)
+
+Five measurements of the same workload, differing one factor at a time:
+
+| # | measurement | window | kernel traffic | words/64 | max err |
+|---|---|---|---|---|---|
+| 1 | Pin `-ul` | ROI only | **blind** | 31.061 | 0.493 |
+| 2 | gem5 `--switch-at-roi` | ROI only | visible | 43.407 | **0.406** |
+| 3 | gem5 full-window | + data load | visible | 46.851 | 0.331 |
+| 4 | gem5 CXL device port | + data load | visible | 47.111 | 0.330 |
+| 5 | gem5 single window | whole run | visible | 63.603 | 0.137 |
+
+Row 2 is the controlled one: same ROI as Pin, only visibility differs.
+
+| step | Δwords | Δerr | share of gap closed |
+|---|---|---|---|
+| kernel visibility, window held at the ROI | +12.35 | −0.087 | **24.4%** |
+| data load added to the window | +3.44 | −0.075 | **21.1%** |
+| window lengthened to the whole run | +16.75 | −0.194 | **54.5%** |
+| total | +32.54 | −0.356 | 100% |
+
+**Both effects are real and the window is the larger one.** Kernel visibility
+is worth 12.3 words/page with the window held fixed, which is the cleanest
+statement of the blind spot available -- it is not an artefact of comparing
+different windows. But window choice accounts for 54.5% on its own, against
+24.4% for visibility.
+
+This also explains the sweep: the full-window runs stack *both* effects, which
+is why workloads Pin already reproduced (tc, cc, bfs) were pushed past M5.
+
 ### The full sweep contradicts the two-workload reading
 
 Extending the simulator to all six GAPBS kernels:

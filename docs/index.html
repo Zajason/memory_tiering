@@ -83,7 +83,7 @@ footer { margin-top:60px; padding-top:22px; border-top:1px solid var(--line);
   <p class="sub">Reproducing M5 (ASPLOS&nbsp;’25) Figure&nbsp;4 with a purpose-built Intel&nbsp;Pin tool —
   then finding that the headline disagreements are dominated by a parameter the paper never states.</p>
   <p class="meta">Advanced Computer Architecture · NTUA / CSLab ·
-  35 commits · <code>4a61c17</code> · built 2026-09-22</p>
+  44 commits · <code>1e33600</code> · built 2026-09-29</p>
 </header>
 
 <div class="cards">
@@ -139,7 +139,36 @@ physical addresses, kernel traffic included, counting code unchanged.</p>
 <p>Both moved <em>toward</em> M5 — the hypothesis is real. Neither reached agreement —
 it is not sufficient.</p>
 
-<h2><span class="n">6</span>What actually dominates</h2>
+<h2><span class="n">6</span>The full sweep, and what it cost us</h2>
+<p class="lede">Extending the simulator to every GAPBS kernel produced the result that
+reshaped the conclusions. <strong>gem5 reports denser pages in every case</strong>, so it
+helps the workloads where Pin read too sparse and breaks three that Pin had right. That
+is one systematic shift, not an accuracy gain.</p>
+<div class="tbl"><table>
+<thead><tr><th>Workload</th>
+<th style="text-align:right">Pin</th><th style="text-align:right">gem5</th>
+<th style="text-align:right">gem5 ROI-gated</th>
+<th style="text-align:right">Pin words</th><th style="text-align:right">gem5 ROI words</th>
+<th style="text-align:right">&Delta;</th></tr></thead>
+<tbody><tr><td>PageRank</td><td class='num'>0.014</td><td class='num'>0.011</td><td class='num'>-</td><td class='num'>63.2</td><td class='num'>-</td><td class='num'>-</td></tr><tr><td>Triangle counting</td><td class='num'>0.030</td><td class='num'>0.385</td><td class='num'>-</td><td class='num'>44.6</td><td class='num'>-</td><td class='num'>-</td></tr><tr><td>Connected components</td><td class='num'>0.082</td><td class='num'>0.271</td><td class='num'>0.165</td><td class='num'>44.8</td><td class='num'>52.3</td><td class='num'>+7.50</td></tr><tr><td>BFS</td><td class='num'>0.095</td><td class='num'>0.165</td><td class='num'>0.111</td><td class='num'>46.9</td><td class='num'>47.8</td><td class='num'>+0.90</td></tr><tr><td>SSSP</td><td class='num'>0.433</td><td class='num'>0.391</td><td class='num'>0.571</td><td class='num'>36.3</td><td class='num'>41.3</td><td class='num'>+4.97</td></tr><tr><td>Betweenness</td><td class='num'>0.493</td><td class='num'>0.331</td><td class='num'>0.406</td><td class='num'>31.1</td><td class='num'>43.4</td><td class='num'>+12.35</td></tr></tbody></table></div>
+<p class="note">First three columns are max error against M5. The plain gem5 column
+measures over a <em>wider</em> window than Pin (it includes the data load), so it changes
+two things at once. The <strong>ROI-gated</strong> column holds the window at exactly
+Pin&rsquo;s region, leaving kernel visibility as the only difference &mdash; that
+&Delta; is the clean measurement. <code>tc</code> and <code>pr</code> are 15&nbsp;h and
+13.5&nbsp;h runs killed by reboots, shown as &ndash; rather than reported from partial data.</p>
+
+<blockquote><p><strong>What the &Delta; column says.</strong> Kernel traffic inside the
+measured region is real and workload-dependent: <strong>+0.90</strong> words/page for BFS,
+which walks memory already resident, up to <strong>+12.35</strong> for betweenness, which
+allocates fresh arrays throughout its kernel. It is <em>not</em> a uniform correction. We
+deliberately do not convert these into percentages of the disagreement with M5 &mdash;
+that decomposition was attempted and withdrawn, because max-error is not monotonic in page
+density and SSSP disproves it.</p></blockquote>
+
+<p class="lede">And the counters were moved onto the CXL device itself &mdash; the placement M5 and NeoMem actually describe &mdash; rather than the memory controller behind it:</p><div class="cards"><div class="card"><div class="big">0.330</div><div class="lab">max error measured <b>at the CXL device port</b></div></div><div class="card"><div class="big">0.330</div><div class="lab">same run, at the memory controller behind it</div></div><div class="card"><div class="big">0.00033</div><div class="lab">largest difference between the two placements, whole CDF</div></div></div><p class="note">The documentation previously <em>argued</em> these two placements were equivalent for a distribution over addresses. This measures it.</p>
+
+<h2><span class="n">7</span>What actually dominates</h2>
 <p class="lede">The residual sat entirely at small N, the signature of the
 <em>measurement window</em>. Re-running the identical workload with one window instead
 of 46 — same run, same 451441535 DRAM accesses:</p>
@@ -172,7 +201,7 @@ of 46 — same run, same 451441535 DRAM accesses:</p>
 We do not match M5 by choosing better — we bracket it. Window choice moves the answer
 further than the instrument does, and the paper never states which window it used.</p>
 
-<h2><span class="n">7</span>Beyond reproduction</h2>
+<h2><span class="n">8</span>Beyond reproduction</h2>
 <p class="lede">M5 proposes bounded hardware trackers. Scored against exact counts,
 the accuracy-vs-area curve is almost flat — which is the useful finding, because it
 says the cheap tracker is the right one.</p>
@@ -215,7 +244,7 @@ wastes the most bandwidth exactly where pages are sparsest.</p>
   <p class="note">Rows are page size, columns are tracking word size. Darker is higher.</p>
 </div>
 
-<h2><span class="n">8</span>Tested and refuted</h2>
+<h2><span class="n">9</span>Tested and refuted</h2>
 <p class="lede">Kept visible because they are results, not gaps.</p>
 <ul>
 <li>Directed graphs explain the bc/sssp gap — <strong>no</strong>, made it worse</li>
@@ -226,7 +255,7 @@ wastes the most bandwidth exactly where pages are sparsest.</p>
 <li>HWT compensates for a weak HPT — <strong>no</strong>, it is gated on HPT membership</li>
 </ul>
 
-<h2><span class="n">9</span>Reproducing this</h2>
+<h2><span class="n">10</span>Reproducing this</h2>
 <pre><code>make reproduce        # build, validate, fetch, profile, analyse, check
 make determinism      # demonstrate reproducibility rather than assert it
 ./experiments/check_claims.sh</code></pre>

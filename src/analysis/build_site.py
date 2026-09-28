@@ -110,6 +110,56 @@ def make_campaign_figure(sim):
     return "assets/sim_window_bracket.png"
 
 
+GAPBS = ["pr", "tc", "cc", "bfs", "sssp", "bc"]
+
+
+def sim_campaign():
+    """Pin vs full-system gem5 vs ROI-gated gem5, for whatever has data.
+
+    Only complete runs are included. A run killed by a reboot leaves a partial
+    summary (the probe writes every epoch on purpose), and a 1-epoch partial
+    next to a 46-epoch run in the same column would be quietly wrong.
+    """
+    out = []
+    for k in GAPBS:
+        m5k = M5KEY[k]
+        pin_p = p(PIN[k])
+        full_p = p(f"results/simcxl/hotskew-{k}.summary.txt")
+        roi_p = p(f"results/simcxl/hotskew-{k}-roi.summary.txt")
+        if not os.path.exists(pin_p) or not os.path.exists(full_p):
+            continue
+
+        def words(path):
+            v = H.load_summary(path).get("mean_unique_words")
+            return float(str(v).split()[0]) if v else None
+
+        row = {"k": k, "nice": NICE[k],
+               "pin": maxerr(H.figure4_from_summary(pin_p), m5k),
+               "pin_w": words(pin_p),
+               "full": maxerr(H.figure4_from_summary(full_p), m5k),
+               "full_w": words(full_p), "roi": None, "roi_w": None}
+        # Presence in results/ is the completion signal: only finished runs are
+        # copied in. An epoch-count threshold cannot work -- cc and bfs finished
+        # legitimately with 3 epochs each, because ROI-gating excludes the data
+        # load and there is simply less traffic to divide into windows.
+        if os.path.exists(roi_p):
+            row["roi"] = maxerr(H.figure4_from_summary(roi_p), m5k)
+            row["roi_w"] = words(roi_p)
+        out.append(row)
+    return out
+
+
+def cxl_port():
+    """Did measuring at the CXL device port change the answer?"""
+    br = p("results/simcxl/hotskew-bc-cxl-bridge.summary.txt")
+    hi = p("results/simcxl/hotskew-bc-cxl-high.summary.txt")
+    if not (os.path.exists(br) and os.path.exists(hi)):
+        return None
+    b, h = H.figure4_from_summary(br), H.figure4_from_summary(hi)
+    return {"bridge": maxerr(b, "gapbs-bc"), "high": maxerr(h, "gapbs-bc"),
+            "delta": max(abs(b[n] - h[n]) for n in H.FIG4_N)}
+
+
 def collect_data():
     """Everything the interactive views need, straight from results/.
 
@@ -270,6 +320,31 @@ def main():
             f"<td class='num good'>{sim['bc-window'][n]:.3f}</td></tr>"
             for n in H.FIG4_N)
 
+    camp = sim_campaign()
+    camp_rows = "".join(
+        f"<tr><td>{esc(r['nice'])}</td>"
+        f"<td class='num'>{r['pin']:.3f}</td>"
+        f"<td class='num'>{r['full']:.3f}</td>"
+        f"<td class='num'>{'-' if r['roi'] is None else format(r['roi'],'.3f')}</td>"
+        f"<td class='num'>{r['pin_w']:.1f}</td>"
+        f"<td class='num'>{'-' if r['roi_w'] is None else format(r['roi_w'],'.1f')}</td>"
+        f"<td class='num'>{'-' if r['roi_w'] is None else format(r['roi_w']-r['pin_w'],'+.2f')}</td>"
+        "</tr>" for r in camp)
+
+    cx = cxl_port()
+    cxl_block = "" if not cx else (
+        '<p class="lede">And the counters were moved onto the CXL device itself &mdash; '
+        'the placement M5 and NeoMem actually describe &mdash; rather than the memory '
+        'controller behind it:</p><div class="cards">'
+        f'<div class="card"><div class="big">{cx["bridge"]:.3f}</div>'
+        '<div class="lab">max error measured <b>at the CXL device port</b></div></div>'
+        f'<div class="card"><div class="big">{cx["high"]:.3f}</div>'
+        '<div class="lab">same run, at the memory controller behind it</div></div>'
+        f'<div class="card"><div class="big">{cx["delta"]:.5f}</div>'
+        '<div class="lab">largest difference between the two placements, whole CDF</div></div>'
+        '</div><p class="note">The documentation previously <em>argued</em> these two '
+        'placements were equivalent for a distribution over addresses. This measures it.</p>')
+
     data = collect_data()
     import json
     datajs = json.dumps(data, separators=(",", ":"))
@@ -421,7 +496,36 @@ physical addresses, kernel traffic included, counting code unchanged.</p>
 <p>Both moved <em>toward</em> M5 — the hypothesis is real. Neither reached agreement —
 it is not sufficient.</p>
 
-<h2><span class="n">6</span>What actually dominates</h2>
+<h2><span class="n">6</span>The full sweep, and what it cost us</h2>
+<p class="lede">Extending the simulator to every GAPBS kernel produced the result that
+reshaped the conclusions. <strong>gem5 reports denser pages in every case</strong>, so it
+helps the workloads where Pin read too sparse and breaks three that Pin had right. That
+is one systematic shift, not an accuracy gain.</p>
+<div class="tbl"><table>
+<thead><tr><th>Workload</th>
+<th style="text-align:right">Pin</th><th style="text-align:right">gem5</th>
+<th style="text-align:right">gem5 ROI-gated</th>
+<th style="text-align:right">Pin words</th><th style="text-align:right">gem5 ROI words</th>
+<th style="text-align:right">&Delta;</th></tr></thead>
+<tbody>{camp_rows}</tbody></table></div>
+<p class="note">First three columns are max error against M5. The plain gem5 column
+measures over a <em>wider</em> window than Pin (it includes the data load), so it changes
+two things at once. The <strong>ROI-gated</strong> column holds the window at exactly
+Pin&rsquo;s region, leaving kernel visibility as the only difference &mdash; that
+&Delta; is the clean measurement. <code>tc</code> and <code>pr</code> are 15&nbsp;h and
+13.5&nbsp;h runs killed by reboots, shown as &ndash; rather than reported from partial data.</p>
+
+<blockquote><p><strong>What the &Delta; column says.</strong> Kernel traffic inside the
+measured region is real and workload-dependent: <strong>+0.90</strong> words/page for BFS,
+which walks memory already resident, up to <strong>+12.35</strong> for betweenness, which
+allocates fresh arrays throughout its kernel. It is <em>not</em> a uniform correction. We
+deliberately do not convert these into percentages of the disagreement with M5 &mdash;
+that decomposition was attempted and withdrawn, because max-error is not monotonic in page
+density and SSSP disproves it.</p></blockquote>
+
+{cxl_block}
+
+<h2><span class="n">7</span>What actually dominates</h2>
 <p class="lede">The residual sat entirely at small N, the signature of the
 <em>measurement window</em>. Re-running the identical workload with one window instead
 of 46 — same run, same {meta("results/simcxl/hotskew-bc.summary.txt","dram_accesses") or ""} DRAM accesses:</p>
@@ -454,7 +558,7 @@ of 46 — same run, same {meta("results/simcxl/hotskew-bc.summary.txt","dram_acc
 We do not match M5 by choosing better — we bracket it. Window choice moves the answer
 further than the instrument does, and the paper never states which window it used.</p>
 
-<h2><span class="n">7</span>Beyond reproduction</h2>
+<h2><span class="n">8</span>Beyond reproduction</h2>
 <p class="lede">M5 proposes bounded hardware trackers. Scored against exact counts,
 the accuracy-vs-area curve is almost flat — which is the useful finding, because it
 says the cheap tracker is the right one.</p>
@@ -497,7 +601,7 @@ wastes the most bandwidth exactly where pages are sparsest.</p>
   <p class="note">Rows are page size, columns are tracking word size. Darker is higher.</p>
 </div>
 
-<h2><span class="n">8</span>Tested and refuted</h2>
+<h2><span class="n">9</span>Tested and refuted</h2>
 <p class="lede">Kept visible because they are results, not gaps.</p>
 <ul>
 <li>Directed graphs explain the bc/sssp gap — <strong>no</strong>, made it worse</li>
@@ -508,7 +612,7 @@ wastes the most bandwidth exactly where pages are sparsest.</p>
 <li>HWT compensates for a weak HPT — <strong>no</strong>, it is gated on HPT membership</li>
 </ul>
 
-<h2><span class="n">9</span>Reproducing this</h2>
+<h2><span class="n">10</span>Reproducing this</h2>
 <pre><code>make reproduce        # build, validate, fetch, profile, analyse, check
 make determinism      # demonstrate reproducibility rather than assert it
 ./experiments/check_claims.sh</code></pre>

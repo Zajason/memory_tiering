@@ -7,6 +7,11 @@ Read this once end to end. After that it is a reference — the per-component se
 are self-contained, and § [Extending it](#8-extending-it) tells you which file to open
 for each kind of change.
 
+**If the terminology is unfamiliar, read [Vocabulary](#vocabulary) first.** It defines
+every term this project uses — CXL, pintool, ROI, set-associative, CDF and the rest —
+in a sentence or two each, with why it matters here. Nothing below assumes you have
+worked with Pin or gem5 before.
+
 **Start here if you only read one thing:** [`claims.md`](claims.md) lists every
 headline number with the command that regenerates it, and `./experiments/check_claims.sh`
 verifies the lot. If a number in any other document disagrees with it, that document is
@@ -18,6 +23,132 @@ deviation analysis; [`which-failure-mode.md`](which-failure-mode.md) and
 [`hardware-evaluation.md`](hardware-evaluation.md) hold the two result sets that go
 beyond reproduction; [`tool-reference.md`](tool-reference.md) is the knob-by-knob
 manual.
+
+---
+
+## Vocabulary
+
+Everything in this project that sounds like jargon, in plain English. Skip it if
+the terms are already familiar; come back when one bites.
+
+### The hardware problem
+
+**CXL** — a standard that lets you attach extra DRAM over the PCIe bus instead of
+plugging it into the usual memory slots. You get far more capacity, at roughly
+**2.2× the latency**. So a machine now has *fast memory* (normal DDR) and *slow
+memory* (CXL), and something has to decide which data lives where.
+
+**Memory tiering** — that decision, made continuously while the program runs. Move
+frequently-used ("hot") data to fast memory, leave the rest in slow memory.
+
+**Page** — the unit the operating system moves memory in: **4 KB**. **Word** (in this
+project) — a **64 B** cache line, the unit the hardware actually fetches. A page is
+64 words. The whole argument of M5's paper is that these two units are badly matched:
+you migrate 4 KB but the program may only touch a few of its 64 words.
+
+**Hot skewness** — the observation that accesses inside a page are *skewed*: heavily
+concentrated in a few words rather than spread evenly. If pages were uniformly
+touched, sub-page tracking would be pointless.
+
+### What M5 proposes
+
+**PAC / WAC** — Page Access Counter and Word Access Counter. Hardware counters in the
+CXL controller: PAC counts accesses per 4 KB page, WAC counts per 64 B word.
+`counter_table.hpp` is our exact software version of both.
+
+**HPT / HWT** — Hot Page Tracker and Hot Word Tracker. Real hardware cannot afford a
+counter for *every* page, so these keep only the top-K hottest, in a fixed amount of
+SRAM. `tracker.hpp` implements them.
+
+**Top-K tracker** — a data structure that sees a stream of addresses and tries to
+report the K most frequent while storing far fewer than K entries' worth of history.
+We implement two: **Space-Saving** (keeps N entries, evicts the smallest, is provably
+never wrong by much) and **Count-Min Sketch** (a hash-based approximate counter, used
+by NeoMem).
+
+**Access-count ratio** — the score for a tracker: of all the accesses that went to the
+genuinely-hottest pages, what fraction went to the pages the tracker *named*? 1.0 is
+perfect. This is the y-axis of M5's Figures 3, 7 and 8.
+
+### Measuring it
+
+**Intel Pin** — a tool that rewrites a program's machine code *as it runs* and splices
+in your own function calls. Called **dynamic binary instrumentation (DBI)**. No
+recompilation, no source changes.
+
+**A pintool** — the plugin you write against Pin's API. Pin ships samples
+(`pinatrace`, `dcache`); ours is `hotskew.cpp`. Writing one is the normal way to use
+Pin, not an unusual step.
+
+**Instrumentation routine vs analysis routine** — the one concept you must not
+confuse. An *instrumentation* routine runs **once**, when Pin first sees a piece of
+code, and decides what to insert. An *analysis* routine runs **every time** that code
+executes, and does the work. Mixing them up means either measuring nothing or running
+1000× too slow.
+
+**Basic block (BBL)** — a straight-line run of instructions with no branches in or
+out. We count instructions one call per basic block rather than one per instruction,
+which is much cheaper.
+
+**ROI (region of interest)** — the part of the program we actually measure. GAPBS
+loads a graph and then runs the algorithm; only the algorithm is interesting, so the
+ROI brackets it. Marked by two empty functions the tool attaches to.
+
+**Epoch / measurement window** — counters are reset every N DRAM accesses, and each
+such window is scored separately. This matters more than it sounds: it turned out to
+be the single biggest factor in whether our numbers match M5's.
+
+### Simulating it
+
+**gem5** — a full-system computer simulator. It boots a real Linux kernel on a
+simulated CPU, so it sees *everything*, including what the kernel does. Pin only sees
+the application.
+
+**SimCXL / CXL-DMSim** — a gem5 fork that models a CXL memory device. We use it
+because CXLRAMSim, the simulator named in the brief, was never released.
+
+**ATOMIC vs Timing CPU** — gem5 CPU models. **ATOMIC** is fast and unrealistic
+(memory returns instantly); **Timing** models real cache and memory delays and is far
+slower. We boot under ATOMIC and switch to Timing for the part we measure. Usefully,
+ATOMIC issues a different internal call (`recvAtomic`) that our probe does not hook —
+so anything run under ATOMIC is automatically invisible to the measurement.
+
+**m5 ops** — magic instructions a program inside the simulated machine can execute to
+talk to the simulator ("stop here", "switch CPU"). Our ROI markers use them.
+
+### The cache model
+
+**Set-associative cache** — the standard design. An address maps to one **set**
+(chosen by some of its bits); within that set it can sit in any of N **ways**. N is
+the **associativity**. Two addresses compete only if they land in the same set.
+
+**LRU** — least-recently-used, the rule for which line to evict when a set is full.
+
+**Writeback / write-allocate** — a modified line is written to memory only when
+evicted (not immediately), and a write that misses first fetches the line.
+
+**Inclusive vs non-inclusive** — whether data in L1/L2 must also be present in L3. We
+model non-inclusive, matching Sapphire Rapids.
+
+**LLC** — last-level cache, here L3.
+
+**Intel CAT** — Cache Allocation Technology: lets you give a workload only some of the
+L3's **ways**. Because it partitions by way and our model has associativity as a
+parameter, setting the associativity to the number of granted ways reproduces the
+partition *exactly* rather than approximately (§3.1).
+
+### Reading the results
+
+**CDF** — cumulative distribution function. Figure 4 plots **P(≤N)**: the fraction of
+pages touching *at most* N distinct words. Low values mean dense pages, high values
+mean sparse ones.
+
+**Max error** — how we score a reproduction: the largest gap between our curve and
+M5's across all five N values. Scoring at one N would flatter us, because the curves
+converge at N=48.
+
+**Geomean** — geometric mean, used for averaging speedup ratios, where an arithmetic
+mean would over-weight the largest.
 
 ---
 
@@ -244,10 +375,37 @@ That is ~269,000 pages M5 records as perfectly dense and Pin records as nothing.
 staging buffer, and it moves BFS's `P(≤48)` from **0.813 → 0.320** against M5's
 **0.345**.
 
-**This was the strongest argument for the simulator, and it was tested.** In gem5 the
-request path sees kernel traffic and the blind spot does not exist. It moved `bc`
-from 0.493 to **0.331** against M5 and `sssp` from 0.433 to **0.391** — real, and
-not sufficient. §7 and `docs/claims.md` carry the numbers.
+**This was the strongest argument for the simulator, and it was tested — twice, because
+the first test was confounded.**
+
+In gem5 the request path sees kernel traffic and the blind spot does not exist. The
+first comparison measured the simulator over a *wider* window than Pin (it included
+the data load), so it changed two things at once and could not attribute either.
+Re-running with `--switch-at-roi` holds the window at exactly Pin's ROI, leaving
+kernel visibility as the only difference:
+
+| workload | extra words/page the kernel accounts for |
+|---|---|
+| bc | **+12.35** |
+| cc | **+7.50** |
+| sssp | **+4.97** |
+| bfs | **+0.90** |
+
+All positive, but spanning an order of magnitude — so this is **not** a uniform
+correction you can apply to every workload.
+
+**Leading hypothesis (untested):** the size tracks how much the kernel *allocates*
+during the ROI, meaning the mechanism is page-fault zeroing rather than anything about
+the access pattern. `bfs` walks a graph that is already in memory and barely faults;
+`bc` allocates fresh per-source arrays throughout its kernel. `getrusage` minor-fault
+counts around the ROI markers would confirm or kill this in minutes, with no
+simulation.
+
+**Do not convert these into "X% of the disagreement with M5".** That decomposition was
+attempted and retracted: it assumes the error moves monotonically as pages get denser,
+and `sssp` disproves it (Pin 0.433, ROI-gated 0.571, wider window 0.391 — the middle
+measurement is outside the range of the two ends). Mean density and any single point
+of a CDF are not tied together. `docs/claims.md` has the full retraction.
 
 ### 4.3 Virtual addresses are exact for this metric
 
@@ -404,6 +562,9 @@ Quick index of where each result lives:
 | which failure mode binds | report §7, which-failure-mode.md |
 | hypotheses tested and **refuted** | claims.md |
 | **the gem5 port, and what it cost to build** | `src/sim/simcxl/README.md` |
+| **full-system sweep, all six GAPBS kernels** | claims.md, "The full sweep contradicts…" |
+| **kernel visibility isolated from window extent** | §4.2 above, claims.md |
+| **counters measured at the CXL device port** | claims.md, "Measured at the CXL device port" |
 | **full-system results: `bc` 0.493→0.331, `sssp` 0.433→0.391** | claims.md, "Full-system campaign" |
 | **the measurement window brackets M5** | claims.md, "The measurement window dominates" |
 
@@ -461,6 +622,17 @@ Quick index of where each result lives:
 - **The window sweep has two points, not a curve.** 10M-access windows and one
   unbounded window bracket M5; the window that actually reproduces M5 is somewhere
   between and was not searched for.
+- **`tc` and `pr` have no ROI-gated result.** Both are long runs (15 h and 13.5 h) and
+  both were killed by a reboot mid-flight. `tc` is the one worth redoing — its wider-
+  window run swung 0.355, the largest of any workload, so it is the sharpest remaining
+  test. `pr` swung 0.003 and is saturated at 63/64 words; it can tell us nothing.
+- **The page-fault hypothesis in §4.2 is unmeasured.** It explains all four data points
+  and has an obvious cheap test, which is exactly the situation in which a plausible
+  story is most likely to be believed without checking.
+- **Three claims in the simulator campaign were published and then withdrawn** — see
+  the git log. Each was a quantitative decomposition offered before the workload set
+  was complete. The honest summary of that episode: measurements held up, explanations
+  built on two or three of them did not.
 - **Everything is single-threaded.** Thread count was swept and barely moves the
   Figure 4 metric (18.298 → 18.353 across 1→16 threads), but the multithreaded cache
   model has no coherence between per-thread L1/L2, so MT numbers would need that first.

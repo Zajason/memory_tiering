@@ -27,7 +27,7 @@ index 2449d17..41f6852 100644
 +    hotskew_countmin = Param.Bool(
 +        False, "Use Count-Min Sketch (NeoMem) instead of Space-Saving")
 diff --git a/src/mem/cxl_bridge.cc b/src/mem/cxl_bridge.cc
-index ff89ae7..c2be0a1 100644
+index ff89ae7..b4e6f3c 100644
 --- a/src/mem/cxl_bridge.cc
 +++ b/src/mem/cxl_bridge.cc
 @@ -46,7 +46,9 @@
@@ -40,7 +40,7 @@ index ff89ae7..c2be0a1 100644
  #include "debug/Bridge.hh"
  #include "params/Bridge.hh"
  #include "debug/CXLMemCtrl.hh"
-@@ -93,6 +95,25 @@ CXLBridge::CXLBridge(const Params &p)
+@@ -93,6 +95,28 @@ CXLBridge::CXLBridge(const Params &p)
                  ticksToCycles(p.bridge_lat), ticksToCycles(p.proto_proc_lat), p.req_fifo_depth),      
        stats(*this)
  {
@@ -54,6 +54,9 @@ index ff89ae7..c2be0a1 100644
 +        cfg.epochAccesses = p.hotskew_epoch;
 +        hotskewProbe.init(cfg);
 +        hotskewOut = simout.resolve(p.hotskew_out);
++        // After hotskewOut is resolved, not before -- setting it first would
++        // install an empty path and silently disable the per-epoch writes.
++        hotskewProbe.setAutoWrite(hotskewOut);
 +
 +        // Flush at exit. The final partial epoch is closed first, otherwise the
 +        // tail of the run is silently dropped -- the same mistake that made an
@@ -66,7 +69,7 @@ index ff89ae7..c2be0a1 100644
  }
  
  CXLBridge::CXLBridgeStats::CXLBridgeStats(CXLBridge &_bridge)
-@@ -257,6 +278,16 @@ CXLBridge::BridgeResponsePort::recvTimingReq(PacketPtr pkt)
+@@ -257,6 +281,16 @@ CXLBridge::BridgeResponsePort::recvTimingReq(PacketPtr pkt)
          }
  
          if (!retryReq) {

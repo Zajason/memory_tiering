@@ -62,6 +62,8 @@
 
 #include <stdint.h>
 
+#include <cstdio>
+
 #include <fstream>
 #include <iomanip>
 #include <string>
@@ -191,10 +193,19 @@ class Probe {
         }
 
         results_.push_back(r);
+        if (!autoWrite_.empty()) writeSummary(autoWrite_);
         counters_.resetCounters();
         ++epoch_;
         sinceEpoch_ = 0;
     }
+
+    // Write the summary after every epoch, so a killed run still yields data.
+    //
+    // gem5 has no checkpointing here and the summary was previously written only
+    // from the exit callback, so a process killed at 16h of a 17h run produced
+    // nothing at all. On a dual-boot machine that reboots a couple of times a
+    // day that is the difference between losing one epoch and losing the run.
+    void setAutoWrite(const std::string& path) { autoWrite_ = path; }
 
     const std::vector<EpochResult>& results() const { return results_; }
     const CounterTable& counters() const { return counters_; }
@@ -202,6 +213,15 @@ class Probe {
     // Same shape as the pintool's summary, so the analysis scripts in src/analysis/
     // read simulator output without modification.
     void writeSummary(const std::string& path) const {
+        // Write-then-rename: rename(2) is atomic within a filesystem, so a
+        // process killed mid-write leaves the previous summary intact rather
+        // than a half-written one.
+        const std::string tmp = path + ".tmp";
+        { writeSummaryTo(tmp); }
+        std::rename(tmp.c_str(), path.c_str());
+    }
+
+    void writeSummaryTo(const std::string& path) const {
         std::ofstream f(path.c_str());
         f << "# hotskew probe summary (simulator-driven)\n";
         f << "epochs             " << results_.size() << "\n";
@@ -250,6 +270,7 @@ class Probe {
     };
 
     ProbeConfig cfg_;
+    std::string autoWrite_;
     CounterTable counters_;
     std::vector<Slot> slots_;
     uint32_t epoch_ = 0;

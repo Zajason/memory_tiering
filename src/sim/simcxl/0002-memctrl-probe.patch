@@ -24,7 +24,7 @@ index da7103d..2e779df 100644
      dram = Param.MemInterface(
          "Memory interface, can be a DRAMor an NVM interface "
 diff --git a/src/mem/mem_ctrl.cc b/src/mem/mem_ctrl.cc
-index 1aff36a..77ed9b7 100644
+index 1aff36a..d29c9f7 100644
 --- a/src/mem/mem_ctrl.cc
 +++ b/src/mem/mem_ctrl.cc
 @@ -40,7 +40,9 @@
@@ -37,7 +37,7 @@ index 1aff36a..77ed9b7 100644
  #include "debug/DRAM.hh"
  #include "debug/Drain.hh"
  #include "debug/MemCtrl.hh"
-@@ -94,6 +96,22 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
+@@ -94,6 +96,25 @@ MemCtrl::MemCtrl(const MemCtrlParams &p) :
      if (p.disable_sanity_check) {
          port.disableSanityCheck();
      }
@@ -51,6 +51,9 @@ index 1aff36a..77ed9b7 100644
 +        cfg.epochAccesses = p.hotskew_epoch;
 +        hotskewProbe.init(cfg);
 +        hotskewOut = simout.resolve(p.hotskew_out);
++        // After hotskewOut is resolved, not before -- setting it first would
++        // install an empty path and silently disable the per-epoch writes.
++        hotskewProbe.setAutoWrite(hotskewOut);
 +        registerExitCallback([this]() {
 +            hotskewProbe.endEpoch();          // do not drop the final partial epoch
 +            hotskewProbe.writeSummary(hotskewOut);
@@ -60,7 +63,7 @@ index 1aff36a..77ed9b7 100644
  }
  
  void
-@@ -483,6 +501,14 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
+@@ -483,6 +504,14 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
          }
      }
  

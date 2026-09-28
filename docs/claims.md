@@ -199,7 +199,36 @@ Row 2 is the controlled one: same ROI as Pin, only visibility differs.
 | window lengthened to the whole run | +16.75 | −0.194 | **54.5%** |
 | total | +32.54 | −0.356 | 100% |
 
-**Both effects are real and the window is the larger one.** Kernel visibility
+**RETRACTED: the percentage split above is not a valid decomposition.** It
+presumes max-error moves monotonically from Pin to the full-window run, so an
+intermediate measurement can be read as partial credit. `sssp` disproves that:
+Pin 0.433, ROI-gated **0.571**, full-window 0.391 -- the intermediate sits
+*outside* the interval. Mean words/page rises monotonically there (36.3 -> 41.3
+-> 48.3) while P(<=48) goes 0.543 -> 0.681 -> 0.501, because the ROI-gated
+distribution is more bimodal: more pages under 48 words *and* a heavier tail at
+64. Mean density and a CDF point are not tied, so max-error is not monotonic in
+density. Where the split appeared to work (bc, cc, bfs) that was luck.
+
+**What survives is the word delta, which is monotonic and physical:**
+
+| workload | kernel visibility, window fixed at the ROI |
+|---|---|
+| bc | **+12.35** words/page |
+| cc | **+7.50** |
+| sssp | **+4.97** |
+| bfs | **+0.90** |
+
+All positive, spanning an order of magnitude. Kernel traffic inside the
+measured region is real and workload-dependent, not a uniform offset.
+
+**Leading hypothesis, not yet tested:** the size tracks how much the kernel
+*allocates* during the ROI, so the mechanism is page-fault zeroing rather than
+anything about the access pattern. bfs traverses a pre-built CSR and faults
+almost nothing (+0.90); bc allocates per-source temporaries throughout its
+kernel (+12.35). Testable cheaply with `getrusage` minor-fault counts around
+the ROI markers, no simulation needed.
+
+**The old claim, for the record:** Kernel visibility
 is worth 12.3 words/page with the window held fixed, which is the cleanest
 statement of the blind spot available -- it is not an artefact of comparing
 different windows. But window choice accounts for 54.5% on its own, against

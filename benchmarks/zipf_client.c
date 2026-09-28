@@ -58,6 +58,22 @@
 #define VALUE_BYTES (FIELD_COUNT * FIELD_BYTES) /* flat-mode value size */
 #define PIPELINE 64
 
+/* ---- protocol selection ----
+ *
+ * Redis speaks RESP; memcached speaks its own line-oriented text protocol. The
+ * Zipfian generator, the record layout and the phase structure are identical, so
+ * only command construction and reply draining differ. PROTO=memcached switches
+ * both.
+ *
+ * One consequence worth stating: memcached has no hash type, so the YCSB record
+ * can only be a single flat value. The Redis runs deliberately use 10 x 100 B
+ * hash fields because the record layout decides which values share a 4 KB page
+ * and therefore how many of its 64 B words a skewed read stream touches. The
+ * memcached numbers are a flat-layout measurement and are not directly
+ * comparable to the Redis ones.
+ */
+static int g_memcached = 0;
+
 static int sock_connect(const char *host, int port) {
     struct sockaddr_in a;
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -134,7 +150,7 @@ static int try_one_reply(respbuf_t *b) {
         size_t save = b->start;
         b->start = crlf + 2;
         for (long i = 0; i < n; ++i) {
-            int r = try_one_reply(b);
+            int r = try_one_reply(b);   /* array elements are always RESP */
             if (r != 1) { b->start = save; return r; }  /* rewind and ask for more */
         }
         return 1;
@@ -143,10 +159,50 @@ static int try_one_reply(respbuf_t *b) {
 }
 
 /* Consume exactly n replies. */
+/* One memcached text reply. Returns 1 if a whole reply is buffered (consuming
+ * it), 0 if more bytes are needed, -1 on a malformed VALUE header.
+ *
+ * Single-line replies: STORED, OK, END, ERROR, NOT_FOUND, VERSION ...
+ * A hit is  VALUE <key> <flags> <bytes>\r\n<data>\r\nEND\r\n  -- the data block is
+ * consumed by its declared byte count, never by scanning for a newline, because a
+ * 1000 B value may legitimately contain one. That is the same mistake the RESP
+ * drain originally made.
+ */
+static int try_one_reply_mc(respbuf_t *b) {
+    if (b->start >= b->len) return 0;
+    size_t crlf = find_crlf(b, b->start);
+    if (crlf == (size_t)-1) return 0;
+
+    if (b->len - b->start >= 6 && !memcmp(&b->buf[b->start], "VALUE ", 6)) {
+        const char *line = &b->buf[b->start];
+        size_t linelen = crlf - b->start;
+        long nbytes = -1;
+        int spaces = 0;
+        for (size_t i = 0; i < linelen; ++i) {
+            if (line[i] == ' ' && ++spaces == 3) {
+                nbytes = strtol(line + i + 1, NULL, 10);
+                break;
+            }
+        }
+        if (nbytes < 0) return -1;
+        /* header CRLF + data + CRLF + "END\r\n" */
+        size_t need = crlf + 2 + (size_t)nbytes + 2 + 5;
+        if (b->len < need) return 0;
+        b->start = need;
+        return 1;
+    }
+
+    b->start = crlf + 2;   /* plain single-line reply */
+    return 1;
+}
+
+static int try_one_reply_mc(respbuf_t *b);
+
 static int drain_n(int fd, respbuf_t *b, int n) {
+    /* g_memcached selects the reply grammar; everything else is shared. */
     int done = 0;
     while (done < n) {
-        int r = try_one_reply(b);
+        int r = g_memcached ? try_one_reply_mc(b) : try_one_reply(b);
         if (r == 1) { ++done; continue; }
         if (r < 0) { fprintf(stderr, "protocol error in reply stream\n"); return -1; }
 
@@ -220,10 +276,25 @@ static int build_hset_all(char *out, size_t cap, unsigned long id, const char *v
 
 static int send_all(int fd, const char *buf, size_t len);
 
-/* Send  ECHO <marker>  with a correctly computed RESP bulk length. */
+/* Send the ROI marker.
+ *
+ * Redis: ECHO <marker>, with a computed RESP bulk length. memcached has no ECHO,
+ * so setup_memcached.sh adds two custom no-arg commands with the same names; the
+ * reply is a single line either way, so one drained reply covers both. */
 static int send_marker(int fd, respbuf_t *b, const char *marker) {
     char buf[256];
-    int n = snprintf(buf, sizeof(buf), "*2\r\n$4\r\nECHO\r\n$%zu\r\n%s\r\n",
+    int n;
+    if (g_memcached) {
+        char lower[64];
+        size_t j = 0;
+        for (const char *q = marker; *q && j + 1 < sizeof(lower); ++q)
+            lower[j++] = (*q >= 'A' && *q <= 'Z') ? (char)(*q - 'A' + 'a') : *q;
+        lower[j] = 0;
+        n = snprintf(buf, sizeof(buf), "%s\r\n", lower);
+        if (send_all(fd, buf, (size_t)n) != 0) return -1;
+        return drain_n(fd, b, 1);
+    }
+    n = snprintf(buf, sizeof(buf), "*2\r\n$4\r\nECHO\r\n$%zu\r\n%s\r\n",
                      strlen(marker), marker);
     if (send_all(fd, buf, (size_t)n) != 0) return -1;
     return drain_n(fd, b, 1);
@@ -259,7 +330,12 @@ int main(int argc, char **argv) {
     double update_frac = (argc > 6) ? atof(argv[6]) : 0.0;
     /* FLAT=1 stores each record as a single 1000 B string instead of ten fields.
      * Kept so the layout's effect on the Figure 4 result can be measured directly. */
-    const int flat = (getenv("FLAT") && atoi(getenv("FLAT")) != 0);
+    const char *proto = getenv("PROTO");
+    g_memcached = (proto && !strcmp(proto, "memcached"));
+    /* memcached has no hash type, so the record is necessarily one flat value.
+     * Forcing flat here rather than erroring keeps the invocation identical to
+     * the Redis one; the layout difference is documented at g_memcached. */
+    const int flat = g_memcached || (getenv("FLAT") && atoi(getenv("FLAT")) != 0);
     if (update_frac < 0.0 || update_frac > 1.0) {
         fprintf(stderr, "update fraction must be in [0,1]\n");
         return 1;
@@ -282,7 +358,10 @@ int main(int argc, char **argv) {
     char cmd[VALUE_BYTES + 256];
     int outstanding = 0;
     for (unsigned long i = 0; i < records; ++i) {
-        int n = flat
+        int n = g_memcached
+            ? snprintf(cmd, sizeof(cmd),
+                       "set user%lu 0 0 %d\r\n%s\r\n", i, VALUE_BYTES, value)
+            : flat
             ? snprintf(cmd, sizeof(cmd),
                        "*3\r\n$3\r\nSET\r\n$%d\r\nuser%lu\r\n$%d\r\n%s\r\n",
                        (int)(4 + snprintf(NULL, 0, "%lu", i)), i, VALUE_BYTES, value)
@@ -327,7 +406,10 @@ int main(int argc, char **argv) {
              * one randomly chosen field, not the whole record. */
             mix_rng ^= mix_rng << 13; mix_rng ^= mix_rng >> 7; mix_rng ^= mix_rng << 17;
             int f = (int)(mix_rng % FIELD_COUNT);
-            n = flat
+            n = g_memcached
+                ? snprintf(cmd, sizeof(cmd),
+                           "set user%lu 0 0 %d\r\n%s\r\n", k, VALUE_BYTES, value)
+                : flat
                 ? snprintf(cmd, sizeof(cmd),
                            "*3\r\n$3\r\nSET\r\n$%d\r\nuser%lu\r\n$%d\r\n%s\r\n",
                            (int)(4 + snprintf(NULL, 0, "%lu", k)), k, VALUE_BYTES, value)
@@ -341,7 +423,9 @@ int main(int argc, char **argv) {
             ++n_reads;
             /* readallfields=true is the YCSB default, so a read fetches the whole
              * record: HGETALL, not a single-field HGET. */
-            n = flat
+            n = g_memcached
+                ? snprintf(cmd, sizeof(cmd), "get user%lu\r\n", k)
+                : flat
                 ? snprintf(cmd, sizeof(cmd), "*2\r\n$3\r\nGET\r\n$%d\r\nuser%lu\r\n",
                            (int)(4 + snprintf(NULL, 0, "%lu", k)), k)
                 : snprintf(cmd, sizeof(cmd),

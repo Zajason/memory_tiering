@@ -29,6 +29,49 @@ Verify the whole table with:
 | 10% dense mixture, mean | 7.301 (analytic 7.300) | " |
 | 10% dense mixture, P(≤4) | 0.9000 (analytic 0.900) | " |
 
+## The measurement window, measured (this supersedes the reproduction table below)
+
+The headline scorecard uses a **10M-DRAM-access** window. That choice was ours; the
+paper never states its own. Searching the window offline -- `.pages.bin` records
+per-page masks per epoch, and OR-ing *m* consecutive epochs is exactly what a window
+*m* times longer would have recorded -- gives:
+
+| workload | err at our 10M window | best window | err there |
+|---|---|---|---|
+| bc | 0.378 | 180M acc | **0.010** |
+| sssp | 0.309 | 50M acc | **0.013** |
+| cc | 0.338 | 80M acc | **0.050** |
+| bfs | 0.373 | 70M acc | **0.056** |
+| tc | 0.103 | 20M acc | 0.115 |
+
+Scored against the values stated in the paper's **prose** (exact) rather than digitised
+bars: `M5_TEXT_P16` for bc/bfs/cc/tc/liblinear, `M5_TEXT_P47` for pr/sssp.
+
+**One global window, fitted once, for all of them:**
+
+| window | bc | bfs | cc | tc | worst |
+|---|---|---|---|---|---|
+| 10M (ours) | 0.378 | 0.373 | 0.338 | 0.103 | 0.378 |
+| **70M** | 0.062 | 0.056 | 0.082 | 0.119 | **0.119** |
+| 90M | 0.013 | 0.062 | 0.050 | 0.119 | 0.119 |
+
+**This is a one-parameter fit, not a reproduction.** We chose the window to minimise
+error against M5, so it cannot be quoted as "we reproduced M5". What it does establish,
+and what `window_fit.py` was written to test, is the distinction that matters: a
+**single** unpublished parameter -- fitted once, not per workload -- moves every GAPBS
+kernel from 0.34-0.38 to 0.06-0.12. The disagreement was dominated by a window the
+paper does not report, and 10M accesses was 5-18x too short.
+
+**Correction to the earlier refutation.** `claims.md` previously recorded "a single
+window reproduces all workloads: No -- best window varies 1x-8x". That came from a
+search stepping `m *= 2`, so with 22 epochs it only ever sampled m = 1, 2, 4, 8, 16 and
+could not see a best at m = 7, 9 or 18. On the full grid the per-workload optima cluster
+in 50-180M rather than spanning 1x-8x of a coarse grid.
+
+**Known limit:** `tc` runs on kron-21 (0.3 GB, because triangle counting is superlinear
+in edges) so it yields only 4 epochs, capping its searchable window at 40M. Its 0.115 is
+a floor imposed by the data, not a fitted optimum.
+
 ## Reproduction of M5 Figure 4
 
 Scored as **max error across all five N**, not at a single point. `spr-20t-ul` for

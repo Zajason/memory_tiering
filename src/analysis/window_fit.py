@@ -76,6 +76,9 @@ def main() -> int:
     ap.add_argument("--config", default="spr-20t-ul")
     ap.add_argument("--epoch-m", type=float, default=10.0,
                     help="millions of DRAM accesses per base epoch in the input")
+    ap.add_argument("--target", choices=["prose", "digitised"], default="prose",
+                    help="prose = |P(<=16) - the paper's stated value|, exact for 8 "
+                         "benchmarks; digitised = mean over all five N vs bar readings")
     args = ap.parse_args()
 
     d = os.path.join(args.results, args.config)
@@ -107,16 +110,23 @@ def main() -> int:
 
         best = None
         base_err = None
-        m = 1
-        while m <= max(n_ep, 1):
+        # Every m, not powers of two. The coarse grid is why an earlier run
+        # reported "best window varies 1x-8x": with 22 epochs it only sampled
+        # m = 1, 2, 4, 8, 16, so a best at m = 11 was invisible.
+        for m in range(1, max(n_ep, 1) + 1):
             c = cdf_at_merge(recs, m)
-            if c is not None:
+            if c is None:
+                continue
+            # Prefer the paper's prose value at N=16: it is exact, where the
+            # digitised bars are +/-0.02.
+            if args.target == "prose" and bench in H.M5_TEXT_P16:
+                err = abs(c[16] - H.M5_TEXT_P16[bench])
+            else:
                 err = float(np.mean([abs(c[n] - m5[n]) for n in H.FIG4_N]))
-                if m == 1:
-                    base_err = err
-                if best is None or err < best[1]:
-                    best = (m, err, c)
-            m *= 2
+            if m == 1:
+                base_err = err
+            if best is None or err < best[1]:
+                best = (m, err, c)
         if best is None:
             continue
         m, err, c = best

@@ -209,6 +209,42 @@ def figure4_from_summary(path: str, ns=FIG4_N) -> dict[int, float]:
 # Values read off M5's published Figure 4, for side-by-side comparison. These are
 # graph-digitised from the paper's bar chart, not from released data, so treat them
 # as accurate to roughly +/-0.02.
+# ---------------------------------------------------------------------------
+# M5's numbers as stated in the PAPER'S PROSE, not digitised from the bar chart.
+#
+# Section 3 of the paper gives exact percentages for two quantities. These are
+# worth more than our digitised M5_FIGURE4 values (which are +/-0.02 at best),
+# and they independently CONFIRM the digitisation: every one of the eight
+# P(<=16) values below matches our digitised figure to within 0.01.
+#
+#   "the likelihood of a page having 25% or fewer of its unique words accessed
+#    is 86%, 76%, and 74% for Redis, Memcached, and CacheLib"
+#   "Liblinear, BC, BFS, CC, and TC present notable access sparsity, with the
+#    probability of a page with at most 25% of words accessed being 15%, 4%,
+#    17%, 20%, and 12%"
+#
+# 25% of 64 words = 16 words, so these are P(<= 16) exactly.
+M5_TEXT_P16 = {
+    "redis": 0.86, "memcached": 0.76, "cachelib": 0.74,
+    "liblinear": 0.15, "gapbs-bc": 0.04, "gapbs-bfs": 0.17,
+    "gapbs-cc": 0.20, "gapbs-tc": 0.12,
+}
+
+#   "The pages in PageRank and SSSP are mostly densely accessed, with the
+#    probability of a page having at least 75% of its words accessed being
+#    98% and 89%"
+#
+# "at least 75%" = at least 48 words, so this is P(>= 48) and the complement is
+# P(<= 47) -- NOT P(<= 48), which is what FIG4_N reports. The two differ by
+# exactly the mass at 48 words. Treat these as a tight bound on P(<=48), not an
+# equality: P(<=48) >= the value below.
+M5_TEXT_P47 = {"gapbs-pr": 0.02, "gapbs-sssp": 0.11}
+
+# SPEC, for completeness: "the pages in the SPEC CPU 2017 benchmarks, except
+# for roms_r, are densely accessed, as the probability of a page with at least
+# 75% of its words accessed is 87% to 92%" -- a range over three benchmarks,
+# not per-benchmark values, so it cannot be used to score individually.
+
 M5_FIGURE4 = {
     "liblinear":   {4: 0.06,  8: 0.10,  16: 0.15,  32: 0.25,  48: 0.38},
     "gapbs-bc":    {4: 0.005, 8: 0.02,  16: 0.04,  32: 0.09,  48: 0.145},

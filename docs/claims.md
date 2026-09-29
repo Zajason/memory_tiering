@@ -387,7 +387,8 @@ Worth keeping visible — these are not open questions.
 |---|---|
 | M5's measurement window | **not recoverable from the paper** — counters accumulate, WAC region-cycling admits two readings differing ~54× |
 | liblinear dataset | we used kdda; M5 used KDD2012 |
-| SPEC CPU2017, Memcached, CacheLib | not run (licence / not attempted) |
+| SPEC CPU2017 (4 bars) | not run -- needs a CPU2017 licence, which CSLab may already hold |
+| CacheLib (1 bar) | not attempted. `benchmarks/setup_cachelib.sh` is written and its dependency check runs, but the build compiles folly/fizz/wangle/fbthrift from source (1-3 h) against a gcc-15 toolchain far newer than CacheLib is tested on. One bar for the highest build risk in the set |
 | Memstrata interference axis | not measured |
 | CXLRAMSim port | CXLRAMSim still unreleased. **Ported to SimCXL/CXL-DMSim instead and verified** — see `src/sim/simcxl/`. Instrument works; no workload campaign run (needs full-system kernel + disk image) |
 

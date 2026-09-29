@@ -84,14 +84,18 @@ def fig_validation():
 
 
 def fig4_vs_paper():
-    """Ours vs M5's published Figure 4, all seven reproduced workloads."""
+    """Ours vs M5's published Figure 4, every workload we have measured."""
     order = ["gapbs-pr", "gapbs-tc", "gapbs-bfs", "gapbs-cc", "gapbs-bc",
-             "gapbs-sssp", "redis"]
+             "gapbs-sssp", "redis", "memcached", "liblinear"]
     label = {"gapbs-pr": "pr", "gapbs-tc": "tc", "gapbs-bfs": "bfs", "gapbs-cc": "cc",
-             "gapbs-bc": "bc", "gapbs-sssp": "sssp", "redis": "redis"}
-    paths = {b: f"results/spr-20t-ul/{b}.summary.txt" for b in order if b != "redis"}
-    paths["redis"] = "results/spr-1t/redis-ycsba.summary.txt"
-    m5key = dict(redis="redis", **{b: b for b in order if b != "redis"})
+             "gapbs-bc": "bc", "gapbs-sssp": "sssp", "redis": "redis",
+             "memcached": "mcd", "liblinear": "lib"}
+    kv = {"redis": "results/spr-1t/redis-ycsba.summary.txt",
+          "memcached": "results/spr-1t/memcached.summary.txt",
+          "liblinear": "results/spr-20t/liblinear.summary.txt"}
+    paths = {b: f"results/spr-20t-ul/{b}.summary.txt" for b in order if b not in kv}
+    paths.update(kv)
+    m5key = {b: b for b in order}
 
     benches, ours, theirs = [], [], []
     for b in order:
@@ -123,6 +127,15 @@ def fig4_vs_paper():
     ax.set_ylim(0, 1.08)
     ax.set_ylabel("P(page has $\\leq$ 16 of 64 words touched)")
     ax.set_title("Reproducing M5 Figure 4 in software, on a desktop", fontweight="bold")
+    # A dot under the workloads whose P(<=16) the paper states in prose: for those
+    # the target is exact, not read off a bar chart.
+    exact = [i for i, b in enumerate(order) if b in H.M5_TEXT_P16
+             and label[b] in benches]
+    for i, b in enumerate(benches):
+        src_b = [k for k in order if label[k] == b]
+        if src_b and src_b[0] in H.M5_TEXT_P16:
+            ax.plot(i + 0.21, -0.045, marker="^", ms=4, color=ACC[1],
+                    clip_on=False)
     ax.legend(frameon=False, fontsize=8, loc="upper left")
     style(ax)
     fig.tight_layout()

@@ -31,19 +31,21 @@ PIN = {
     "tc": "results/spr-20t-ul/gapbs-tc.summary.txt",
     "cc": "results/spr-20t-ul/gapbs-cc.summary.txt",
     "redis": "results/spr-1t/redis-ycsba.summary.txt",
+    "memcached": "results/spr-1t/memcached.summary.txt",
     "bfs": "results/spr-20t-ul/gapbs-bfs.summary.txt",
     "sssp": "results/spr-20t-ul/gapbs-sssp.summary.txt",
     "bc": "results/spr-20t-ul/gapbs-bc.summary.txt",
     "lib": "results/spr-20t/liblinear.summary.txt",
 }
 M5KEY = {
+    "memcached": "memcached",
     "pr": "gapbs-pr", "tc": "gapbs-tc", "cc": "gapbs-cc", "redis": "redis",
     "bfs": "gapbs-bfs", "sssp": "gapbs-sssp", "bc": "gapbs-bc",
     "lib": "liblinear",
 }
 NICE = {
     "pr": "PageRank", "tc": "Triangle counting", "cc": "Connected components",
-    "redis": "Redis (YCSB-A)", "bfs": "BFS", "sssp": "SSSP", "bc": "Betweenness",
+    "redis": "Redis (YCSB-A)", "memcached": "Memcached (YCSB-A)", "bfs": "BFS", "sssp": "SSSP", "bc": "Betweenness",
     "lib": "liblinear",
 }
 
@@ -473,6 +475,14 @@ nearly saturated and is the cheapest place to agree.</p>
 <div class="tbl"><table>
 <thead><tr><th>Workload</th><th style="text-align:right">Max error</th><th>Verdict</th></tr></thead>
 <tbody>{sc}</tbody></table></div>
+<p class="note"><strong>Two different targets, and they disagree about Memcached.</strong>
+The column above is the max gap against M5&rsquo;s bar chart, read off the figure at
+&plusmn;0.02. But the paper also states some values in <em>prose</em>, and those are
+exact. Memcached is the sharpest case: our <code>P(&le;16) = 0.766</code> against the
+paper&rsquo;s written <strong>0.760</strong> &mdash; an error of <strong>0.006</strong>
+&mdash; while its max error across the whole digitised curve is 0.118. The single point
+the paper commits to in words lands almost exactly; the curve shape does not. Both are
+reported because quoting only the flattering one would be dishonest.</p>
 
 <h2><span class="n">4</span>The kernel blind spot</h2>
 <p class="lede">Pin instruments user-space instructions. When the kernel moves data on

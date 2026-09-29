@@ -29,7 +29,10 @@ CLIENT="$REPO/benchmarks/zipf_client"
 [[ -x "$SERVER" ]] || die "memcached not built -- run benchmarks/setup_memcached.sh"
 [[ -x "$CLIENT" ]] || gcc -O2 -Wall -o "$CLIENT" "$REPO/benchmarks/zipf_client.c" -lm
 
-load_config "$CONFIG"
+CFG_FILE="$REPO/configs/$CONFIG.env"
+[[ -f "$CFG_FILE" ]] || die "no such config: $CFG_FILE"
+# shellcheck source=/dev/null
+source "$CFG_FILE"
 OUTDIR="$REPO/results/$CONFIG"; mkdir -p "$OUTDIR"
 OUT="$OUTDIR/memcached"
 

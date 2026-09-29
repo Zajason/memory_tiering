@@ -62,7 +62,7 @@ echo ">> installing ROI markers"
 PROTO_SRC="$(grep -rl '"version"' "$MC_DIR" --include='proto_text.c' | head -1)"
 [[ -n "$PROTO_SRC" ]] || die "could not find the version-command handler in proto_text.c"
 
-python3 - "$PROTO_SRC" <<'PY'
+python3 - "$PROTO_SRC" <<'PYEOF'
 import re, sys
 path = sys.argv[1]
 src = open(path).read()
@@ -74,25 +74,27 @@ if '#include "hotskew_roi.h"' not in src:
     src = re.sub(r'(#include [<"][^>"]+[>"]\n)', r'\1#include "hotskew_roi.h"\n',
                  src, count=1)
 
-# Insert two no-arg commands immediately before the "version" dispatch, which is
-# a plain strcmp on the command token in every version that ships proto_text.c.
-m = re.search(r'\n(\s*)(\}?\s*else\s+)?if\s*\(\s*strcmp\s*\(\s*tokens\s*\[\s*COMMAND_TOKEN\s*\]\s*\.\s*value\s*,\s*"version"\s*\)\s*==\s*0', src)
+# Insert the two branches immediately BEFORE the "version" dispatch's `if`
+# keyword, not before the whole clause. The dispatch reads
+# `} else if (strcmp(... "version") ...)`, so inserting ahead of the clause
+# produced `} else    } else if (...)` and failed to compile. Splitting at the
+# `if` leaves whatever `} else ` precedes it intact.
+m = re.search(r'if\s*\(\s*strcmp\s*\(\s*tokens\s*\[\s*COMMAND_TOKEN\s*\]'
+              r'\s*\.\s*value\s*,\s*"version"\s*\)\s*==\s*0\s*\)', src)
 if not m:
-    sys.exit("could not locate the \"version\" dispatch; memcached layout changed")
+    sys.exit('could not locate the "version" dispatch; memcached layout changed')
 
-indent = m.group(1)
-hook = (f'\n{indent}/* hotskew: region-of-interest markers driven by the benchmark client. */\n'
-        f'{indent}if (strcmp(tokens[COMMAND_TOKEN].value, "hotskew_roi_begin") == 0) {{\n'
-        f'{indent}    hotskew_roi_begin();\n'
-        f'{indent}    out_string(c, "OK");\n'
-        f'{indent}}} else if (strcmp(tokens[COMMAND_TOKEN].value, "hotskew_roi_end") == 0) {{\n'
-        f'{indent}    hotskew_roi_end();\n'
-        f'{indent}    out_string(c, "OK");\n'
-        f'{indent}}} else')
-src = src[:m.start()] + hook + src[m.start():].lstrip('\n')
+hook = ('if (strcmp(tokens[COMMAND_TOKEN].value, "hotskew_roi_begin") == 0) {\n'
+        '        hotskew_roi_begin();\n'
+        '        out_string(c, "OK");\n'
+        '    } else if (strcmp(tokens[COMMAND_TOKEN].value, "hotskew_roi_end") == 0) {\n'
+        '        hotskew_roi_end();\n'
+        '        out_string(c, "OK");\n'
+        '    } else ')
+src = src[:m.start()] + hook + src[m.start():]
 open(path, 'w').write(src)
 print("   proto_text.c patched")
-PY
+PYEOF
 
 if [[ ! -x "$MC_DIR/memcached" ]] || [[ "$PROTO_SRC" -nt "$MC_DIR/memcached" ]]; then
   echo ">> building"

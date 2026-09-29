@@ -104,6 +104,32 @@ GAPBS, `spr-1t` for Redis, `spr-20t` for liblinear.
 | BC | 0.493 | disagrees | " |
 | liblinear | 0.577 | disagrees | `--config spr-20t` |
 
+### memcached (new)
+
+| N | ours | M5 digitised | diff |
+|---|---|---|---|
+| 4 | 0.494 | 0.380 | 0.114 |
+| 8 | 0.700 | 0.600 | 0.100 |
+| **16** | **0.766** | 0.755 | **0.011** |
+| 32 | 0.978 | 0.860 | 0.118 |
+| 48 | 0.998 | 0.965 | 0.033 |
+
+**P(<=16) = 0.766 against the value stated in the paper's prose, 0.760 -- error
+0.006.** That is a number M5 wrote out in text, so there is no digitising slack
+in it. Max error across the whole digitised curve is 0.118, so the *shape* is
+imperfect (we are too dense in the middle) while the one point the paper commits
+to in words lands almost exactly.
+
+Run: `./experiments/run_memcached.sh spr-1t 2000000 10000000` with `EPOCH_M=10`,
+matching the Redis run. At the env default of 50M it gives P(<=16) = 0.591 --
+the window matters here exactly as it does everywhere else, and the two key-value
+runs must use the same one to be comparable.
+
+**Record layout caveat:** memcached has no hash type, so this is one flat 1000 B
+value per key where the Redis runs use 10 x 100 B fields. Layout decides which
+values share a page, so the two are not directly comparable to each other, only
+each to its own M5 bar.
+
 **Do not quote "within 0.03" without saying across what.** At N=48 alone five
 workloads are within 0.03, but N=48 is where the CDF has nearly saturated and is the
 cheapest point to agree at.

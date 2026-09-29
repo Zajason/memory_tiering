@@ -39,11 +39,11 @@ per-page masks per epoch, and OR-ing *m* consecutive epochs is exactly what a wi
 | workload | err at our 10M window | best window | err there |
 |---|---|---|---|
 | bc | 0.378 | 180M acc | **0.010** |
-| sssp | 0.433 | 50M acc | **0.013** |
 | pr | 0.014 | 300M acc | **0.013** |
+| sssp | 0.433 | 50M acc | **0.013** |
+| cc | 0.067 | 30M acc | **0.022** |
 | tc | 0.031 | 10M acc | **0.031** |
-| cc | 0.338 | 80M acc | **0.050** |
-| bfs | 0.373 | 70M acc | **0.056** |
+| bfs | 0.095 | 30M acc | **0.086** |
 
 Scored against the values stated in the paper's **prose** (exact) rather than digitised
 bars: `M5_TEXT_P16` for bc/bfs/cc/tc/liblinear, `M5_TEXT_P47` for pr/sssp.
@@ -52,13 +52,20 @@ bars: `M5_TEXT_P16` for bc/bfs/cc/tc/liblinear, `M5_TEXT_P47` for pr/sssp.
 
 All six GAPBS kernels, one window, `window_fit.py --target prose`:
 
-| window | pr | tc | bfs | bc | cc | sssp | **worst** |
+| window | sssp | pr | tc | bc | bfs | cc | **worst** |
 |---|---|---|---|---|---|---|---|
-| 10M (ours) | 0.014 | 0.031 | 0.373 | 0.378 | 0.338 | 0.433 | **0.433** |
-| **70M** | 0.020 | 0.051 | 0.056 | 0.062 | 0.082 | 0.086 | **0.086** |
+| 10M (ours) | 0.433 | 0.014 | 0.031 | 0.378 | 0.095 | 0.067 | **0.433** |
+| **50M** | 0.013 | 0.018 | 0.088 | 0.116 | 0.170 | 0.199 | **0.199** |
 
-`pr` and `tc` already agree at 10M and are slightly *worse* at 70M; the other four
-improve by 0.25-0.35. Worst case across all six falls from **0.433 to 0.086**.
+Worst case across all six falls from **0.433 to 0.199** on one fitted parameter.
+Two workloads (`sssp`, `pr`) reproduce there and `tc` is close, but `cc` and `bfs`
+get *worse* -- they already sat at 0.067 and 0.095 with our own window and a
+longer one overshoots them.
+
+**So the window is a large part of the story and not all of it.** It takes `bc`
+from 0.378 to 0.010 and `sssp` from 0.433 to 0.013 at their own optima, but no
+single window satisfies all six simultaneously: the optima span m = 1 to 30 and
+the best compromise still leaves 0.199.
 
 **This is a one-parameter fit, not a reproduction.** We chose the window to minimise
 error against M5, so it cannot be quoted as "we reproduced M5". What it does establish,

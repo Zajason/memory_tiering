@@ -30,8 +30,18 @@ case "$VARIANTS" in
 esac
 
 trials_for() {
+  # ONE trial for everything, which is what the published numbers used and what
+  # docs/methodology.md 7b says: "The headline runs use one trial ... with the
+  # load visible, the ratio of load traffic to traversal traffic depends on trial
+  # count, and one invocation is what a user actually runs."
+  #
+  # This defaulted to 8 for bfs and cc, which contradicted both. Eight traversals
+  # dilute the one-time load 8x, so pages read far sparser: cc came back at
+  # 25.304 words instead of 44.763 and its error against M5 went 0.082 -> 0.458.
+  # The committed script therefore did not reproduce the committed results.
+  # Override with TRIALS_TRAVERSAL only to study the trial sensitivity itself.
   case "$1" in
-    bfs|cc) echo "${TRIALS_TRAVERSAL:-8}" ;;
+    bfs|cc) echo "${TRIALS_TRAVERSAL:-1}" ;;
     *)      echo 1 ;;
   esac
 }

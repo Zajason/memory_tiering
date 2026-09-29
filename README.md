@@ -25,8 +25,20 @@ and then answers a question the paper does not ask.
 **Scored across the whole CDF, not a single point: two workloads reproduce to within
 0.03 (PageRank, triangle counting), three to within 0.10 (BFS, CC, Redis), and three
 disagree (BC, SSSP, liblinear).** The tool captures both extremes of M5's figure —
-PageRank at 63/64 words per page, Redis at 9/64. The disagreements are traced to the
-measurement window, which [we show the paper does not determine](docs/report.md).
+PageRank at 63/64 words per page, Redis at 9/64.
+
+**Memcached hits the paper's stated value almost exactly.** The paper writes out
+P(≤16) for eight benchmarks in prose rather than only drawing them; for Memcached that
+is 0.760 and we measure **0.766 — an error of 0.006**. Those same prose values confirm
+our digitisation of the bar chart to within 0.01 everywhere, so the target itself is
+not in doubt.
+
+**Most of the remaining disagreement is one parameter the paper never states: the
+measurement window.** Searching it offline moves BC from 0.378 to **0.010** and SSSP
+from 0.433 to **0.013**. A single window, fitted once for all six GAPBS kernels rather
+than tuned per workload, takes the worst case from **0.433 to 0.199**. That is a
+one-parameter fit, not a reproduction — but it is one parameter, the same one for every
+workload, and the paper does not report it.
 
 | | |
 |---|---|

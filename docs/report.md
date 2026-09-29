@@ -201,6 +201,30 @@ The access *count* varies by 19×; the touched *set* does not vary at all, becau
 compulsory misses eventually touch every line the program references. **A sparsity
 figure reported without its measurement window is not reproducible.**
 
+**We have since measured that window.** `window_fit.py` merges *m* consecutive epochs
+offline, which reproduces exactly what a window *m* times longer would have recorded,
+and scores the result against the values M5 states in prose (exact) rather than the
+digitised bars. Per workload:
+
+| workload | at our 10M window | best window | error there |
+|---|---|---|---|
+| bc | 0.378 | 180M acc | **0.010** |
+| pr | 0.014 | 300M acc | **0.013** |
+| sssp | 0.433 | 50M acc | **0.013** |
+| cc | 0.067 | 30M acc | **0.022** |
+| tc | 0.031 | 10M acc | **0.031** |
+| bfs | 0.095 | 30M acc | **0.086** |
+
+A **single** window of 50M accesses, fitted once rather than per workload, takes the
+worst case across all six from **0.433 to 0.199**.
+
+This is a one-parameter fit and must not be quoted as a reproduction: the window was
+chosen to minimise error against M5. What it establishes is narrower and still useful —
+one parameter, the same for every workload, that the paper does not report, accounts for
+most of the disagreement. It does not account for all of it: `cc` and `bfs` already sat
+at 0.067 and 0.095 with our own window and a longer one overshoots them, and the
+per-workload optima span 10M to 300M.
+
 M5's hardware has the same property and addresses it the same way: WAC uses 4-bit
 counters that are read periodically. We initially read `m5_manager -s 10` as a 10 ms
 measurement window; §5.4b revises that — it is the polling cadence, and the effective

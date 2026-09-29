@@ -330,6 +330,14 @@ be probed, and each was found the hard way.
 
 ### 4.1 The measurement window makes the question well-posed
 
+> **Since measured.** `window_fit.py` searches the window offline by merging epochs
+> (`.pages.bin` stores per-page masks per epoch, and OR-ing *m* consecutive epochs is
+> exactly what a window *m* times longer would have recorded). Result: BC 0.378 →
+> **0.010** at 180M accesses, SSSP 0.433 → **0.013** at 50M. One window for all six
+> kernels takes the worst case **0.433 → 0.199**. It is a one-parameter fit, not a
+> reproduction — but the same single parameter works for every workload, and the paper
+> does not state it. See `claims.md`.
+
 Unique-word coverage per page **only ever grows**. Measure long enough and every page
 looks dense. Measured over an unbounded window, the result was *byte-identical* for a
 4 MB and a 60 MB LLC:
@@ -565,6 +573,8 @@ Quick index of where each result lives:
 | **full-system sweep, all six GAPBS kernels** | claims.md, "The full sweep contradicts…" |
 | **kernel visibility isolated from window extent** | §4.2 above, claims.md |
 | **counters measured at the CXL device port** | claims.md, "Measured at the CXL device port" |
+| **the measurement window, measured** | claims.md, "The measurement window, measured" |
+| **memcached: 0.006 against the paper's stated value** | claims.md, "memcached (new)" |
 | **full-system results: `bc` 0.493→0.331, `sssp` 0.433→0.391** | claims.md, "Full-system campaign" |
 | **the measurement window brackets M5** | claims.md, "The measurement window dominates" |
 
@@ -629,6 +639,17 @@ Quick index of where each result lives:
 - **The page-fault hypothesis in §4.2 is unmeasured.** It explains all four data points
   and has an obvious cheap test, which is exactly the situation in which a plausible
   story is most likely to be believed without checking.
+- **The committed script did not reproduce the committed results, for a while.**
+  `run_all_gapbs.sh`'s `trials_for()` defaulted to eight trials for bfs and cc while
+  the published numbers used one, contradicting §7b of methodology.md. Eight traversals
+  dilute the one-time load 8x, so cc came back at 25.3 words instead of 44.8 and its
+  error against M5 went 0.082 → 0.458. Fixed, and `check_claims.sh` is what caught it.
+  Worth remembering as the failure mode a claims ledger exists to catch.
+- **Four bugs sat between us and the window result**, all ours: the search grid stepped
+  in powers of two and could not see optima at m = 3, 5, 18; the verdict tested whether
+  the per-workload optima were *identical* rather than whether one window works for all;
+  the `.pages.bin` inputs had been deleted in a cleanup as "regenerable"; and scoring
+  used digitised bars when the paper states exact values in prose.
 - **Three claims in the simulator campaign were published and then withdrawn** — see
   the git log. Each was a quantitative decomposition offered before the workload set
   was complete. The honest summary of that episode: measurements held up, explanations

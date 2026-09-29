@@ -39,21 +39,26 @@ per-page masks per epoch, and OR-ing *m* consecutive epochs is exactly what a wi
 | workload | err at our 10M window | best window | err there |
 |---|---|---|---|
 | bc | 0.378 | 180M acc | **0.010** |
-| sssp | 0.309 | 50M acc | **0.013** |
+| sssp | 0.433 | 50M acc | **0.013** |
+| pr | 0.014 | 300M acc | **0.013** |
+| tc | 0.031 | 10M acc | **0.031** |
 | cc | 0.338 | 80M acc | **0.050** |
 | bfs | 0.373 | 70M acc | **0.056** |
-| tc | 0.103 | 20M acc | 0.115 |
 
 Scored against the values stated in the paper's **prose** (exact) rather than digitised
 bars: `M5_TEXT_P16` for bc/bfs/cc/tc/liblinear, `M5_TEXT_P47` for pr/sssp.
 
 **One global window, fitted once, for all of them:**
 
-| window | bc | bfs | cc | tc | worst |
-|---|---|---|---|---|---|
-| 10M (ours) | 0.378 | 0.373 | 0.338 | 0.103 | 0.378 |
-| **70M** | 0.062 | 0.056 | 0.082 | 0.119 | **0.119** |
-| 90M | 0.013 | 0.062 | 0.050 | 0.119 | 0.119 |
+All six GAPBS kernels, one window, `window_fit.py --target prose`:
+
+| window | pr | tc | bfs | bc | cc | sssp | **worst** |
+|---|---|---|---|---|---|---|---|
+| 10M (ours) | 0.014 | 0.031 | 0.373 | 0.378 | 0.338 | 0.433 | **0.433** |
+| **70M** | 0.020 | 0.051 | 0.056 | 0.062 | 0.082 | 0.086 | **0.086** |
+
+`pr` and `tc` already agree at 10M and are slightly *worse* at 70M; the other four
+improve by 0.25-0.35. Worst case across all six falls from **0.433 to 0.086**.
 
 **This is a one-parameter fit, not a reproduction.** We chose the window to minimise
 error against M5, so it cannot be quoted as "we reproduced M5". What it does establish,
@@ -68,9 +73,13 @@ search stepping `m *= 2`, so with 22 epochs it only ever sampled m = 1, 2, 4, 8,
 could not see a best at m = 7, 9 or 18. On the full grid the per-workload optima cluster
 in 50-180M rather than spanning 1x-8x of a coarse grid.
 
-**Known limit:** `tc` runs on kron-21 (0.3 GB, because triangle counting is superlinear
-in edges) so it yields only 4 epochs, capping its searchable window at 40M. Its 0.115 is
-a floor imposed by the data, not a fitted optimum.
+**A fourth bug, in the script's own verdict.** `window_fit.py` concluded "the window
+alone does NOT explain the disagreement" whenever the per-workload optima were not
+identical. That is the wrong test: a single compromise window can bring every workload
+into agreement even when each one's private optimum lies elsewhere, which is exactly
+what happens here (optima at m = 1, 5, 7, 8, 18, 30; one window at m = 7 works for all).
+The script now reports the global fit as its primary verdict. Every "the window does not
+explain it" statement in this project traces back to that check.
 
 ## Reproduction of M5 Figure 4
 

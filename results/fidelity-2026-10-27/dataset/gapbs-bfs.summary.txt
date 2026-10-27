@@ -1,0 +1,113 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-bfs
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             8
+epoch_len_dram_acc 10000000
+instructions       3082331118
+mem_refs_profiled  933165082
+dram_accesses      77891095
+llc_miss_ratio     0.083470  (DRAM accesses per memory ref)
+page_observations  2398934   (page x epoch pairs with >=1 access)
+mean_unique_words  17.911 / 64
+top4_word_share    0.1642   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.3912
+  8         12.5%   0.5136
+ 16           25%   0.6794
+ 32           50%   0.8147
+ 48           75%   0.8276
+
+# P(page has at least 48 of 64 words accessed) = 0.1730
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,379291
+2,262811
+3,172949
+4,123442
+5,94086
+6,75168
+7,65409
+8,58883
+9,55518
+10,53180
+11,51243
+12,50263
+13,49842
+14,48360
+15,46059
+16,43261
+17,40177
+18,37228
+19,34524
+20,31417
+21,28703
+22,25823
+23,22865
+24,20222
+25,17662
+26,15380
+27,12851
+28,10790
+29,8949
+30,7349
+31,5987
+32,4805
+33,3893
+34,3335
+35,2749
+36,2344
+37,2068
+38,1854
+39,1667
+40,1581
+41,1566
+42,1433
+43,1454
+44,1363
+45,1366
+46,1388
+47,1355
+48,1346
+49,1367
+50,1422
+51,1453
+52,1594
+53,2006
+54,2472
+55,3154
+56,4366
+57,6070
+58,8394
+59,11614
+60,14892
+61,17791
+62,19380
+63,19495
+64,298205
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,273015
+1,479650
+2,390588
+3,434465
+4,365431
+5,48930
+6,190402
+7,151973
+8,64480

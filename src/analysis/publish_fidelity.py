@@ -104,6 +104,16 @@ def main():
             lines.append(f"| {case} | {name} | {scope} | {scores['accesses']:.3f} | {scores['fills']:.3f} | {scores['traffic']:.3f} | {baseline[name,'fills']:.3f} |")
     lines+=['','Errors are maximum absolute differences from the digitized reference over N=4,8,16,32,48; 0.10 means ten percentage points. They are similarity scores, not evidence of identical methodology.']
     if curves:lines+=['','![All completed demand-fill controls](../results/fidelity-2026-10-27/demand-fill-controls.png)']
+    dataset_scores={r['workload']:r['max_abs_error'] for r in rows
+                    if r['case']=='dataset' and r['scope']=='pooled' and r['stream']=='fills'}
+    if all(name in dataset_scores for name in ['bfs','cc']):
+        lines+=['','## Interpretation of completed input controls','',
+          'On the declared Twitter reduction, pooled demand-fill error changes from '
+          f"{100*baseline['bfs','fills']:.1f} to {100*dataset_scores['bfs']:.1f} percentage points for BFS and "
+          f"{100*baseline['cc','fills']:.1f} to {100*dataset_scores['cc']:.1f} for CC. "
+          'These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. '
+          'Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. '
+          'The remaining input and repetition controls must finish before assessing the campaign as a whole.']
     if all((name,'fills') in dataset for name in names):
         lines+=['','![M5, accesses and demand misses on documented real-input controls](assets/fig4_fidelity_full.png)']
     if (OUT/'inputs.json').exists():

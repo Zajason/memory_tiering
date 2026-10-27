@@ -155,7 +155,7 @@
       "elapsed_s": 22.851495027542114
     },
     "pr-artifact-convergence-pr": {
-      "status": "running",
+      "status": "complete",
       "started": 1793131828.8117666,
       "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
       "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/pr-artifact-convergence",
@@ -171,19 +171,83 @@
         "1000",
         "--pr-tolerance",
         "0.0001"
-      ]
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/pr-artifact-convergence-pr-1793131830.run.log",
+      "elapsed_s": 734.7021067142487
     },
     "prepare-inputs": {
-      "status": "queued"
+      "status": "complete",
+      "started": 1793132564.3285913,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "benchmarks/prepare_fidelity_inputs.py",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/inputs.json"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/prepare-inputs-1793132565.run.log",
+      "elapsed_s": 1416.294053554535
     },
     "dataset-bfs": {
-      "status": "queued"
+      "status": "complete",
+      "started": 1793133981.3296561,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bfs",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75",
+        "--graph-family",
+        "Twitter WWW2010 induced hash reduction"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset-bfs-1793133982.run.log",
+      "elapsed_s": 73.98503518104553
     },
     "dataset-cc": {
-      "status": "queued"
+      "status": "complete",
+      "started": 1793134056.0368614,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "cc",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75",
+        "--graph-family",
+        "Twitter WWW2010 induced hash reduction"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset-cc-1793134057.run.log",
+      "elapsed_s": 83.35314440727234
     },
     "dataset-pr": {
-      "status": "queued"
+      "status": "running",
+      "started": 1793134140.1233292,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "pr",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75",
+        "--graph-family",
+        "Twitter WWW2010 induced hash reduction"
+      ]
     },
     "dataset-tc": {
       "status": "queued"
@@ -198,5 +262,5 @@
   "status": "running",
   "pid": 50869,
   "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
-  "current": "pr-artifact-convergence-pr"
+  "current": "dataset-pr"
 }

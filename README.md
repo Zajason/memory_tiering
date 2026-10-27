@@ -35,6 +35,11 @@ validated before entering the figures; queued experiments are listed explicitly.
 The authors' exact graph reductions and Figure 4 collection procedure remain
 unavailable, so these are input-family and execution controls.
 
+The first validated Twitter BFS/CC results improve pooled demand-fill agreement
+only slightly: maximum five-point errors are 55.6/49.2 percentage points, versus
+59.1/50.5 on the prior baseline. Input family alone has not closed the gap; the
+remaining dataset and repetition controls are still pending.
+
 ### Corrected extension campaign
 
 The [25 October revalidation report](docs/revalidation-2026-10-25.md) tracks fresh

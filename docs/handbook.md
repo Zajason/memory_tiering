@@ -12,6 +12,11 @@ execution control and reports all completed cases, including negative results.
 The additional HDD is mounted at `/mnt/research`; this expands project storage
 while Ubuntu and the repository stay on the SSD.
 
+The first Twitter BFS/CC measurements are validated but still far from M5:
+their largest CDF differences are 55.6 and 49.2 percentage points across the
+five thresholds. The new inputs help only slightly. This is evidence against
+input family alone explaining the gap, not a reason to tune inputs to the plot.
+
 ## Start with the audited measurement
 
 ### Are the extensions still usable?

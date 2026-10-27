@@ -1,0 +1,186 @@
+{
+  "status": "complete",
+  "graphs": {
+    "twitter-main": {
+      "path": "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75.sg",
+      "sha256": "7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc",
+      "bytes": 5616022257,
+      "nodes": 31239712,
+      "directed_edges": 1341526134,
+      "directed": false,
+      "family": "Twitter WWW2010 induced hash reduction",
+      "selection": "SplitMix64(vertex_id)%4 < 3; retain induced edges; ascending original-ID relabel; GAPBS symmetrize/deduplicate; vertex-count sentinel self-loop removed by GAPBS",
+      "m5_exact_input": false
+    },
+    "twitter-tc": {
+      "path": "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash25.sg",
+      "sha256": "085d5efd0ebf4556d0a10d133017246bf0db4f0875063e92e28bb35efaa16f5a",
+      "bytes": 675199209,
+      "nodes": 10414695,
+      "directed_edges": 147970406,
+      "directed": false,
+      "family": "Twitter WWW2010 induced hash reduction",
+      "selection": "SplitMix64(vertex_id)%4 < 1; retain induced edges; ascending original-ID relabel; GAPBS symmetrize/deduplicate; vertex-count sentinel self-loop removed by GAPBS",
+      "m5_exact_input": false
+    },
+    "gplus-bc": {
+      "path": "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/gplus-snapshot4.sg",
+      "sha256": "cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51",
+      "bytes": 4167052553,
+      "nodes": 28943748,
+      "directed_edges": 462994069,
+      "directed": true,
+      "family": "Google+ IMC12 published snapshot 4",
+      "selection": "TimeID < 4; original IDs and direction; unweighted",
+      "m5_exact_input": false
+    },
+    "gplus-sssp": {
+      "path": "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/gplus-snapshot2.wsg",
+      "sha256": "4ea071cf5a26a0c94df516323ba1d3afc470fc5ecfd87114e2bcaa58112b2224",
+      "bytes": 4624124145,
+      "nodes": 17092002,
+      "directed_edges": 271915755,
+      "directed": true,
+      "family": "Google+ IMC12 published snapshot 2",
+      "selection": "TimeID < 2; original IDs and direction; GAPBS-generated weights (authors weights unavailable)",
+      "m5_exact_input": false
+    }
+  },
+  "twitter_source": {
+    "release": "https://github.com/ANLAB-KAIST/traces/releases/tag/twitter_rv.net",
+    "release_id": 44770465,
+    "assets": [
+      {
+        "name": "twitter_rv.net.00.gz",
+        "bytes": 1643968338,
+        "sha256": "bf28479b02cd8825a7ff05e9d44111b790aa06587cbe50f04719610354b3a7b8",
+        "url": "https://github.com/ANLAB-KAIST/traces/releases/download/twitter_rv.net/twitter_rv.net.00.gz"
+      },
+      {
+        "name": "twitter_rv.net.01.gz",
+        "bytes": 1731229384,
+        "sha256": "54bfa92b44b85de7a39b0271b07b65fdba18773d26e8d1c95b4c091b2d1d976f",
+        "url": "https://github.com/ANLAB-KAIST/traces/releases/download/twitter_rv.net/twitter_rv.net.01.gz"
+      },
+      {
+        "name": "twitter_rv.net.02.gz",
+        "bytes": 1854797138,
+        "sha256": "59649122bb06df51f597f4791037cce5410639fdf5421053381c96bc0e34ca1d",
+        "url": "https://github.com/ANLAB-KAIST/traces/releases/download/twitter_rv.net/twitter_rv.net.02.gz"
+      },
+      {
+        "name": "twitter_rv.net.03.gz",
+        "bytes": 1245302442,
+        "sha256": "1eb991676c7157877b2295cc2c2fa1fa9abf2bc1215903e1464fd14c996783c6",
+        "url": "https://github.com/ANLAB-KAIST/traces/releases/download/twitter_rv.net/twitter_rv.net.03.gz"
+      }
+    ],
+    "m5_exact_input": false
+  },
+  "twitter_selection": {
+    "source_nodes": 41652230,
+    "source_edges": 1468365182,
+    "main_nodes": 31239712,
+    "main_edges": 818955431,
+    "tc_nodes": 10414695,
+    "tc_edges": 90213310,
+    "vertex_count_self_loop_sentinel": true
+  },
+  "preparer_sha256": "582791fa8af2985430c160b0ccad7351fbe320eb472bdd48cf2706daab474466",
+  "converter_sha256": "51f98629a2ba8155102b46b56cdfdb074d677295272fb5a80c4d13a3256a83a7",
+  "google_archive_sha256": "24a3a97523f18dfedf912400d5022fbef6ce89627a5e53a4fc37368e65e358d5",
+  "native_memory": [
+    {
+      "workload": "bfs",
+      "threads": 1,
+      "trials": 1,
+      "graph": "twitter-main",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/workloads/gapbs/bfs",
+        "-f",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75.sg",
+        "-n",
+        "1"
+      ],
+      "peak_rss_kib": 5732012,
+      "exit_code": 0
+    },
+    {
+      "workload": "cc",
+      "threads": 1,
+      "trials": 1,
+      "graph": "twitter-main",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/workloads/gapbs/cc",
+        "-f",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75.sg",
+        "-n",
+        "1"
+      ],
+      "peak_rss_kib": 5732572,
+      "exit_code": 0
+    },
+    {
+      "workload": "pr",
+      "threads": 1,
+      "trials": 1,
+      "graph": "twitter-main",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/workloads/gapbs/pr",
+        "-f",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75.sg",
+        "-n",
+        "1"
+      ],
+      "peak_rss_kib": 5732716,
+      "exit_code": 0
+    },
+    {
+      "workload": "tc",
+      "threads": 1,
+      "trials": 1,
+      "graph": "twitter-tc",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/workloads/gapbs/tc",
+        "-f",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash25.sg",
+        "-n",
+        "1"
+      ],
+      "peak_rss_kib": 744812,
+      "exit_code": 0
+    },
+    {
+      "workload": "bc",
+      "threads": 1,
+      "trials": 1,
+      "graph": "gplus-bc",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/workloads/gapbs/bc",
+        "-f",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/gplus-snapshot4.sg",
+        "-n",
+        "1"
+      ],
+      "peak_rss_kib": 4688284,
+      "exit_code": 0
+    },
+    {
+      "workload": "sssp",
+      "threads": 1,
+      "trials": 1,
+      "graph": "gplus-sssp",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/workloads/gapbs/sssp",
+        "-f",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/gplus-snapshot2.wsg",
+        "-n",
+        "1"
+      ],
+      "peak_rss_kib": 4742272,
+      "exit_code": 0
+    }
+  ],
+  "completed": 1793133980.5675144,
+  "rule_selected_before_measurement": true
+}

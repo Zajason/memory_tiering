@@ -27,11 +27,11 @@ All cases below were declared before collecting their new measurements. No windo
 | trials3-pool-cc | complete |
 | setup-warmed-bfs | complete |
 | setup-warmed-cc | complete |
-| pr-artifact-convergence-pr | running |
-| prepare-inputs | queued |
-| dataset-bfs | queued |
-| dataset-cc | queued |
-| dataset-pr | queued |
+| pr-artifact-convergence-pr | complete |
+| prepare-inputs | complete |
+| dataset-bfs | complete |
+| dataset-cc | complete |
+| dataset-pr | running |
 | dataset-tc | queued |
 | dataset-bc | queued |
 | dataset-sssp | queued |
@@ -42,6 +42,12 @@ All cases below were declared before collecting their new measurements. No windo
 
 | Case | Workload | Scope | Access error | Fill error | Traffic error | Baseline pooled fill error |
 |---|---|---|---:|---:|---:|---:|
+| dataset | bfs | pooled | 0.555 | 0.556 | 0.555 | 0.591 |
+| dataset | bfs | whole | 0.584 | 0.584 | 0.584 | 0.591 |
+| dataset | cc | pooled | 0.492 | 0.492 | 0.489 | 0.505 |
+| dataset | cc | whole | 0.526 | 0.526 | 0.526 | 0.505 |
+| pr-artifact-convergence | pr | pooled | 0.020 | 0.011 | 0.011 | 0.011 |
+| pr-artifact-convergence | pr | whole | 0.020 | 0.020 | 0.020 | 0.011 |
 | setup-warmed | bfs | pooled | 0.591 | 0.591 | 0.591 | 0.591 |
 | setup-warmed | bfs | whole | 0.591 | 0.591 | 0.591 | 0.591 |
 | setup-warmed | cc | pooled | 0.510 | 0.510 | 0.510 | 0.505 |
@@ -62,6 +68,23 @@ All cases below were declared before collecting their new measurements. No windo
 Errors are maximum absolute differences from the digitized reference over N=4,8,16,32,48; 0.10 means ten percentage points. They are similarity scores, not evidence of identical methodology.
 
 ![All completed demand-fill controls](../results/fidelity-2026-10-27/demand-fill-controls.png)
+
+## Interpretation of completed input controls
+
+On the declared Twitter reduction, pooled demand-fill error changes from 59.1 to 55.6 percentage points for BFS and 50.5 to 49.2 for CC. These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. The remaining input and repetition controls must finish before assessing the campaign as a whole.
+
+## Native footprint checks
+
+| Workload | Native peak RSS (GiB) | Graph file (GiB) |
+|---|---:|---:|
+| bfs | 5.466 | 5.230 |
+| cc | 5.467 | 5.230 |
+| pr | 5.467 | 5.230 |
+| tc | 0.710 | 0.629 |
+| bc | 4.471 | 3.881 |
+| sssp | 4.523 | 4.307 |
+
+These are one-thread, one-trial native memory footprints. Pin memory overhead is excluded. File size and process RSS are different quantities. No graph reduction is retuned from its measured CDF.
 
 ## Remaining evidence gaps
 

@@ -47,7 +47,7 @@ The rebuilt simulator reports 30,321 accepted line requests and 474 page observa
 | cc | complete | 7196.2 |
 | bc | complete | 19838.3 |
 | sssp | complete | 17886.9 |
-| pr | interrupted | 0.0 |
+| pr | interrupted | 25323.2 |
 
 Failure detail for `pr`: `signal 15`
 

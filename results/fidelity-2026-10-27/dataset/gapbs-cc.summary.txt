@@ -1,0 +1,113 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-cc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             8
+epoch_len_dram_acc 10000000
+instructions       3882105792
+mem_refs_profiled  1092915244
+dram_accesses      79059256
+llc_miss_ratio     0.072338  (DRAM accesses per memory ref)
+page_observations  2379407   (page x epoch pairs with >=1 access)
+mean_unique_words  24.169 / 64
+top4_word_share    0.1590   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1026
+  8         12.5%   0.2069
+ 16           25%   0.4172
+ 32           50%   0.7509
+ 48           75%   0.8742
+
+# P(page has at least 48 of 64 words accessed) = 0.1272
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,62049
+2,61161
+3,60491
+4,60408
+5,61091
+6,61659
+7,62570
+8,62925
+9,63339
+10,63299
+11,63785
+12,63341
+13,62560
+14,62477
+15,61250
+16,60285
+17,58767
+18,58331
+19,56351
+20,55204
+21,54019
+22,52739
+23,51199
+24,49668
+25,49113
+26,48286
+27,46866
+28,46046
+29,44838
+30,42656
+31,40558
+32,39344
+33,37278
+34,34670
+35,32200
+36,29834
+37,27004
+38,23991
+39,21386
+40,18306
+41,15769
+42,13163
+43,10755
+44,8926
+45,7007
+46,5498
+47,4290
+48,3250
+49,2582
+50,2042
+51,1729
+52,1394
+53,1219
+54,1163
+55,1194
+56,1225
+57,1358
+58,1525
+59,1709
+60,2158
+61,2436
+62,2953
+63,3889
+64,270829
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,60029
+1,120695
+2,245991
+3,501049
+4,803902
+5,334237
+6,174741
+7,120470
+8,18293

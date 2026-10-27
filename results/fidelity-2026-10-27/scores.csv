@@ -1,4 +1,22 @@
 case,workload,scope,stream,threads,trials,roi_epoch,warm_setup,graph_family,max_abs_error,p16,events
+dataset,bfs,pooled,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5554316706082916,0.6799574638777233,933165082
+dataset,bfs,pooled,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5556287084858513,0.6800920122348694,62304636
+dataset,bfs,pooled,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5547356284082847,0.6793705037320743,77891095
+dataset,bfs,whole,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5838242551844867,0.5590977520629108,933165082
+dataset,bfs,whole,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5838242551844867,0.5590977520629108,62304636
+dataset,bfs,whole,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5838242551844867,0.5590977520629108,77891095
+dataset,cc,pooled,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.4919985461298009,0.41782228822104545,1092915244
+dataset,cc,pooled,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.49218974527963255,0.41812313431894815,70481855
+dataset,cc,pooled,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.48916822762982537,0.41720058821378603,79059256
+dataset,cc,whole,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5259644280608522,0.41166332965326247,1092915244
+dataset,cc,whole,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5259644280608522,0.41166332965326247,70481855
+dataset,cc,whole,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5259644280608522,0.41166332965326247,79059256
+pr-artifact-convergence,pr,pooled,accesses,1,1,1,False,synthetic Kronecker,0.019866050177677244,0.00010479820809824463,5287528124
+pr-artifact-convergence,pr,pooled,fills,1,1,1,False,synthetic Kronecker,0.010806405128471957,7.601781769082225e-05,230153698
+pr-artifact-convergence,pr,pooled,traffic,1,1,1,False,synthetic Kronecker,0.011287152065037536,0.0004702396527007455,239684549
+pr-artifact-convergence,pr,whole,accesses,1,1,1,False,synthetic Kronecker,0.01993693040269938,5.9565730783920055e-05,5287528124
+pr-artifact-convergence,pr,whole,fills,1,1,1,False,synthetic Kronecker,0.01993693040269938,5.9565730783920055e-05,230153698
+pr-artifact-convergence,pr,whole,traffic,1,1,1,False,synthetic Kronecker,0.01993693040269938,5.9565730783920055e-05,239684549
 setup-warmed,bfs,pooled,accesses,1,1,1,True,synthetic Kronecker,0.5914075366081207,0.7078448870320042,168833287
 setup-warmed,bfs,pooled,fills,1,1,1,True,synthetic Kronecker,0.5914118535870563,0.7078484760905168,7918329
 setup-warmed,bfs,pooled,traffic,1,1,1,True,synthetic Kronecker,0.5914092469312945,0.7078480781613624,9824862

@@ -36,6 +36,15 @@ Iason Zakynthinos
 
 ## Search record (2026-10-18)
 
+Rechecked on 27 October: the official main revision is still
+`d3d90d9308a4abd3af70e99c81d4ed8d445320cf`, with no release assets and a blank
+dataset link in the experiment README. A full checkout is now available locally
+on the research HDD. The TC performance script uses
+`twitter_reduced_690M_u.sg`, separately from the other Twitter kernels; the
+clarification request should also ask for this input. The official upstream
+Twitter gzip chunks have been downloaded and verified. Our follow-up uses
+documented induced reductions, not a claim to recover the missing files.
+
 - Official artifact main revision remains
   `d3d90d9308a4abd3af70e99c81d4ed8d445320cf`.
 - The public API lists one branch (`main`), no releases and no issues at the

@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "scope": "cached synthetic process supervisor",
+  "pause_restore_cycles": 2,
+  "completion_tick": 50000438234,
+  "summary_comparison": "byte-identical"
+}

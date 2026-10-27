@@ -25,9 +25,17 @@ The mixed read/write cache test also passed:
 summaries match byte-for-byte; native and restored runs both finish draining at
 tick 50,000,438,234. The compressed snapshot is 37,110,211 bytes.
 
-This is NOT yet full-system certification, a reboot test, or proof that arbitrary
-workloads can resume. The full campaign remains stopped and its automatic monitor
-remains paused. These tests establish process restore feasibility on this machine.
+The process supervisor has also passed two complete pause/restore cycles in one
+cached synthetic run, preserving byte-identical probe summaries and completion
+tick 50,000,438,234. The evidence is copied to
+`results/fidelity-2026-10-27/checkpoint-manager-validation.json`.
+
+Full-system validation is now running a bounded 64 MiB guest `dd` workload. It
+waits until TimingSimpleCPU is active before checkpointing, then kills/restores
+the process and compares against an uninterrupted run. Its report lives at
+`/mnt/research/memory-tiering/checkpoint-validation/full-system-1/validation.json`.
+This validation must pass before the long simulator queue uses the supervisor.
+A reboot test and general certification across arbitrary workloads remain open.
 
 ## Local installation
 
@@ -76,13 +84,32 @@ defaults remain unchanged. Both tests use multiple probe epochs.
 3. Test a real Linux reboot with unchanged binaries, libraries and input files.
    Never mount or modify the Linux filesystem from Windows while relying on a
    snapshot whose open files refer to it.
-4. Add explicit checkpoint-complete, paused and resume states to the campaign
-   runner. Do not let a checkpoint-and-kill operation become a failed benchmark
-   or cause the next queued benchmark to start.
-5. Budget disk space for an old valid snapshot plus its replacement, preserving
-   the old snapshot until the new one is complete. Full-system compression is
-   not measured yet. Only about 4.6 GiB was free during feasibility testing;
-   this is insufficient headroom for the previous 10+ GiB simulator process.
+4. The runner now has explicit paused/resume handling: exit 75 preserves the
+   current job and stops the lane. It checks the full-system validation report
+   and matching gem5 binary hash before enabling checkpoints.
+5. The research HDD now provides ample space. The supervisor requires 25 GiB
+   free before making a snapshot, keeps the old valid snapshot during replacement,
+   verifies checkpoint hashes on restore, and retains recent history. Full-system
+   checkpoint size and time are still being measured.
+
+## Operator commands
+
+```bash
+# Start or restore a managed process; same command and guarded files required.
+.venv/bin/python experiments/checkpoint_sim.py run \
+  --state-dir /mnt/research/memory-tiering/checkpoints/example -- gem5.opt CONFIG.py
+
+# Wait for a finalized disk snapshot and confirmed paused state before shutdown.
+.venv/bin/python experiments/checkpoint_sim.py pause \
+  --state-dir /mnt/research/memory-tiering/checkpoints/example
+```
+
+The real simulator lane accepts `--checkpoint-storage DIRECTORY` and
+`--checkpoint-validation REPORT.json`; it refuses synthetic-only or mismatched
+validation reports. Routine process termination is not a substitute for the
+explicit pause command. An unexpected stop can resume from the last completed
+periodic snapshot, losing work since that snapshot. Snapshots use the same Linux
+environment and unchanged guarded inputs; do not update these during a paused run.
 
 Completed campaign results are safe. The interrupted PageRank attempt has no
 checkpoint and cannot be recovered by adding this feature retroactively.

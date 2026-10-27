@@ -21,18 +21,23 @@ def main():
     ap.add_argument('--dmtcp', type=Path, default=ROOT.parent/'dmtcp-local/bin')
     ap.add_argument('--duration-ticks', type=int, default=50000000000)
     ap.add_argument('--with-cache', action='store_true')
+    ap.add_argument('--full-system', action='store_true')
     args = ap.parse_args()
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
     ckpt = out/'checkpoint'; ckpt.mkdir()
     portfile = out/'port'
     sim = ROOT.parent/'simcxl/build/X86/gem5.opt'
-    config = ROOT/'src/sim/simcxl/cxl_hotskew_test.py'
-    report = {'status': 'running', 'scope': 'synthetic CXL traffic, not full-system',
+    config = ROOT/'src/sim/simcxl'/('fs_hotskew.py' if args.full_system else 'cxl_hotskew_test.py')
+    report = {'status': 'running', 'scope': 'bounded full-system dd workload' if args.full_system else 'synthetic CXL traffic',
               'gem5_sha256': hashlib.file_digest(sim.open('rb'), 'sha256').hexdigest(),
               'duration_ticks': args.duration_ticks, 'with_cache': args.with_cache}
     def save(): (out/'validation.json').write_text(json.dumps(report, indent=2)+'\n')
     def command(name):
+        if args.full_system:
+            return [str(sim),'-d',str(out/name),str(config),'--workload','bfs',
+                    '--big-mem','--switch-at-roi','--max-exits','3','--epoch','100000',
+                    '--validation-bytes','67108864']
         return [str(sim), '-d', str(out/name), str(config),
                 '--duration-ticks', str(args.duration_ticks), '--epoch-events', '100000',
                 *(['--with-cache', '--read-percent', '50'] if args.with_cache else [])]
@@ -51,12 +56,18 @@ def main():
                     raise RuntimeError('DMTCP launch failed; inspect resumed.log')
                 time.sleep(.1)
             port = portfile.read_text().strip()
+            if args.full_system:
+                deadline=time.monotonic()+7200
+                while 'switching to TimingSimpleCPU at exit #2' not in (out/'resumed.log').read_text():
+                    if process.poll() is not None or time.monotonic()>deadline:
+                        raise RuntimeError('full-system validation never reached timing ROI')
+                    time.sleep(2)
             time.sleep(2)
             if process.poll() is not None: raise RuntimeError('simulation exited before checkpoint')
             with (out/'checkpoint.log').open('w') as cklog:
                 subprocess.run([str(args.dmtcp/'dmtcp_command'), '-p', port, '--checkpoint'],
                                stdout=cklog, stderr=subprocess.STDOUT, check=True, timeout=180)
-                deadline = time.monotonic()+180
+                deadline = time.monotonic()+(900 if args.full_system else 180)
                 while True:
                     status = subprocess.run([str(args.dmtcp/'dmtcp_command'), '-p', port, '--status'],
                                             capture_output=True, text=True, check=True).stdout
@@ -74,18 +85,20 @@ def main():
         save()
         with (out/'restore.log').open('w') as log:
             process = subprocess.Popen([str(args.dmtcp/'dmtcp_restart'), '--new-coordinator',
-                '--coord-port', '0', *map(str,images)], stdout=log, stderr=subprocess.STDOUT, cwd=ROOT)
-            if process.wait(timeout=300): raise RuntimeError('restore failed; inspect restore.log')
+                '--coord-port', '0', '--ckptdir', str(ckpt), *map(str,images)], stdout=log, stderr=subprocess.STDOUT, cwd=ROOT)
+            if process.wait(timeout=7200 if args.full_system else 300): raise RuntimeError('restore failed; inspect restore.log')
         with (out/'native.log').open('w') as log:
             subprocess.run(command('native'), stdout=log, stderr=subprocess.STDOUT,
-                           cwd=ROOT, check=True, timeout=300)
-        for name in ['hotskew','hotskew-controller']:
+                           cwd=ROOT, check=True, timeout=7200 if args.full_system else 300)
+        summaries=['hotskew-bfs','hotskew-bfs.high','hotskew-bfs.bridge'] if args.full_system else ['hotskew','hotskew-controller']
+        for name in summaries:
             native=(out/'native'/name).read_bytes()
             resumed=(out/'resumed'/name).read_bytes()
             if native != resumed: raise RuntimeError(f'restored/native mismatch: {name}')
         ticks = []
         for name in ['native.log','restore.log']:
-            found = re.search(r'drained @ tick (\d+)', (out/name).read_text())
+            pattern=r'exit #3 at tick (\d+)' if args.full_system else r'drained @ tick (\d+)'
+            found = re.search(pattern, (out/name).read_text())
             if not found: raise RuntimeError(f'missing completion tick in {name}')
             ticks.append(int(found.group(1)))
         if ticks[0] != ticks[1]: raise RuntimeError('restored/native completion tick mismatch')

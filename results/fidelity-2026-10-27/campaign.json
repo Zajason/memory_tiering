@@ -1,0 +1,202 @@
+{
+  "jobs": {
+    "threads20-bfs": {
+      "status": "complete",
+      "started": 1793131581.9562492,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/threads20",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bfs",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/threads20",
+        "--threads",
+        "20"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/threads20-bfs-1793131583.run.log",
+      "elapsed_s": 1.7387936115264893
+    },
+    "threads20-cc": {
+      "status": "complete",
+      "started": 1793131584.2731361,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/threads20",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "cc",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/threads20",
+        "--threads",
+        "20"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/threads20-cc-1793131585.run.log",
+      "elapsed_s": 1.6978580951690674
+    },
+    "trials3-close-bfs": {
+      "status": "complete",
+      "started": 1793131586.53631,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-close",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bfs",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-close",
+        "--trials",
+        "3"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-close-bfs-1793131587.run.log",
+      "elapsed_s": 39.45836162567139
+    },
+    "trials3-close-cc": {
+      "status": "complete",
+      "started": 1793131626.60285,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-close",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "cc",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-close",
+        "--trials",
+        "3"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-close-cc-1793131627.run.log",
+      "elapsed_s": 59.68980360031128
+    },
+    "trials3-pool-bfs": {
+      "status": "complete",
+      "started": 1793131686.9187217,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-pool",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bfs",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-pool",
+        "--trials",
+        "3",
+        "--roi-epoch",
+        "0"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-pool-bfs-1793131688.run.log",
+      "elapsed_s": 39.911837577819824
+    },
+    "trials3-pool-cc": {
+      "status": "complete",
+      "started": 1793131727.4616265,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-pool",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "cc",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-pool",
+        "--trials",
+        "3",
+        "--roi-epoch",
+        "0"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/trials3-pool-cc-1793131728.run.log",
+      "elapsed_s": 60.951005935668945
+    },
+    "setup-warmed-bfs": {
+      "status": "complete",
+      "started": 1793131789.0734577,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/setup-warmed",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bfs",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/setup-warmed",
+        "--warm-setup"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/setup-warmed-bfs-1793131790.run.log",
+      "elapsed_s": 15.581658601760864
+    },
+    "setup-warmed-cc": {
+      "status": "complete",
+      "started": 1793131805.3004897,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/setup-warmed",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "cc",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/setup-warmed",
+        "--warm-setup"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/setup-warmed-cc-1793131806.run.log",
+      "elapsed_s": 22.851495027542114
+    },
+    "pr-artifact-convergence-pr": {
+      "status": "running",
+      "started": 1793131828.8117666,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/pr-artifact-convergence",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "pr",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/pr-artifact-convergence",
+        "--pr-iterations",
+        "1000",
+        "--pr-tolerance",
+        "0.0001"
+      ]
+    },
+    "prepare-inputs": {
+      "status": "queued"
+    },
+    "dataset-bfs": {
+      "status": "queued"
+    },
+    "dataset-cc": {
+      "status": "queued"
+    },
+    "dataset-pr": {
+      "status": "queued"
+    },
+    "dataset-tc": {
+      "status": "queued"
+    },
+    "dataset-bc": {
+      "status": "queued"
+    },
+    "dataset-sssp": {
+      "status": "queued"
+    }
+  },
+  "status": "running",
+  "pid": 50869,
+  "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+  "current": "pr-artifact-convergence-pr"
+}

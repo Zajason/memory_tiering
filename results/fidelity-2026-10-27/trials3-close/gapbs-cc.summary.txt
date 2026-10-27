@@ -1,0 +1,114 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-cc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             6
+epoch_len_dram_acc 10000000
+instructions       2833654431
+mem_refs_profiled  773904389
+dram_accesses      39101693
+llc_miss_ratio     0.050525  (DRAM accesses per memory ref)
+page_observations  691122   (page x epoch pairs with >=1 access)
+mean_unique_words  23.600 / 64
+top4_word_share    0.1527   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1144
+  8         12.5%   0.2502
+ 16           25%   0.5551
+ 32           50%   0.7821
+ 48           75%   0.7871
+
+# P(page has at least 48 of 64 words accessed) = 0.2130
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,17925
+2,19728
+3,20129
+4,21276
+5,22407
+6,22960
+7,23764
+8,24719
+9,25483
+10,26885
+11,27193
+12,27349
+13,27695
+14,27099
+15,25228
+16,23818
+17,22568
+18,19676
+19,17824
+20,16109
+21,14336
+22,12680
+23,10715
+24,9272
+25,7805
+26,6548
+27,5338
+28,4337
+29,3411
+30,2643
+31,2125
+32,1448
+33,1137
+34,735
+35,536
+36,354
+37,179
+38,112
+39,104
+40,64
+41,38
+42,35
+43,32
+44,26
+45,22
+46,21
+47,38
+48,26
+49,52
+50,44
+51,58
+52,50
+53,56
+54,100
+55,148
+56,168
+57,178
+58,278
+59,410
+60,624
+61,1228
+62,3721
+63,14721
+64,125334
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,2444
+1,22221
+2,47547
+3,109196
+4,214213
+5,157759
+6,40180
+7,72038
+8,19535
+9,5989

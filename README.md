@@ -24,6 +24,17 @@ software tracking and simulation. Full numerical replication remains unresolved.
 
 ## Results at a glance
 
+### Input and execution fidelity campaign
+
+The [27 October follow-up](docs/fidelity-followup.md) reports the next controlled
+attempt to close the Figure 4 gap: real Twitter source data, documented induced
+reductions, larger published Google+ snapshots, 20-thread controls, repeated
+trials, setup warming and artifact PageRank convergence settings. The new 1 TB
+research HDD holds the large data and checkpoint files. Completed runs are
+validated before entering the figures; queued experiments are listed explicitly.
+The authors' exact graph reductions and Figure 4 collection procedure remain
+unavailable, so these are input-family and execution controls.
+
 ### Corrected extension campaign
 
 The [25 October revalidation report](docs/revalidation-2026-10-25.md) tracks fresh

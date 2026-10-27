@@ -139,7 +139,11 @@ ap.add_argument("--max-exits", type=int, default=4,
                 help="stop on this m5_exit; 4 = boot + roi_begin + roi_end + script end")
 ap.add_argument("--outfile", default=None)
 ap.add_argument("--llc-ways", type=int, choices=[9, 10], default=10)
+ap.add_argument('--validation-bytes', type=int, default=0,
+                help='Use a bounded guest dd workload for full-system restore validation')
 args = ap.parse_args()
+if args.validation_bytes < 0 or args.validation_bytes % 4096:
+    ap.error('validation-bytes must be a nonnegative multiple of 4096')
 
 # Matches configs/spr-20t.env -- M5's GAPBS CAT partition.
 cache_hierarchy = PrivateL1PrivateL2SharedL3CacheHierarchy(
@@ -238,6 +242,10 @@ command = (
     + f"/data/run_{args.workload}.sh;"
     + "m5 exit;"
 )
+if args.validation_bytes:
+    command = ('m5 exit; m5 exit; '
+               f'dd if=/dev/zero of=/tmp/hotskew-restore-test bs=4096 count={args.validation_bytes//4096}; '
+               'm5 exit;')
 
 board.set_kernel_disk_workload(
     kernel=KernelResource(local_path=f"{args.fs_dir}/vmlinux-5.4.49"),

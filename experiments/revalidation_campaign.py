@@ -21,6 +21,9 @@ ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'results/revalidated-2026-10-25'
 PY=ROOT/'.venv/bin/python'
 
+class PausedRun(Exception):
+    pass
+
 def sha(p):
     with Path(p).open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
 
@@ -38,6 +41,7 @@ def run(cmd,log):
             while child.poll() is None:
                 if shutil.disk_usage(ROOT).free<2*1024**3:raise RuntimeError('disk safety floor reached')
                 time.sleep(2)
+            if child.returncode==75:raise PausedRun('checkpoint saved; run paused')
             if child.returncode:raise RuntimeError(f'exit {child.returncode}: {log}')
         finally:
             if child.poll() is None:
@@ -49,7 +53,10 @@ def publish():
     subprocess.run([str(PY),'src/analysis/publish_revalidation.py'],cwd=ROOT,check=True)
 
 def main():
-    ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('lane',choices=['pin','sim']);a=ap.parse_args()
+    ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('lane',choices=['pin','sim'])
+    ap.add_argument('--checkpoint-storage',type=Path)
+    ap.add_argument('--checkpoint-validation',type=Path)
+    a=ap.parse_args()
     OUT.mkdir(parents=True,exist_ok=True)
     lock=(OUT/f'{a.lane}.lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     statefile=OUT/f'{a.lane}-status.json'
@@ -61,6 +68,12 @@ def main():
     tool=ROOT/'src/profiler/pintool/obj-intel64/hotskew.so'
     sim=ROOT.parent/'simcxl/build/X86/gem5.opt'
     fingerprint=sha(tool if a.lane=='pin' else sim)
+    if a.checkpoint_storage:
+        if a.lane!='sim' or not a.checkpoint_validation:ap.error('sim checkpoints require a full-system validation report')
+        proof=json.loads(a.checkpoint_validation.read_text())
+        if (proof.get('status')!='passed' or proof.get('scope')!='bounded full-system dd workload'
+                or proof.get('gem5_sha256')!=fingerprint):
+            raise RuntimeError('full-system restore validation is missing or incompatible')
     jobs=[]
     if a.lane=='pin':
         for algo in ['spacesaving','cmsketch']:
@@ -83,10 +96,17 @@ def main():
         status={'status':'running','started':time.time(),'binary_sha256':fingerprint}
         state['jobs'][job]=status;state['current']=job;save();publish()
         try:
+            if a.lane=='sim' and a.checkpoint_storage and old.get('checkpoint_state'):
+                checkpoint=Path(old['checkpoint_state'])
+                if (checkpoint/'latest.json').exists():
+                    directory=Path(old['output']);cmd=old['command']
+                    status['checkpoint_state']=str(checkpoint)
+                    for key in ['config_sha256','scope','graph','guest_script_sha256']:
+                        if key in old:status[key]=old[key]
             if cmd is not None:
-                directory=prefix.parent
+                if a.lane=='pin':directory=prefix.parent
                 manifest_path=Path(str(prefix)+'.manifest.json')
-                if manifest_path.exists():
+                if a.lane=='pin' and manifest_path.exists():
                     prior=json.loads(manifest_path.read_text())
                     if prior.get('status')!='complete' or prior.get('tool_sha256')!=fingerprint:
                         attempt=1
@@ -113,7 +133,15 @@ def main():
             status['command']=[str(x) for x in cmd];status['output']=str(directory);save()
             log=OUT/'logs'/f'{a.lane}-{job}-{int(time.time())}.run.log'
             status['log']=str(log);save()
-            run(cmd,log)
+            launch=cmd
+            if a.lane=='sim' and a.checkpoint_storage:
+                checkpoint=Path(status.get('checkpoint_state',a.checkpoint_storage/job/directory.name))
+                status['checkpoint_state']=str(checkpoint)
+                launch=[PY,'experiments/checkpoint_sim.py','run','--state-dir',checkpoint]
+                for file in ['vmlinux-5.4.49','x86-ubuntu.img','data2.img']:
+                    launch+=['--guard-file',ROOT.parent/'fs_image'/file]
+                launch+=['--',*cmd];save()
+            run(launch,log)
             if a.lane=='pin':
                 manifest=json.loads(Path(str(prefix)+'.manifest.json').read_text())
                 if manifest.get('status')!='complete' or manifest['tool_sha256']!=fingerprint:
@@ -141,6 +169,8 @@ def main():
             status['status']='complete'
             print(f'COMPLETE {a.lane}/{job}',flush=True)
         except BaseException as e:
+            if isinstance(e,PausedRun):
+                status.update(status='paused',error=str(e));state['status']='paused';save();publish();return 75
             status.update(status='interrupted' if isinstance(e,KeyboardInterrupt) else 'failed',error=str(e))
             print(f"{status['status'].upper()} {a.lane}/{job}: {e}",flush=True)
             if isinstance(e,KeyboardInterrupt):

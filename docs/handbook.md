@@ -6,6 +6,12 @@
 
 # Handbook
 
+The [27 October fidelity follow-up](fidelity-followup.md) tracks the current
+attempt to improve agreement with M5. It explains every new input reduction and
+execution control and reports all completed cases, including negative results.
+The additional HDD is mounted at `/mnt/research`; this expands project storage
+while Ubuntu and the repository stay on the SSD.
+
 ## Start with the audited measurement
 
 ### Are the extensions still usable?

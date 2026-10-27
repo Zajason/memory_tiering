@@ -20,6 +20,12 @@ def main():
     ap.add_argument("workloads", nargs="*", default=["bfs", "cc", "sssp", "bc", "pr", "tc"])
     ap.add_argument("--out", type=Path, default=ROOT / "results/paired-v2")
     ap.add_argument("--scale", type=int, default=23)
+    ap.add_argument("--threads", type=int, default=1)
+    ap.add_argument("--trials", type=int, default=1)
+    ap.add_argument("--pr-iterations", type=int)
+    ap.add_argument("--pr-tolerance", type=float)
+    ap.add_argument("--roi-epoch", type=int, choices=[0,1], default=1,
+                    help="Close each trial's partial epoch (default); 0 pools across ROI calls")
     ap.add_argument("--epoch-refs", type=int, default=10)
     ap.add_argument("--epoch-traffic", type=int, default=0,
                     help="Use M modeled memory events instead of reference windows")
@@ -41,6 +47,12 @@ def main():
         args.dump_max_mb = 0
     if args.epoch_refs <= 0 or args.epoch_traffic < 0:
         ap.error("epoch-refs must be positive and epoch-traffic nonnegative")
+    if args.threads <= 0 or args.trials <= 0:
+        ap.error('threads and trials must be positive')
+    if args.pr_iterations is not None and args.pr_iterations <= 0:
+        ap.error('PageRank iteration limit must be positive')
+    if args.pr_tolerance is not None and args.pr_tolerance <= 0:
+        ap.error('PageRank tolerance must be positive')
     if args.graph_prefix and args.graph_family == "synthetic Kronecker":
         ap.error("explicit graphs require an explicit --graph-family")
     args.out = args.out.resolve()
@@ -68,12 +80,16 @@ def main():
                "-l3_kb", str(4096*args.llc_ways), "-l3_assoc", str(args.llc_ways),
                "-warm_outside_roi", str(int(args.warm_setup)),
                "-roi_begin", "hotskew_roi_begin", "-roi_end", "hotskew_roi_end",
-               "-tag", f"gapbs-{name}", "-o", str(prefix), "--", str(binary), "-f", str(graph), "-n", "1"]
+               "-roi_epoch", str(args.roi_epoch),
+               "-tag", f"gapbs-{name}", "-o", str(prefix), "--", str(binary), "-f", str(graph), "-n", str(args.trials)]
+        if name=='pr':
+            if args.pr_iterations is not None:cmd+=['-i',str(args.pr_iterations)]
+            if args.pr_tolerance is not None:cmd+=['-t',str(args.pr_tolerance)]
         if args.track_algo:
             at = cmd.index('--')
             cmd[at:at] = ['-track_algo', args.track_algo, '-track_n', args.track_budgets,
                           '-track_k', str(args.track_k), '-dump_topk', '1']
-        metadata = dict(command=cmd, gzip_pages=args.gzip_pages, threads=1, input=str(graph),
+        metadata = dict(command=cmd, gzip_pages=args.gzip_pages, threads=args.threads, input=str(graph),
                         input_bytes=graph.stat().st_size,
                         input_sha256=input_hashes[graph],
                         executable_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),
@@ -82,14 +98,16 @@ def main():
                         window="modeled memory events" if args.epoch_traffic else "line-operand references",
                         epoch_refs=0 if args.epoch_traffic else args.epoch_refs*1000000,
                         epoch_traffic=args.epoch_traffic*1000000,
-                        roi="timed kernel", warm_setup=args.warm_setup, trials=1,
+                        roi="timed kernel", warm_setup=args.warm_setup, trials=args.trials,
+                        roi_epoch=args.roi_epoch,
+                        multicore_model='per-thread private caches; shared serialized LLC; no coherence',
                         status="running", started=time.time())
         if manifest.exists():
             old = json.loads(manifest.read_text())
             if (old.get("status") == "complete" and old.get("command") == cmd
                     and old.get('gzip_pages', False) == args.gzip_pages
                     and all(old.get(k) == metadata[k] for k in
-                            ('tool_sha256', 'executable_sha256', 'input_sha256'))):
+                            ('tool_sha256', 'executable_sha256', 'input_sha256','threads'))):
                 print(f"SKIP completed {name}", flush=True)
                 continue
             raise SystemExit(f"Refusing to overwrite {manifest}; use a new --out directory")
@@ -99,7 +117,7 @@ def main():
             temp.replace(manifest)
         save()
         print(f"START {name}", flush=True)
-        env = dict(os.environ, OMP_NUM_THREADS="1", OMP_DYNAMIC="FALSE")
+        env = dict(os.environ, OMP_NUM_THREADS=str(args.threads), OMP_DYNAMIC="FALSE")
         compressor = None
         guard = None
         fifo = prefix.with_suffix('.pages.bin')

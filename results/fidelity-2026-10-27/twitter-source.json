@@ -1,0 +1,31 @@
+{
+  "release": "https://github.com/ANLAB-KAIST/traces/releases/tag/twitter_rv.net",
+  "release_id": 44770465,
+  "assets": [
+    {
+      "name": "twitter_rv.net.00.gz",
+      "bytes": 1643968338,
+      "sha256": "bf28479b02cd8825a7ff05e9d44111b790aa06587cbe50f04719610354b3a7b8",
+      "url": "https://github.com/ANLAB-KAIST/traces/releases/download/twitter_rv.net/twitter_rv.net.00.gz"
+    },
+    {
+      "name": "twitter_rv.net.01.gz",
+      "bytes": 1731229384,
+      "sha256": "54bfa92b44b85de7a39b0271b07b65fdba18773d26e8d1c95b4c091b2d1d976f",
+      "url": "https://github.com/ANLAB-KAIST/traces/releases/download/twitter_rv.net/twitter_rv.net.01.gz"
+    },
+    {
+      "name": "twitter_rv.net.02.gz",
+      "bytes": 1854797138,
+      "sha256": "59649122bb06df51f597f4791037cce5410639fdf5421053381c96bc0e34ca1d",
+      "url": "https://github.com/ANLAB-KAIST/traces/releases/download/twitter_rv.net/twitter_rv.net.02.gz"
+    },
+    {
+      "name": "twitter_rv.net.03.gz",
+      "bytes": 1245302442,
+      "sha256": "1eb991676c7157877b2295cc2c2fa1fa9abf2bc1215903e1464fd14c996783c6",
+      "url": "https://github.com/ANLAB-KAIST/traces/releases/download/twitter_rv.net/twitter_rv.net.03.gz"
+    }
+  ],
+  "m5_exact_input": false
+}

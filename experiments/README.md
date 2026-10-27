@@ -1,54 +1,64 @@
 # Experiments
 
-One directory per experiment: `NN-short-name/`, containing
+The current goal is the M5 Figure 4 characterization: distinct 64-byte lines per
+4 KiB page, measured from application accesses and modeled memory traffic.
+The exact authors' inputs and Figure 4 collection procedure remain unresolved.
 
-- `config.md` — what was configured and why
-- `run.sh` — the exact command
-- `notes.md` — what happened, what surprised you, what you'd change
+## Current runners
 
-Record the **gem5 commit, kernel version, and workload version** in every `config.md`. You will need
-to reproduce a result from three weeks ago and you will not remember.
+| Runner | Purpose |
+|---|---|
+| `run_paired.py` | Paired access/fill/traffic measurements with manifests and explicit thread/trial/window controls |
+| `run_fidelity_campaign.py` | Predeclared input and execution controls; updates the fidelity report after each completion |
+| `revalidation_campaign.py` | Corrected tracker/extension runs and full-system simulator queue |
+| `run_extension_workload.py` | Redis A/C, Memcached and Liblinear with compressed raw records |
+| `test_process_checkpoint.py` | Kill/restore versus uninterrupted synthetic or bounded full-system run |
+| `checkpoint_sim.py` | Periodic snapshots and explicit pause/resume for a simulator process |
+| `migrate_raw_storage.py` | SHA256-verified migration of ignored raw records to the research HDD |
 
-## Blocking prerequisite
+See [current measurement semantics](../docs/methodology.md),
+[27 October fidelity controls](../docs/fidelity-followup.md), and
+[corrected extension results](../docs/revalidation-2026-10-25.md).
 
-**CXLRAMSim source.** The v1.0 paper says the authors plan to open-source and upstream into gem5,
-but no public repo was findable. Ask the professor for:
+## Fidelity campaign
 
-- repository URL / tarball, and the exact commit
-- build instructions and dependency versions (gem5 v25, Linux 6.14, Ubuntu 24.04 base image)
-- a working disk image and kernel binary, if they have one — building these from scratch is a
-  multi-day detour that teaches you nothing about tiering
-- any example config that already boots with a CXL zNUMA node
+```bash
+.venv/bin/python experiments/run_fidelity_campaign.py
+```
 
-## Planned sequence
+This runs the declared controls in sequence. Completed jobs with compatible
+profiler hashes are reused; incomplete benchmark attempts use new directories.
+The raw Twitter chunks must first be fetched with `benchmarks/fetch_twitter.py`.
+Large files live under `/mnt/research/memory-tiering`; the reduced input rules and
+hashes are recorded in the campaign's `inputs.json`. Reductions are our own
+documented input-family experiments. They are not the missing M5 input files.
 
-| # | Experiment | Purpose | Gate |
-|---|---|---|---|
-| 00 | Boot to shell | Toolchain works | `numactl -H` shows the CXL zNUMA node |
-| 01 | Post-boot checkpoint | Iteration speed | Restore works, is deterministic |
-| 02 | Pointer-chase latency, node 0 vs node 1 | **Prove CXL is slower** | ~2–3× latency ratio |
-| 03 | Bandwidth: DDR / CXL / interleaved | Characterize the device | Matches paper's ballpark |
-| 04 | Access tap on device request path | Enable everything downstream | Trace of {paddr, r/w, cycle} |
-| 05 | **Access-density CDF** | *The money figure* | Skew visible at 64 B granularity |
-| 06 | Slowdown vs fast-tier ratio (100/50/25/12.5%) | Size the problem | Monotone degradation curve |
-| 07 | Naive page-migration baseline + cost model | The "problem" arm | Recovers only part of the gap |
-| 08 | Oracle placement (offline-optimal from trace) | Upper bound | Defines the gap to close |
-| 09 | HPT (top-K page tracker) | M5 phase 1 | Beats count-only baseline |
-| 10 | HWT (top-K 64 B word tracker) | M5 phase 2 — the differentiator | Density-aware beats count-only |
-| 11 | Sensitivity: K, interval, quota, CXL latency | Robustness | — |
-| 12 | *(stretch)* Two co-running workloads | Memstrata's interference angle | — |
+Twenty-thread runs have per-thread private caches and a serialized shared LLC;
+the Pin model does not simulate coherence. Three-trial controls assess scope and
+repetition, while the artifact's performance commands use many more trials.
+Do not silently treat performance-script settings as Figure 4's collection scope.
 
-Experiments 02 and 05 are the ones to get done before the presentation if at all possible — 02
-proves the setup works, 05 proves the thesis.
+## Simulator pause and resume
 
-## Methodology notes
+```bash
+.venv/bin/python experiments/checkpoint_sim.py pause --state-dir DIRECTORY
+```
 
-- **Scale workloads down.** The papers use 10–20 GB RSS; full-system gem5 can't. Use hundreds of MB
-  and scale the fast-tier capacity proportionally so the *ratio* stays realistic. **Disclose this
-  explicitly** in the writeup — it's legitimate methodology only if stated.
-- **Always report the two bounds** (all-CXL, all-local-DRAM) alongside every scheme. A speedup number
-  without bounds is uninterpretable.
-- **Model migration cost honestly**: copy bandwidth charged to *both* tiers, a fixed per-migration
-  TLB-shootdown penalty, and a bandwidth quota. It's tempting to make migration free; that would
-  invalidate the whole study.
-- Fix the random seed. Check determinism early (experiment 01).
+Wait for confirmed `paused` before shutdown. The supervisor's run command restores
+its last complete snapshot; the same binary, command, configuration and guarded
+input files must be available. A normal kill can lose progress since the last
+periodic checkpoint. The simulator queue accepts `--checkpoint-storage DIRECTORY`
+and `--checkpoint-validation REPORT.json`, refusing a missing or incompatible
+full-system restore validation. See [checkpointing](../docs/checkpointing.md).
+
+Full-system runs use SimCXL/CXL-DMSim, kernel and disk images already available on
+the workstation. They can expose 19 GiB of guest RAM. CXLRAMSim access remains a
+separate question; it is not a prerequisite for the current SimCXL measurements.
+
+## Data and provenance
+
+Preserve complete commands, input/executable/profiler hashes, workload parameters,
+scope and completion state. Include partial final windows as declared. A growing
+summary is not evidence of completed execution and is not a resumable checkpoint.
+Report accesses, demand fills and writeback-inclusive traffic separately.
+Serial memory-cost estimates do not establish application speedup.

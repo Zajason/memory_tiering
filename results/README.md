@@ -6,6 +6,13 @@
 
 # results/
 
+`fidelity-2026-10-27/` contains the current input/execution controls, source
+provenance, checkpoint-supervisor validation and all completed comparison scores.
+See [the fidelity report](../docs/fidelity-followup.md) for live campaign status.
+
+`revalidated-2026-10-25/` contains the completed 16-job Pin extension campaign
+and corrected simulator runs. See [its report](../docs/revalidation-2026-10-25.md).
+
 The latest six-workload uniform-window scores and source manifests live in
 `uniform-traffic10/` (Google+ BC/SSSP, synthetic other kernels) and
 `uniform-kron-traffic10/` (all synthetic). See
@@ -21,13 +28,15 @@ closer under memory-event windows, not an exact replication or CXL-device trace.
 The parent `matched-family/scores.csv` is the BC/SSSP four-cell comparison;
 the `uniform-*` score tables cover all six kernels. The table below is historical.
 
-Raw `.pages.bin` dumps are **not kept** — they are gigabytes, gitignored, and
-regenerable. Summaries, per-epoch CSVs and figures are kept.
+Raw `.pages.bin` and compressed dumps are gitignored. Current raw records are
+preserved on the research HDD, with verified symlinks at their original paths;
+they are not included in GitHub. Summaries, compact histograms and figures remain
+in the repository. See [storage layout](../docs/storage.md).
 
 | directory | what it is | still cited? |
 |---|---|---|
 | `spr-20t/` | GAPBS + liblinear, stock build, ROI on steady state | yes |
-| `spr-20t-ul/` | GAPBS, user-space graph load — **the controller view**, the headline set | yes |
+| `spr-20t-ul/` | Historical user-space graph load and changed scope; not an isolated controller view | historical only |
 | `spr-1t/` | Redis, 4 MB CAT partition (M5's 1-way mask) | yes |
 | `trackers/` | HPT/HWT accuracy vs hardware budget | yes |
 | `sensitivity/` | epoch, cache, threads, scale, trials sweeps | yes |

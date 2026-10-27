@@ -22,8 +22,10 @@ input family alone explaining the gap, not a reason to tune inputs to the plot.
 ### Are the extensions still usable?
 
 Checkpoint/resume development is tracked in [checkpointing.md](checkpointing.md).
-The process-snapshot feasibility test does not yet make the long campaign
-restartable mid-run; do not treat an interrupted summary as a checkpoint.
+Synthetic and bounded full-system process-restore tests now pass, including
+identical probe outputs and completion tick. Managed simulator runs can use
+periodic disk snapshots; old interrupted runs without a snapshot must restart.
+A real reboot restore is still untested. A summary alone is never a checkpoint.
 
 The methods can still be useful, but results obtained before a counting fix need
 new measurements. The [fresh revalidation report](revalidation-2026-10-25.md)
@@ -41,8 +43,10 @@ Two independent user services run the Pin and simulator queues:
 `systemctl --user status memory-tiering-revalidate-pin memory-tiering-revalidate-sim`.
 They continue without this chat open, but not while Linux is shut down or suspended.
 After a restart, run `.venv/bin/python experiments/revalidation_campaign.py pin`
-and, separately, the same command with `sim`. Completed jobs are preserved;
-interrupted workloads restart from the beginning, not from a simulator checkpoint.
+and, separately, the same command with `sim`. Completed jobs are preserved.
+Without checkpoint options, interrupted workloads restart from the beginning.
+The managed simulator command and explicit safe-pause procedure are documented
+in [checkpointing.md](checkpointing.md); use them to preserve mid-run state.
 
 For current experiments, read [methodology.md](methodology.md) and the
 [audit report](audit-2026-10.md) before the historical chapters below. The newer

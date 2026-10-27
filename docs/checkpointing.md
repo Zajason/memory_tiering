@@ -30,12 +30,18 @@ cached synthetic run, preserving byte-identical probe summaries and completion
 tick 50,000,438,234. The evidence is copied to
 `results/fidelity-2026-10-27/checkpoint-manager-validation.json`.
 
-Full-system validation is now running a bounded 64 MiB guest `dd` workload. It
-waits until TimingSimpleCPU is active before checkpointing, then kills/restores
-the process and compares against an uninterrupted run. Its report lives at
-`/mnt/research/memory-tiering/checkpoint-validation/full-system-1/validation.json`.
-This validation must pass before the long simulator queue uses the supervisor.
-A reboot test and general certification across arbitrary workloads remain open.
+Full-system validation passed on a bounded 64 MiB guest `dd` workload. After
+TimingSimpleCPU became active, the test checkpointed, killed and restored gem5.
+All three probe outputs (ordinary memory, high memory and CXL bridge) match the
+uninterrupted run byte-for-byte. Both runs stop at tick 4,677,431,532,021.
+The compressed snapshot is 329,700,893 bytes. The small report is preserved at
+`results/fidelity-2026-10-27/full-system-checkpoint-validation.json`; its gem5
+hash matches the current binary. The report's generic "both" wording is inherited
+from the synthetic test; this full-system test compares all three files.
+
+This passes the bounded full-system prerequisite for managed campaign snapshots.
+It is not general certification across arbitrary workloads. A real reboot test
+remains open, and no old interrupted computation gains a checkpoint retroactively.
 
 ## Local installation
 
@@ -78,7 +84,7 @@ defaults remain unchanged. Both tests use multiple probe epochs.
 
 ## Before restarting the long campaign
 
-1. Validate full-system kill/restore with CPU, disks and in-flight memory traffic.
+1. Bounded full-system kill/restore with CPU and disks passed as described above.
 2. Compare uninterrupted and resumed final counts, histograms, tracker results
    and simulated completion tick. Check output-file handling across restore.
 3. Test a real Linux reboot with unchanged binaries, libraries and input files.
@@ -90,7 +96,8 @@ defaults remain unchanged. Both tests use multiple probe epochs.
 5. The research HDD now provides ample space. The supervisor requires 25 GiB
    free before making a snapshot, keeps the old valid snapshot during replacement,
    verifies checkpoint hashes on restore, and retains recent history. Full-system
-   checkpoint size and time are still being measured.
+   checkpoint size and time depend on the workload; the bounded test is not a
+   capacity estimate for large graph runs.
 
 ## Operator commands
 

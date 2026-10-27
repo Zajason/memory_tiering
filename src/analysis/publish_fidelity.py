@@ -123,6 +123,16 @@ def main():
             size=inputs['graphs'][r['graph']]['bytes']/1024**3
             lines.append(f"| {r['workload']} | {r['peak_rss_kib']/1024**2:.3f} | {size:.3f} |")
         lines+=['','These are one-thread, one-trial native memory footprints. Pin memory overhead is excluded. File size and process RSS are different quantities. No graph reduction is retuned from its measured CDF.']
+    validation=OUT/'full-system-checkpoint-validation.json'
+    if validation.exists():
+        proof=json.loads(validation.read_text())
+        if proof.get('status')=='passed':
+            lines+=['','## Checkpoint validation','',
+              f"Bounded full-system kill/restore passed with completion tick {proof['completion_tick']:,}. "
+              'All three probe outputs match the uninterrupted execution byte-for-byte. '
+              f"The compressed snapshot is {proof['checkpoint_bytes']:,} bytes. "
+              'See [the preserved validation report](../results/fidelity-2026-10-27/full-system-checkpoint-validation.json). '
+              'This is a bounded guest dd test, not arbitrary-workload certification or a real reboot test.']
     lines+=['','## Remaining evidence gaps','',
       'The official artifact still omits its dataset-download link and a recovered Figure 4 collection runner. '
       'The exact reduced graphs, region/reset schedule, page denominator and Figure 4 trial configuration remain unresolved. '

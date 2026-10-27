@@ -86,6 +86,10 @@ On the declared Twitter reduction, pooled demand-fill error changes from 59.1 to
 
 These are one-thread, one-trial native memory footprints. Pin memory overhead is excluded. File size and process RSS are different quantities. No graph reduction is retuned from its measured CDF.
 
+## Checkpoint validation
+
+Bounded full-system kill/restore passed with completion tick 4,677,431,532,021. All three probe outputs match the uninterrupted execution byte-for-byte. The compressed snapshot is 329,700,893 bytes. See [the preserved validation report](../results/fidelity-2026-10-27/full-system-checkpoint-validation.json). This is a bounded guest dd test, not arbitrary-workload certification or a real reboot test.
+
 ## Remaining evidence gaps
 
 The official artifact still omits its dataset-download link and a recovered Figure 4 collection runner. The exact reduced graphs, region/reset schedule, page denominator and Figure 4 trial configuration remain unresolved. The draft author request has not been sent. Additional storage removes the capacity restriction, not this evidence gap.

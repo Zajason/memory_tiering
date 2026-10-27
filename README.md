@@ -40,6 +40,11 @@ only slightly: maximum five-point errors are 55.6/49.2 percentage points, versus
 59.1/50.5 on the prior baseline. Input family alone has not closed the gap; the
 remaining dataset and repetition controls are still pending.
 
+Bounded full-system checkpoint/restore validation has passed: all three probe
+outputs and the completion tick match an uninterrupted run. Managed snapshots
+are now eligible for the remaining simulator queue, after the dataset campaign.
+An actual reboot restore remains untested; see [checkpointing](docs/checkpointing.md).
+
 ### Corrected extension campaign
 
 The [25 October revalidation report](docs/revalidation-2026-10-25.md) tracks fresh

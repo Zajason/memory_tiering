@@ -2,43 +2,21 @@
 #
 #   ./build/X86/gem5.opt fs_hotskew.py --workload sssp|bc|liblinear
 #
-# What this measures, and why it is not the same instrument as the pintool
-# -----------------------------------------------------------------------
-# The probe sits in MemCtrl::recvTimingReq -- post-LLC, so the stream it sees is
-# the same quantity the pintool calls "dram_accesses" (LLC misses + writebacks).
-# Two things differ, and they are the entire reason for running here:
+# Counts accepted physical memory requests at controllers and, with --big-mem,
+# the CXL bridge. Kernel traffic is visible; CPU, caches, placement and scope
+# also differ from Pin, so their difference does not isolate kernel visibility.
+# One core, 48 KiB/12-way L1D, 2 MiB/16-way L2, and 9 or 10 LLC ways at 4 MiB
+# per way. Matching geometry does not establish Sapphire Rapids fidelity.
 #
-#   * addresses are PHYSICAL, so page-keyed trackers are not layout-dependent;
-#   * KERNEL traffic is included -- read(2), page-fault zeroing, DMA. Pin cannot
-#     see any of it (docs/report.md Sec 4.2), and that blind spot is the leading
-#     explanation for where we disagree with M5.
+# Boot uses AtomicSimpleCPU. Normally exit #1 switches to TimingSimpleCPU and
+# includes graph loading. --switch-at-roi instead switches at exit #2, excluding
+# atomic setup from the timing-request probe. --max-exits 3 ends at ROI exit.
+# A tick-limited run may be partial and requires explicit completion evidence.
 #
-# Cache hierarchy is set to match configs/spr-20t.env: 48kB/12-way L1d,
-# 2MB/16-way L2, 36MB/9-way L3. One core, because the Pin headline runs are
-# single-threaded (docs/methodology.md, "Why the headline runs are single-threaded").
-#
-# Why the probe is at the memory controller and not the CXL bridge
-# ---------------------------------------------------------------
-# The CXL-bridge integration exists and is verified (0001-hotskew-probe.patch),
-# but SimCXL exposes CXL memory as E820 type 20, which Linux treats as reserved
-# unless the CXL driver claims it. That needs SimCXL's custom 6.12 kernel; the
-# stock gem5 kernel would route nothing through the bridge and the probe would
-# silently report an empty run. The memory controller carries the traffic under
-# any kernel, and for a distribution over addresses the placement is equivalent.
-#
-# Flow
-# ----
-#   1. boot under ATOMIC. KVM boots to a blank console on this host and never
-#      reports an error, so it is not used.
-#   2. the boot script m5-exits; we switch to TimingSimpleCPU
-#   3. the workload runs in detail, INCLUDING its data load -- that is
-#      deliberate. The user-space-load experiment showed load visibility is
-#      worth 26.7 of the 28.6 words/page difference, so excluding it would
-#      reproduce the pintool's blind spot in a simulator that does not have one.
-#   4. the binaries' hotskew_roi_begin/end markers m5-exit too; those are
-#      recorded as epoch boundaries, not used to gate the measurement.
-#   5. we stop at --max-exits (the workload's own final exit) or --max-ticks,
-#      whichever comes first, and the summary is written either way.
+# --big-mem retypes the high E820 region as ordinary usable RAM so the stock
+# guest kernel routes requests through the bridge. It is a local memory-map
+# adaptation, not a complete CXL-driver or memory-tiering-policy implementation.
+# --validation-bytes selects a bounded guest workload for restore testing.
 
 import argparse
 import m5
@@ -145,7 +123,7 @@ args = ap.parse_args()
 if args.validation_bytes < 0 or args.validation_bytes % 4096:
     ap.error('validation-bytes must be a nonnegative multiple of 4096')
 
-# Matches configs/spr-20t.env -- M5's GAPBS CAT partition.
+# Capacity/way controls corresponding to the two documented CAT geometries.
 cache_hierarchy = PrivateL1PrivateL2SharedL3CacheHierarchy(
     l1d_size="48kB", l1d_assoc=12,
     l1i_size="32kB", l1i_assoc=8,
@@ -202,9 +180,8 @@ if args.big_mem:
     print(f"hotskew: big-mem on -- retyped {flipped} E820 entry to usable RAM, "
           f"total guest RAM ~= {3 + args.high_mem_gb} GB")
 
-# Enable the probe on every memory controller. With --big-mem there are two
-# memory systems, so there are two summaries; Figure 4 is a distribution over
-# pages and every 4KB page lies wholly within one range, so the histograms add.
+# Each controller has its own event clock. Compare its epochs separately rather
+# than treating the resulting windows as synchronized across memory ranges.
 out = args.outfile or f"hotskew-{args.workload}"
 systems = [("", memory)] + ([(".high", high_memory)] if args.big_mem else [])
 n_enabled = 0
@@ -220,8 +197,8 @@ for suffix, sysmem in systems:
 # memory region is reached through it. Counting AT the bridge is the placement
 # the project is actually about -- it is where M5 and NeoMem put their counters,
 # on the CXL device's request path, rather than at the DRAM controller behind
-# it. The two see the same stream for memory traffic; the bridge additionally
-# carries IO, so the summaries are kept separate rather than merged.
+# it. The patched bridge probe filters data requests by the configured range.
+# Bridge and downstream-controller observations overlap; do not add them.
 if args.big_mem and hasattr(board, "bridge"):
     board.bridge.hotskew_enable = True
     board.bridge.hotskew_out = out + ".bridge"
@@ -273,18 +250,14 @@ def on_exit():
     WHERE we switch to the detailed CPU decides what gets measured, because the
     probe hooks recvTimingReq and an ATOMIC CPU issues recvAtomic instead:
 
-      default          switch at #1. The data load runs in detail and IS
-                       counted. That is what we want for GAPBS, where load
-                       visibility is the hypothesis under test (worth 26.7 of
-                       the 28.6 words/page difference).
+      default          switch at #1. Setup and graph loading are included in
+                       the timing-request measurement.
 
       --switch-at-roi  switch at #2. The load runs under ATOMIC and is
-                       invisible; only the timed kernel is measured. Required
-                       for liblinear, whose kdda parse is ~15G instructions and
-                       ate a 2h50m budget without ever reaching the training
-                       kernel -- observed, not predicted. It also matches what
-                       the Pin run measured for liblinear, keeping the two
-                       comparable.
+                       invisible; only the timed kernel is measured. This also
+                       avoids spending timing-simulation hours on parsing kdda.
+                       A matched scope alone does not make Pin and gem5 paired
+                       experiments: their memory systems and inputs also matter.
     """
     while True:
         Phase.exits += 1

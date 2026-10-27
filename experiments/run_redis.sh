@@ -19,7 +19,7 @@
 # ECHO HOTSKEW_ROI_BEGIN / _END between the load and query phases, and the patched
 # echoCommand calls the ROI markers, so only the query phase is measured.
 
-set -uo pipefail
+set -euo pipefail
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/env.sh"
 check_prereqs
@@ -47,7 +47,9 @@ SERVER="$REDIS_DIR/src/redis-server"
 CLIENT="$YCSB_DIR/zipf_client"
 USE_YCSB=0
 if [[ -x "$YCSB_DIR/bin/ycsb.sh" ]] && command -v java >/dev/null 2>&1; then
-  USE_YCSB=1
+  # This runner requires explicit ROI markers, supplied by the custom client.
+  # The former auto-selected YCSB path never entered ROI and recorded no queries.
+  [[ -x "$CLIENT" ]] || die "ROI client missing; real YCSB requires explicit marker integration"
 elif [[ ! -x "$CLIENT" ]]; then
   die "no client -- run benchmarks/setup_redis.sh"
 fi
@@ -77,7 +79,7 @@ echo "=== redis [$CONFIG]  YCSB-${WORKLOAD^^}  records=$RECORDS ops=$OPS epoch=$
 "$PIN" -t "$TOOL" "${CACHE_ARGS[@]}" -epoch "$EPOCH_M" -dump_pages "$DUMP_PAGES" \
        -tag "redis-ycsb${WORKLOAD}" -o "$OUT" \
        -roi_begin hotskew_roi_begin -roi_end hotskew_roi_end \
-       -- "$SERVER" --port "$PORT" --save '' --appendonly no --protected-mode no \
+       -- "$SERVER" --bind 127.0.0.1 --port "$PORT" --save '' --appendonly no --protected-mode no \
        > "$OUT.server.log" 2>&1 &
 SERVER_PID=$!
 
@@ -106,8 +108,8 @@ else
 fi
 
 echo "   shutting the server down so the tool writes its summary"
-kill -TERM "$SERVER_PID" 2>/dev/null
-wait "$SERVER_PID" 2>/dev/null
+kill -TERM "$SERVER_PID" 2>/dev/null || true
+wait "$SERVER_PID" 2>/dev/null || true
 SERVER_PID=""
 
 echo

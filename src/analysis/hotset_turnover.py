@@ -74,12 +74,14 @@ def top_k_of_epoch(recs: np.ndarray, k: int) -> np.ndarray:
     acc = (recs["reads"] + recs["writes"]).astype(np.int64)
     if acc.size == 0:
         return np.empty(0, np.uint64)
-    idx = np.argpartition(acc, -k)[-k:] if acc.size > k else np.arange(acc.size)
+    if k <= 0:
+        raise ValueError('k must be positive')
+    idx = np.lexsort((recs['page'], -acc))[:k]
     return recs["page"][idx]
 
 
 def analyse(path: str, k: int) -> dict | None:
-    recs = H.load_pages(path).records
+    recs = H.load_pages(path, require_complete=True).records
     if recs.size == 0:
         return None
     epochs = np.unique(recs["epoch"])
@@ -96,7 +98,7 @@ def analyse(path: str, k: int) -> dict | None:
             continue
         sa, sb = set(pa.tolist()), set(pb.tolist())
         inter = len(sa & sb)
-        retention.append(inter / min(len(sa), len(sb)))
+        retention.append(inter / len(sa))
         jaccard.append(inter / len(sa | sb))
 
         # Operational view: of the accesses in epoch b, what share landed in pages

@@ -1,5 +1,58 @@
 # Claims ledger
 
+> ## SUPERSEDED IN PART — read [`audit-2026-10.md`](audit-2026-10.md) first
+>
+> An October 2026 code-and-methodology audit found substantive instrument bugs and
+> withdrew several claims below. A fresh non-fitted campaign
+> ([`revalidation-2026-10-25.md`](revalidation-2026-10-25.md),
+> [`uniform-windows.md`](uniform-windows.md)) replaces the headline reproduction
+> numbers. Where this file and the audit disagree, **the audit wins.**
+>
+> **The corrected bottom line: under a predeclared protocol with no workload-specific
+> fitting, the measurements do NOT numerically reproduce M5 Figure 4.** P(<=16) on
+> kron-23, one thread, timed kernel, 10M line-operand reference windows:
+>
+> | Workload | accesses | demand misses | misses+WB | M5 (digitised) |
+> |---|---:|---:|---:|---:|
+> | BFS | 0.692 | 0.712 | 0.671 | 0.170 |
+> | CC | 0.536 | 0.620 | 0.550 | 0.200 |
+> | SSSP | 0.685 | 0.861 | 0.825 | 0.025 |
+> | BC | 0.665 | 0.746 | 0.639 | 0.040 |
+> | PR | 0.001 | 0.387 | 0.369 | 0.005 |
+> | TC | 0.370 | 0.485 | 0.489 | 0.120 |
+>
+> **Claims withdrawn by the audit:**
+> - the **1.505x geomean speedup** (the corrected latency model has not regenerated
+>   that campaign; its output is an assumed serial memory cost, not measured runtime)
+> - the **HPT-gating explanation of HWT behaviour** (the membership check followed
+>   insertion and was ineffective; M5 section 5.1 describes *independent* page and
+>   word trackers)
+> - **any window chosen by fitting the reference curve** — that is a sensitivity
+>   result, not evidence of reproduction. This includes the window search reported in
+>   "The measurement window, measured" below.
+> - the earlier claim that the userspace-load experiment isolates kernel traffic: it
+>   added a copy *and* changed scope to include setup, so its improvement cannot be
+>   credited to recovering kernel traffic alone.
+>
+> **Instrument bugs the audit fixed** (all of which move the numbers): dirty L1
+> writebacks not propagating L2 evictions; store misses marking lower-level copies
+> dirty; missing Pin predication (zero-count REP observations); unprotected
+> instruction/phase globals; raw-dump accounting using 156 bytes for a 164-byte
+> record; unweighted simulator epoch means; placement selecting among the *next*
+> window's pages (future-information leak); batch runners hiding failed subprocesses.
+>
+> **Why agreement is still unresolved** — and it is not "the best a PC can do":
+> M5 uses resized Twitter/Google inputs and 20 threads against our synthetic graphs
+> and one thread; liblinear used KDD2010, the paper KDD2012; Figure 4's collection
+> protocol (region cycling, reset intervals, zero-access pages, setup inclusion) is
+> not established; and the software cache is an approximation. Controlled checks
+> (9 vs 10 LLC ways, warm setup) move the CDF by at most 0.043 and do not close it.
+>
+> The useful next step is **obtaining the exact graph subsets, preprocessing commands
+> and Figure 4 collection procedure** from the artifact authors or the professor —
+> see [`m5-author-request.md`](m5-author-request.md).
+
+
 Every headline number in this repository, with the command that regenerates it and the
 file it comes from.
 
@@ -29,7 +82,13 @@ Verify the whole table with:
 | 10% dense mixture, mean | 7.301 (analytic 7.300) | " |
 | 10% dense mixture, P(≤4) | 0.9000 (analytic 0.900) | " |
 
-## The measurement window, measured (this supersedes the reproduction table below)
+## Window sensitivity (NOT a reproduction -- see the audit banner)
+
+The audit is explicit: "A window selected using the reference curve is a fitted
+sensitivity result, not independent evidence of reproduction." Everything in this
+section is that kind of result. It shows how strongly the answer depends on a
+parameter M5 does not publish; it does not show agreement with M5. The audit also
+found this fitter compared `P(<=48)` against the prose complement `P(<=47)`.
 
 The headline scorecard uses a **10M-DRAM-access** window. That choice was ours; the
 paper never states its own. Searching the window offline -- `.pages.bin` records
@@ -169,7 +228,7 @@ non-monotone on `cc`; do not present that curve as clean.**
 | best nominator gain, exact counts | −0.015 (BFS) | `placement_study.py` |
 | best nominator gain, HPT N=16384 | −0.049 (BFS) | `--tracker-csv` |
 | wasted bytes/page, Redis | 81% | `placement_study.py --config spr-1t` |
-| geomean stall-time speedup, count-only | 1.505× | `latency_model.py` |
+| geomean stall-time speedup, count-only | **WITHDRAWN** (see audit) | — |
 | gap to all-local closed | 61% | " |
 | speedup at 30 µs migration | 0.835× (net loss) | `--sensitivity` |
 
@@ -379,7 +438,7 @@ Worth keeping visible — these are not open questions.
 | Real `web-Google` graph is usable | **No** — 55 MB CSR, 125× below M5's footprint, smaller than the modelled LLC |
 | A single window reproduces all workloads | **No** — best window varies 1×–8× |
 | A fixed *time* window explains that spread | **No** — DRAM-access rates are near-identical (Spearman 0.086) |
-| HWT compensates for a weak HPT | **No** — HWT is gated on HPT membership, so it inherits the weakness |
+| HWT compensates for a weak HPT | **Withdrawn** — the code's post-insertion check did not filter the Space-Saving stream |
 
 ## Known-open
 

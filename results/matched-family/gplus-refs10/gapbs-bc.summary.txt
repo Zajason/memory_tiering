@@ -1,0 +1,112 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     10000000
+benchmark          gapbs-bc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             58
+epoch_len_dram_acc 0
+instructions       1851669051
+mem_refs_profiled  571672737
+dram_accesses      39252744
+llc_miss_ratio     0.068663  (DRAM accesses per memory ref)
+page_observations  2399422   (page x epoch pairs with >=1 access)
+mean_unique_words  13.941 / 64
+top4_word_share    0.2793   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.3150
+  8         12.5%   0.4980
+ 16           25%   0.6943
+ 32           50%   0.8898
+ 48           75%   0.9583
+
+# P(page has at least 48 of 64 words accessed) = 0.0437
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,203209
+2,221857
+3,177506
+4,153195
+5,131926
+6,115338
+7,101669
+8,90191
+9,79761
+10,71998
+11,64857
+12,58687
+13,53719
+14,50181
+15,47414
+16,44486
+17,42451
+18,40652
+19,38367
+20,37268
+21,35835
+22,34156
+23,31947
+24,30155
+25,28195
+26,26350
+27,24632
+28,22575
+29,20852
+30,19715
+31,18588
+32,17364
+33,16503
+34,15646
+35,14916
+36,13945
+37,12941
+38,12369
+39,11458
+40,10294
+41,9672
+42,8930
+43,7901
+44,7187
+45,6552
+46,5704
+47,5417
+48,4874
+49,4573
+50,4411
+51,4310
+52,4327
+53,4503
+54,4445
+55,4544
+56,4464
+57,4138
+58,3676
+59,2967
+60,2320
+61,1948
+62,1589
+63,1460
+64,46342
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,201538
+1,395470
+2,491728
+3,493064
+4,459895
+5,251812
+6,95062
+7,10853

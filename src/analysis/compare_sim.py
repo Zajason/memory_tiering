@@ -70,13 +70,13 @@ def main():
 
     print()
     if worst_sim < worst_pin:
-        print(f"gem5 is CLOSER to M5 than Pin ({worst_sim:.3f} vs {worst_pin:.3f}). "
-              "Consistent with the kernel blind spot explaining the gap.")
+        print(f"gem5 is CLOSER to M5 than Pin ({worst_sim:.3f} vs {worst_pin:.3f}).")
     elif worst_sim > worst_pin:
-        print(f"gem5 is FARTHER from M5 than Pin ({worst_sim:.3f} vs {worst_pin:.3f}). "
-              "The kernel blind spot does not explain this workload's gap.")
+        print(f"gem5 is FARTHER from M5 than Pin ({worst_sim:.3f} vs {worst_pin:.3f}).")
     else:
         print("gem5 and Pin are equally far from M5.")
+    print("These runs also differ in cache behavior, address space and ROI/setup. "
+          "The difference does not isolate kernel traffic.")
 
     meta = H.load_summary(a.sim)
     print(f"\nsimulator run: {meta.get('epochs','?')} epoch(s), "

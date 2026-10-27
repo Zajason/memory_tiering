@@ -20,6 +20,7 @@ results/**/raw/
 __pycache__/
 *.pyc
 .venv/
+.local-build-tools/
 venv/
 
 # Editor / OS
@@ -47,3 +48,20 @@ results/**/*.pages.bin
 results/**/*.run.log
 results/**/*.server.log
 results/**/*.client.log
+results/**/*.paired.csv
+results/**/*.pages.bin.gz
+results/**/*.dmtcp
+results/**/dmtcp_restart_script*.sh
+results/**/ckpt_*_files/
+
+# Trained-model outputs are regenerable and large (kdda.model is 75 MB).
+results/**/*.model
+
+# Per-key top-K dumps run to millions of rows for tc/pr. The summaries and the
+# analysis JSON that the figures are built from are kept; these are not.
+results/**/*.topk.csv
+
+# gem5 writes a full stats dump per run; the probe summary is what we analyse.
+results/**/stats.txt
+results/**/config.ini
+results/**/config.json

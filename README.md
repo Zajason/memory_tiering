@@ -1,3 +1,9 @@
+> **October 2026 audit:** Historical results below predate confirmed cache-path
+> corrections. The window-fit causal explanation, HWT-gating explanation and
+> 1.505x speedup claim are withdrawn. See [the audit](docs/audit-2026-10.md) and
+> [current methodology](docs/methodology.md) for the corrected interpretation and paired
+> access/miss measurements. Historical numerical agreement is not proof of replication.
+
 <div align="center">
 
 # Sub-page hot skewness in CXL tiered memory
@@ -7,8 +13,8 @@
 M5 (ASPLOS '25) built a Page/Word Access Counter into a CXL controller on an Agilex 7 FPGA
 to show that a 4 KB page's accesses concentrate in a handful of 64 B cache lines.
 This repository measures the same thing with Intel Pin on a single workstation,
-reproduces their figure across seven workloads, implements the hardware they propose,
-and then answers a question the paper does not ask.
+attempts their Figure 4 measurement using local workload approximations and explores
+software tracking and simulation. Full numerical replication remains unresolved.
 
 <sub>Advanced Computer Architecture · NTUA / CSLab · profiling stage of a CXLRAMSim memory-tiering project</sub>
 
@@ -17,6 +23,57 @@ and then answers a question the paper does not ask.
 ---
 
 ## Results at a glance
+
+### Corrected extension campaign
+
+The [25 October revalidation report](docs/revalidation-2026-10-25.md) tracks fresh
+granularity, turnover, tracker and causal-placement analyses, plus rebuilt SimCXL
+runs. It updates after each job and explicitly separates validated results from
+queued/running work. Historical extension numbers below are not silently reused.
+
+### Latest: uniform memory-event windows
+
+All six kernels now have complete paired measurements with the **same 10M
+modeled-memory-event window**. No per-workload window fitting: PageRank's
+five-threshold traffic error improves from 0.616 to **0.011**, TC from 0.530 to
+0.416, but BFS and CC get worse (0.591 and 0.505). Google+ BC/SSSP remain at
+0.303/0.339. **Five curves still disagree substantially; this is not full replication.**
+
+![M5 reference, accesses and demand misses with uniform windows](docs/assets/fig4_uniform_full.png)
+
+[Full results, all-synthetic control and provenance limits](docs/uniform-windows.md).
+The lower row excludes dirty writebacks; traffic scores above include them.
+The exact M5 inputs and collection protocol are still needed; an
+[author-request draft](docs/m5-author-request.md) records the missing details.
+
+### Audited access-versus-miss measurements
+
+The earlier raw-reference-window control measured six stock GAPBS kernels with simultaneous access, demand-miss and total
+traffic counters. The windows are fixed at 10M line-operand references and are
+shared by all streams. These are synthetic kron-23, one-thread, one-trial runs;
+the paper's inputs and 20-thread graph setup have not been matched.
+
+![Accesses, misses and M5 reference](docs/assets/fig4_accesses_and_misses.png)
+
+[Full audit and measured controls](docs/audit-2026-10.md) explain why the remaining
+gap cannot be assigned solely to the cache model. The legacy figures below remain
+for comparison, not as validation of the corrected instrument.
+
+### Dataset and window follow-up
+
+The M5 artifact names **Google+**, not the previously tested Google web graph.
+We downloaded the original archive and measured its published first snapshot
+(4.69M vertices, 47.13M directed edges). At the same 10M-memory-event window,
+maximum error over all five paper thresholds falls from **0.572 to 0.303 for BC**
+and **0.646 to 0.339 for SSSP**. Raw-reference windows do not show a consistent
+improvement; neither result is an exact reproduction.
+
+![Dataset and window controls](docs/assets/reproduction_controls.png)
+
+[Methods, all results and remaining mismatches](docs/reproduction-followup.md).
+The exact M5 reductions, weights and collection protocol remain unavailable.
+
+### Historical results (before the audit)
 
 <div align="center">
 <img src="docs/assets/hero_fig4.png" width="88%" alt="Reproducing M5 Figure 4">
@@ -33,12 +90,10 @@ is 0.760 and we measure **0.766 — an error of 0.006**. Those same prose values
 our digitisation of the bar chart to within 0.01 everywhere, so the target itself is
 not in doubt.
 
-**Most of the remaining disagreement is one parameter the paper never states: the
-measurement window.** Searching it offline moves BC from 0.378 to **0.010** and SSSP
-from 0.433 to **0.013**. A single window, fitted once for all six GAPBS kernels rather
-than tuned per workload, takes the worst case from **0.433 to 0.199**. That is a
-one-parameter fit, not a reproduction — but it is one parameter, the same one for every
-workload, and the paper does not report it.
+**The cause of the discrepancy is not isolated.** Historical window fitting showed
+sensitivity, but used the reference to select a parameter and scored SSSP/PR at the
+wrong complement threshold. Dataset, thread count, ROI and model differences remain.
+The corrected access/miss campaign uses shared, predeclared windows.
 
 | | |
 |---|---|
@@ -154,7 +209,7 @@ substitutions *are* the engineering.
 |---|---|---|
 | PAC/WAC counters in a CXL controller | `counter_table.hpp`, fed by the DRAM stream out of a modelled cache hierarchy | the counters are indexed by `PA[47:6]`; what matters is *which* stream reaches them |
 | Xeon 6430, 60 MB L3, 15-way | modelled: 48 KB L1d / 2 MB L2 / 60 MB L3 | geometry taken from M5's own testbed, not invented |
-| Intel CAT way-partitioning (`pqos`) | `L3_ASSOC` = number of granted ways | **CAT partitions by way**, so a way-associative model reproduces it *exactly*, not approximately |
+| Intel CAT way-partitioning (`pqos`) | `L3_ASSOC` = number of granted ways | Matches idealized capacity and way count; physical indexing, replacement and coherence remain approximate |
 | Agilex 7 FPGA bitstream | not attempted | needs the board and Quartus; the RTL and 7 nm synthesis numbers are out of reach |
 | 3 patched kernels (5.19 / 6.5 / 6.11) | none needed | nothing here runs in kernel space |
 

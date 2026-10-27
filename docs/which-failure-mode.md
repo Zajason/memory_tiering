@@ -1,3 +1,9 @@
+> **October 2026 audit:** Historical results below predate confirmed cache-path
+> corrections. The window-fit causal explanation, HWT-gating explanation and
+> 1.505x speedup claim are withdrawn. See [the audit](audit-2026-10.md) and
+> [current methodology](methodology.md) for the corrected interpretation and paired
+> access/miss measurements. Historical numerical agreement is not proof of replication.
+
 # Which failure mode actually binds?
 
 M5, NeoMem and Memstrata all attack CXL memory tiering, and they disagree about

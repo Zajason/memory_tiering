@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Reproducing M5 (ASPLOS 25) Figure 4 with a
 purpose-built Intel Pin tool, then showing the residual disagreement is dominated
-by the measurement window the paper never specifies.">
+under explicit local assumptions; see the October audit for corrections.">
 <style>
 :root { --bg:#fbfbfa; --fg:#1a1a1a; --mut:#666; --line:#e2e2df; --card:#fff;
         --ok:#1a7f4b; --mid:#b06f00; --bad:#b3261e; --acc:#2563a8; }
@@ -81,14 +81,58 @@ footer { margin-top:60px; padding-top:22px; border-top:1px solid var(--line);
 <header>
   <h1>Cache-line hot skewness for CXL memory tiering</h1>
   <p class="sub">Reproducing M5 (ASPLOS&nbsp;’25) Figure&nbsp;4 with a purpose-built Intel&nbsp;Pin tool —
-  then finding that the headline disagreements are dominated by a parameter the paper never states.</p>
+  with local workload approximations, audited instrumentation and matched access/miss measurements.</p>
   <p class="meta">Advanced Computer Architecture · NTUA / CSLab ·
-  52 commits · <code>999808e</code> · built 2026-09-29</p>
+  53 commits · <code>05f1680</code> · built 2026-10-27</p>
 </header>
+<section><h2>Latest comparison: one window definition for all six workloads</h2>
+<p>Each window spans 10M modeled memory events (demand fills plus dirty writebacks).
+The access and miss counters observe the same execution interval. The final partial
+window is included; one thread and one trial are used throughout.</p>
+<figure><img src="assets/fig4_uniform_full.png" alt="M5 digitized reference, our accesses and our demand misses for six workloads">
+<figcaption>The bottom row excludes writebacks. Dataset reductions and the paper's
+collection protocol are still unmatched; visual agreement alone is not replication.</figcaption></figure>
+<p>Maximum absolute CDF error across all five published thresholds. Lower is closer;
+these are coverage errors, not miss rates or speedups.</p>
+<div class="tbl"><table><thead><tr><th>Workload</th><th>Input</th><th>Accesses</th>
+<th>Demand misses</th><th>Including writebacks</th></tr></thead><tbody><tr><td>BFS</td><td>Synthetic kron-23</td><td>0.591</td><td>0.591</td><td>0.591</td></tr><tr><td>Connected components</td><td>Synthetic kron-23</td><td>0.505</td><td>0.505</td><td>0.505</td></tr><tr><td>SSSP</td><td>Google+ snapshot 1</td><td>0.337</td><td>0.340</td><td>0.339</td></tr><tr><td>Betweenness</td><td>Google+ snapshot 1</td><td>0.300</td><td>0.307</td><td>0.303</td></tr><tr><td>PageRank</td><td>Synthetic kron-23</td><td>0.020</td><td>0.011</td><td>0.011</td></tr><tr><td>Triangle counting</td><td>Synthetic kron-23</td><td>0.416</td><td>0.416</td><td>0.416</td></tr></tbody></table></div>
+<p><a href="assets/fig4_uniform_kron.png">All-synthetic input control</a> &middot;
+<a href="uniform-windows.md">Protocol and full results</a> &middot;
+<a href="m5-author-request.md">Missing details: author-request draft (not sent)</a></p>
+</section>
+<section>
+<h2>Raw-reference-window control: accesses versus misses</h2>
+<p>Confirmed cache-path bugs were corrected. The new measurements use the same
+execution and 10M demand-reference windows for accesses, modeled demand misses,
+and misses plus writebacks. Whole-kernel coverage is shown separately.</p>
+<p><a href="audit-2026-10.md">Audit findings and limitations</a> &middot;
+<a href="methodology.md">Current methodology</a></p>
+<figure><img src="assets/fig4_accesses_and_misses.png" alt="Figure 4-style bars: M5 reference, accesses, modeled misses, and total traffic." style="width:100%"><figcaption>Figure 4-style bars: M5 reference, accesses, modeled misses, and total traffic.</figcaption></figure>
+<figure><img src="assets/access_vs_misses_pooled.png" alt="Paired streams; same windows, each stream's touched-page population." style="width:100%"><figcaption>Paired streams; same windows, each stream's touched-page population.</figcaption></figure>
+<figure><img src="assets/access_vs_misses_common.png" alt="Accesses and misses on the same miss-touched pages." style="width:100%"><figcaption>Accesses and misses on the same miss-touched pages.</figcaption></figure>
+<figure><img src="assets/access_vs_misses_whole.png" alt="Whole timed-kernel coverage; inputs and thread counts still differ from M5." style="width:100%"><figcaption>Whole timed-kernel coverage; inputs and thread counts still differ from M5.</figcaption></figure>
+<p><strong>The older results below are historical.</strong> Their cache model
+predates the fixes. The window-fit causal explanation, HWT-gating explanation and
+speedup claim are withdrawn. They must not be presented as validated replication.</p>
+</section>
+
+<section><h2>Dataset and window controls</h2>
+<p>The artifact names a Google+ social graph, not the web-Google graph previously
+tested. We measured a published Google+ snapshot and retained both predeclared
+window definitions. This is a scaled input-family comparison, not M5's exact reduction.</p>
+<p>Maximum absolute CDF error over all five Figure 4 thresholds; lower is closer.
+Traffic includes modeled demand fills and dirty writebacks.</p>
+<div class="tbl"><table><thead><tr><th>Graph</th><th>Window</th><th>BC error</th>
+<th>SSSP error</th></tr></thead><tbody><tr><td>Synthetic kron-23</td><td>10M raw references</td><td>0.829</td><td>0.872</td></tr><tr><td>Synthetic kron-23</td><td>10M memory events</td><td>0.572</td><td>0.646</td></tr><tr><td>Google+ snapshot 1</td><td>10M raw references</td><td>0.813</td><td>0.904</td></tr><tr><td>Google+ snapshot 1</td><td>10M memory events</td><td>0.303</td><td>0.339</td></tr></tbody></table></div>
+<figure><img src="assets/reproduction_controls.png" alt="All dataset and window controls, including whole-kernel coverage">
+<figcaption>One thread, one trial, cold cache model. Dataset size and topology both
+change; the paper's collection protocol is still unconfirmed.</figcaption></figure>
+<p><a href="reproduction-followup.md">Methods, provenance, findings and reproduction commands</a></p>
+</section>
 
 <div class="cards">
   <div class="card"><div class="big">2 / 9</div>
-    <div class="lab">workloads reproduced (max error ≤ 0.05); 3 more within 0.10</div></div>
+    <div class="lab">historical curves within 0.05; 3 more within 0.10</div></div>
   <div class="card"><div class="big">5 vs 24.8M</div>
     <div class="lab">DRAM accesses Pin sees for 512 MiB moved by <code>read(2)</code> vs <code>memcpy</code></div></div>
   <div class="card"><div class="big">63.98 / 64</div>
@@ -119,7 +163,7 @@ nearly saturated and is the cheapest place to agree.</p>
 <p class="note"><strong>Two different targets, and they disagree about Memcached.</strong>
 The column above is the max gap against M5&rsquo;s bar chart, read off the figure at
 &plusmn;0.02. But the paper also states some values in <em>prose</em>, and those are
-exact. Memcached is the sharpest case: our <code>P(&le;16) = 0.766</code> against the
+rounded. Memcached is the sharpest case: our <code>P(&le;16) = 0.766</code> against the
 paper&rsquo;s written <strong>0.760</strong> &mdash; an error of <strong>0.006</strong>
 &mdash; while its max error across the whole digitised curve is 0.118. The single point
 the paper commits to in words lands almost exactly; the curve shape does not. Both are
@@ -128,12 +172,13 @@ reported because quoting only the flattering one would be dishonest.</p>
 <h2><span class="n">4</span>The kernel blind spot</h2>
 <p class="lede">Pin instruments user-space instructions. When the kernel moves data on
 the program's behalf, Pin sees nothing — and for these benchmarks that is most of the
-traffic.</p>
+traffic that Pin cannot directly observe.</p>
 <blockquote><p>512 MiB via <code>read(2)</code>: <strong>5</strong> DRAM accesses observed.<br>
 The same 512 MiB via <code>memcpy</code>: <strong>24,838,154</strong>.</p></blockquote>
 <p>Routing the graph load through user space moves BFS's P(≤48) from
 <strong>0.813 → 0.320</strong>, against M5's published <strong>0.345</strong>.
-That single effect accounts for 26.7 of the 28.6 words/page difference.</p>
+The comparison also changed the measured scope and added a copy, so it cannot
+attribute that change solely to kernel traffic.</p>
 
 <h2><span class="n">5</span>Full-system simulation</h2>
 <p class="lede">The natural test: run the same counters where the blind spot cannot
@@ -144,8 +189,8 @@ physical addresses, kernel traffic included, counting code unchanged.</p>
 <thead><tr><th>Workload</th><th style="text-align:right">Pin vs M5</th>
 <th style="text-align:right">gem5 vs M5</th><th style="text-align:right">Δ</th></tr></thead>
 <tbody><tr><td>SSSP</td><td class='num'>0.433</td><td class='num'>0.391</td><td class='num good'>-0.043</td></tr><tr><td>Betweenness</td><td class='num'>0.493</td><td class='num'>0.331</td><td class='num good'>-0.163</td></tr></tbody></table></div>
-<p>Both moved <em>toward</em> M5 — the hypothesis is real. Neither reached agreement —
-it is not sufficient.</p>
+<p>These workloads moved toward M5, but cache behavior, addresses and scope also
+changed. This does not isolate kernel visibility or validate its causal contribution.</p>
 
 <h2><span class="n">6</span>The full sweep, and what it cost us</h2>
 <p class="lede">Extending the simulator to every GAPBS kernel produced the result that
@@ -158,21 +203,11 @@ is one systematic shift, not an accuracy gain.</p>
 <th style="text-align:right">gem5 ROI-gated</th>
 <th style="text-align:right">Pin words</th><th style="text-align:right">gem5 ROI words</th>
 <th style="text-align:right">&Delta;</th></tr></thead>
-<tbody><tr><td>PageRank</td><td class='num'>0.014</td><td class='num'>0.011</td><td class='num'>-</td><td class='num'>63.2</td><td class='num'>-</td><td class='num'>-</td></tr><tr><td>Triangle counting</td><td class='num'>0.031</td><td class='num'>0.385</td><td class='num'>-</td><td class='num'>44.6</td><td class='num'>-</td><td class='num'>-</td></tr><tr><td>Connected components</td><td class='num'>0.082</td><td class='num'>0.271</td><td class='num'>0.165</td><td class='num'>44.8</td><td class='num'>52.3</td><td class='num'>+7.50</td></tr><tr><td>BFS</td><td class='num'>0.095</td><td class='num'>0.165</td><td class='num'>0.111</td><td class='num'>46.9</td><td class='num'>47.8</td><td class='num'>+0.90</td></tr><tr><td>SSSP</td><td class='num'>0.433</td><td class='num'>0.391</td><td class='num'>0.571</td><td class='num'>36.3</td><td class='num'>41.3</td><td class='num'>+4.98</td></tr><tr><td>Betweenness</td><td class='num'>0.493</td><td class='num'>0.331</td><td class='num'>0.406</td><td class='num'>31.1</td><td class='num'>43.4</td><td class='num'>+12.35</td></tr></tbody></table></div>
-<p class="note">First three columns are max error against M5. The plain gem5 column
-measures over a <em>wider</em> window than Pin (it includes the data load), so it changes
-two things at once. The <strong>ROI-gated</strong> column holds the window at exactly
-Pin&rsquo;s region, leaving kernel visibility as the only difference &mdash; that
-&Delta; is the clean measurement. <code>tc</code> and <code>pr</code> are 15&nbsp;h and
-13.5&nbsp;h runs killed by reboots, shown as &ndash; rather than reported from partial data.</p>
-
-<blockquote><p><strong>What the &Delta; column says.</strong> Kernel traffic inside the
-measured region is real and workload-dependent: <strong>+0.90</strong> words/page for BFS,
-which walks memory already resident, up to <strong>+12.35</strong> for betweenness, which
-allocates fresh arrays throughout its kernel. It is <em>not</em> a uniform correction. We
-deliberately do not convert these into percentages of the disagreement with M5 &mdash;
-that decomposition was attempted and withdrawn, because max-error is not monotonic in page
-density and SSSP disproves it.</p></blockquote>
+<tbody><tr><td>PageRank</td><td class='num'>0.014</td><td class='num'>0.011</td><td class='num'>-</td><td class='num'>63.2</td><td class='num'>-</td><td class='num'>-</td></tr><tr><td>Triangle counting</td><td class='num'>0.031</td><td class='num'>0.385</td><td class='num'>-</td><td class='num'>44.6</td><td class='num'>-</td><td class='num'>-</td></tr><tr><td>Connected components</td><td class='num'>0.082</td><td class='num'>0.271</td><td class='num'>0.165</td><td class='num'>44.8</td><td class='num'>52.1</td><td class='num'>+7.36</td></tr><tr><td>BFS</td><td class='num'>0.095</td><td class='num'>0.165</td><td class='num'>0.111</td><td class='num'>46.9</td><td class='num'>43.5</td><td class='num'>-3.35</td></tr><tr><td>SSSP</td><td class='num'>0.433</td><td class='num'>0.391</td><td class='num'>0.571</td><td class='num'>36.3</td><td class='num'>32.8</td><td class='num'>-3.56</td></tr><tr><td>Betweenness</td><td class='num'>0.493</td><td class='num'>0.331</td><td class='num'>0.406</td><td class='num'>31.1</td><td class='num'>38.8</td><td class='num'>+7.75</td></tr></tbody></table></div>
+<p class="note">Historical simulator runs differ from Pin in cache behavior,
+physical indexing, kernel traffic and scope. The Pin column uses setup-inclusive
+userspace-load runs. ROI gating does not make these a controlled comparison of
+kernel visibility. Old mean-word summaries also used different window weighting.</p>
 
 <p class="lede">And the counters were moved onto the CXL device itself &mdash; the placement M5 and NeoMem actually describe &mdash; rather than the memory controller behind it:</p><div class="cards"><div class="card"><div class="big">0.330</div><div class="lab">max error measured <b>at the CXL device port</b></div></div><div class="card"><div class="big">0.330</div><div class="lab">same run, at the memory controller behind it</div></div><div class="card"><div class="big">0.00033</div><div class="lab">largest difference between the two placements, whole CDF</div></div></div><p class="note">The documentation previously <em>argued</em> these two placements were equivalent for a distribution over addresses. This measures it.</p>
 
@@ -211,35 +246,22 @@ further than the instrument does, and the paper never states which window it use
 
 <h2><span class="n">8</span>Beyond reproduction</h2>
 <p class="lede">M5 proposes bounded hardware trackers. Scored against exact counts,
-the accuracy-vs-area curve is almost flat — which is the useful finding, because it
-says the cheap tracker is the right one.</p>
+the historical accuracy curve is nearly flat for some runs. These software
+experiments do not establish hardware area, timing, or the best device design.</p>
 <div class="widget">
   <div class="ctl"><label>workload <select id="t-bench"></select></label></div>
   <div id="t-chart"></div>
   <div class="readout" id="t-read"></div>
 </div>
 
-<p class="lede">Tiering only pays if migration is cheap. Drag the migration cost and
-watch the break-even move — this is the same arithmetic as
-<code>latency_model.py</code>, over the measured access counts.</p>
-<div class="widget">
-  <div class="ctl">
-    <label>migration cost
-      <input type="range" id="l-cost" min="0" max="400" step="5" value="10"></label>
-  </div>
-  <div id="l-chart"></div>
-  <div class="readout" id="l-out"></div>
-  <p class="note">Memory <em>stall time</em> with no memory-level parallelism
-  modelled — an upper bound, not an application speedup. The curve is a linear
-  extrapolation from the measured migration counts, and it is <em>not</em>
-  currently cross-checked against the full model: <code>latency_model.py</code>
-  needs the per-page dumps, which were pruned from the tree. At 30&nbsp;µs it
-  gives 0.956× where <a href="claims.md">claims.md</a> records 0.835×. Treat the
-  break-even <em>region</em> as the result, not the exact crossing point.</p>
-</div>
+<p class="note"><strong>Latency result withdrawn.</strong> The historical placement
+model used next-window page membership during selection. Selection now uses only
+previous-window observations, with fixed capacity. No corrected application
+speedup has been measured; the old interactive extrapolation is disabled.</p>
 
 <p class="lede">Page size against word size, as a surface. Coarser tracking granularity
-wastes the most bandwidth exactly where pages are sparsest.</p>
+changes the fraction of address blocks counted as touched. This is an offline
+aggregation result, not measured migration bandwidth or actual huge-page behavior.</p>
 <div class="widget">
   <div class="ctl">
     <label>workload <select id="g-bench"></select></label>
@@ -260,7 +282,7 @@ wastes the most bandwidth exactly where pages are sparsest.</p>
 <li>Real <code>web-Google</code> is usable — <strong>no</strong>, 125× below M5's footprint</li>
 <li>One window fits all workloads — <strong>no</strong>, the best window varies 1×–8×</li>
 <li>A fixed <em>time</em> window explains the spread — <strong>no</strong> (Spearman 0.086)</li>
-<li>HWT compensates for a weak HPT — <strong>no</strong>, it is gated on HPT membership</li>
+<li>The claim that HWT inherits HPT membership mistakes is withdrawn: the old check did not filter the stream.</li>
 </ul>
 
 <h2><span class="n">10</span>Reproducing this</h2>

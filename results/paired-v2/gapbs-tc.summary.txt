@@ -1,0 +1,112 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     10000000
+benchmark          gapbs-tc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             11714
+epoch_len_dram_acc 0
+instructions       565416276016
+mem_refs_profiled  117137679872
+dram_accesses      2480414925
+llc_miss_ratio     0.021175  (DRAM accesses per memory ref)
+page_observations  129258525   (page x epoch pairs with >=1 access)
+mean_unique_words  19.128 / 64
+top4_word_share    0.1947   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1792
+  8         12.5%   0.3136
+ 16           25%   0.4894
+ 32           50%   0.7947
+ 48           75%   0.9572
+
+# P(page has at least 48 of 64 words accessed) = 0.0461
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,6098824
+2,5833168
+3,5601680
+4,5629269
+5,3769578
+6,3314022
+7,3459364
+8,6832925
+9,5262963
+10,2671565
+11,2520130
+12,2475475
+13,2472922
+14,2373419
+15,2414871
+16,2525307
+17,3398758
+18,5230990
+19,5801882
+20,4784032
+21,2528509
+22,1669979
+23,1584333
+24,1596321
+25,1550729
+26,1511644
+27,1476040
+28,1473930
+29,1501975
+30,1595289
+31,1792571
+32,1967005
+33,1998060
+34,1860585
+35,1887406
+36,1748738
+37,1680573
+38,1574297
+39,1525441
+40,1450140
+41,1320377
+42,1206480
+43,1163667
+44,1087053
+45,909679
+46,664519
+47,507242
+48,419192
+49,385454
+50,370362
+51,347851
+52,352870
+53,309312
+54,326670
+55,279067
+56,276074
+57,273924
+58,227138
+59,216440
+60,208565
+61,186826
+62,185241
+63,150152
+64,1439661
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,6096427
+1,11433339
+2,16167159
+3,27013257
+4,40009556
+5,27065944
+6,1411950
+7,60893

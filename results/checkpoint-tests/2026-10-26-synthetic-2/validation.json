@@ -1,0 +1,7 @@
+{
+  "status": "failed",
+  "scope": "synthetic CXL traffic, not full-system",
+  "gem5_sha256": "da6ad1eb2f8f71aece70b042d847825522f21bb43f6be6572845c9b69beee2d7",
+  "duration_ticks": 50000000000,
+  "error": "no checkpoint images produced"
+}

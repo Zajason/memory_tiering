@@ -1,0 +1,38 @@
+diff --git a/src/mem/mem_ctrl.cc b/src/mem/mem_ctrl.cc
+--- a/src/mem/mem_ctrl.cc
++++ b/src/mem/mem_ctrl.cc
+@@ -456,6 +456,9 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
+     // translates to only one memory packet. Otherwise, a pkt translates to
+     // multiple memory packets
+     unsigned size = pkt->getSize();
++    // Save request fields before queue processing can turn it into a response.
++    const Addr hotskewAddr = pkt->getAddr();
++    const bool hotskewWrite = pkt->isWrite();
+     uint32_t burst_size = dram->bytesPerBurst();
+ 
+     unsigned offset = pkt->getAddr() & (burst_size - 1);
+@@ -515,7 +518,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
+     // request once per retry. That inflated the CXL-bridge numbers 2.89x while
+     // leaving pages and words/page correct -- see src/sim/simcxl/README.md.
+     if (hotskewEnabled)
+-        hotskewProbe.onRequest(pkt->getAddr(), pkt->isWrite());
++        hotskewProbe.onRequest(hotskewAddr, hotskewWrite, size);
+ 
+     return true;
+ }
+diff --git a/src/mem/cxl_bridge.cc b/src/mem/cxl_bridge.cc
+--- a/src/mem/cxl_bridge.cc
++++ b/src/mem/cxl_bridge.cc
+@@ -278,8 +278,10 @@ CXLBridge::BridgeResponsePort::recvTimingReq(PacketPtr pkt)
+             // first traffic-generator run while leaving the page set correct,
+             // which is exactly the shape of error that looks plausible.
+             // Physical address, and kernel traffic included.
+-            if (bridge.hotskewEnabled)
+-                bridge.hotskewProbe.onRequest(pkt->getAddr(), pkt->isWrite());
++            if (bridge.hotskewEnabled && (pkt->isRead() || pkt->isWrite()) &&
++                cxl_range.contains(pkt->getAddr()) && pkt->getSize() &&
++                cxl_range.contains(pkt->getAddr() + pkt->getSize() - 1))
++                bridge.hotskewProbe.onRequest(pkt->getAddr(), pkt->isWrite(), pkt->getSize());
+ 
+             // technically the packet only reaches us after the header
+             // bridge_lat, and typically we also need to deserialise any

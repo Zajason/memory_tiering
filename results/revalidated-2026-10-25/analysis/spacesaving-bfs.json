@@ -1,0 +1,369 @@
+{
+  "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving/gapbs-bfs",
+  "status": "validated",
+  "epochs": 1,
+  "page_observations": 197224,
+  "events": 9497443,
+  "saturated_words": false,
+  "tracker_word_scores_valid": true,
+  "tracker": [
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "50",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.272509",
+      "hpt_recall": "0.000000",
+      "hwt_access_ratio": "0.214286",
+      "hwt_recall": "0.000000",
+      "exact_pages": "197224",
+      "exact_words": "3608780"
+    },
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "128",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.715511",
+      "hpt_recall": "0.000000",
+      "hwt_access_ratio": "0.572136",
+      "hwt_recall": "0.000000",
+      "exact_pages": "197224",
+      "exact_words": "3608780"
+    },
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "512",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.728373",
+      "hpt_recall": "0.000000",
+      "hwt_access_ratio": "0.577086",
+      "hwt_recall": "0.000000",
+      "exact_pages": "197224",
+      "exact_words": "3608780"
+    },
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "2048",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.745074",
+      "hpt_recall": "0.000000",
+      "hwt_access_ratio": "0.573550",
+      "hwt_recall": "0.000000",
+      "exact_pages": "197224",
+      "exact_words": "3608780"
+    },
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "8192",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.727835",
+      "hpt_recall": "0.000000",
+      "hwt_access_ratio": "0.586280",
+      "hwt_recall": "0.000000",
+      "exact_pages": "197224",
+      "exact_words": "3608780"
+    }
+  ],
+  "granularity": [
+    {
+      "page_bytes": 4096,
+      "word_bytes": 64,
+      "observations": 197224,
+      "mean_fraction": 0.28590428903176085,
+      "p_le_25pct": 0.7078448870320042
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 128,
+      "observations": 197224,
+      "mean_fraction": 0.35185182837788503,
+      "p_le_25pct": 0.5116618667099339
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 256,
+      "observations": 197224,
+      "mean_fraction": 0.4470006185859733,
+      "p_le_25pct": 0.3287074595383929
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 512,
+      "observations": 197224,
+      "mean_fraction": 0.5653134253437716,
+      "p_le_25pct": 0.2220368717803107
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 1024,
+      "observations": 197224,
+      "mean_fraction": 0.7001734068875999,
+      "p_le_25pct": 0.15488480103841318
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 2048,
+      "observations": 197224,
+      "mean_fraction": 0.8723760799902649,
+      "p_le_25pct": 0.0
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 64,
+      "observations": 112766,
+      "mean_fraction": 0.2500185672099746,
+      "p_le_25pct": 0.7931557384317968
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 128,
+      "observations": 112766,
+      "mean_fraction": 0.3076885985137364,
+      "p_le_25pct": 0.5911533618289201
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 256,
+      "observations": 112766,
+      "mean_fraction": 0.3908946402284377,
+      "p_le_25pct": 0.3900643811077807
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 512,
+      "observations": 112766,
+      "mean_fraction": 0.4943572309029317,
+      "p_le_25pct": 0.2572495255662168
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 1024,
+      "observations": 112766,
+      "mean_fraction": 0.6122900519660182,
+      "p_le_25pct": 0.1612631466931522
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 2048,
+      "observations": 112766,
+      "mean_fraction": 0.7628784385364383,
+      "p_le_25pct": 0.09145487114910522
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 4096,
+      "observations": 112766,
+      "mean_fraction": 0.8744834435911534,
+      "p_le_25pct": 0.0
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 64,
+      "observations": 61850,
+      "mean_fraction": 0.22791910873080032,
+      "p_le_25pct": 0.8534680679062248
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 128,
+      "observations": 61850,
+      "mean_fraction": 0.2804916127728375,
+      "p_le_25pct": 0.6695877122069523
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 256,
+      "observations": 61850,
+      "mean_fraction": 0.3563429668552951,
+      "p_le_25pct": 0.4043168957154406
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 512,
+      "observations": 61850,
+      "mean_fraction": 0.450660367825384,
+      "p_le_25pct": 0.24299110751818917
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 1024,
+      "observations": 61850,
+      "mean_fraction": 0.5581689571544058,
+      "p_le_25pct": 0.16105092966855294
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 2048,
+      "observations": 61850,
+      "mean_fraction": 0.695446645109135,
+      "p_le_25pct": 0.1172837510105093
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 4096,
+      "observations": 61850,
+      "mean_fraction": 0.7971867421180275,
+      "p_le_25pct": 0.1011802748585287
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 64,
+      "observations": 17026,
+      "mean_fraction": 0.20698926458064137,
+      "p_le_25pct": 0.8869963585105133
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 128,
+      "observations": 17026,
+      "mean_fraction": 0.25473402810407614,
+      "p_le_25pct": 0.8115235522142605
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 256,
+      "observations": 17026,
+      "mean_fraction": 0.3236199415599671,
+      "p_le_25pct": 0.45013508751321507
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 512,
+      "observations": 17026,
+      "mean_fraction": 0.4092761621931164,
+      "p_le_25pct": 0.20785856924703394
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 1024,
+      "observations": 17026,
+      "mean_fraction": 0.5069122224832608,
+      "p_le_25pct": 0.11723246799013273
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 2048,
+      "observations": 17026,
+      "mean_fraction": 0.6315836808410666,
+      "p_le_25pct": 0.07741101844238224
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 4096,
+      "observations": 17026,
+      "mean_fraction": 0.723980970280747,
+      "p_le_25pct": 0.06225772348173382
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 64,
+      "observations": 4364,
+      "mean_fraction": 0.20189042270565993,
+      "p_le_25pct": 0.8854262144821264
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 128,
+      "observations": 4364,
+      "mean_fraction": 0.24845907209555454,
+      "p_le_25pct": 0.8751145737855178
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 256,
+      "observations": 4364,
+      "mean_fraction": 0.31564809377864345,
+      "p_le_25pct": 0.4977085242896425
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 512,
+      "observations": 4364,
+      "mean_fraction": 0.3991943135598075,
+      "p_le_25pct": 0.12121906507791018
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 1024,
+      "observations": 4364,
+      "mean_fraction": 0.49442526924839597,
+      "p_le_25pct": 0.048808432630614115
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 2048,
+      "observations": 4364,
+      "mean_fraction": 0.6160256502062328,
+      "p_le_25pct": 0.025664527956003668
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 4096,
+      "observations": 4364,
+      "mean_fraction": 0.7061468835930339,
+      "p_le_25pct": 0.015811182401466544
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 64,
+      "observations": 554,
+      "mean_fraction": 0.1987928259673962,
+      "p_le_25pct": 0.8880866425992779
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 128,
+      "observations": 554,
+      "mean_fraction": 0.2446469744189982,
+      "p_le_25pct": 0.8862815884476535
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 256,
+      "observations": 554,
+      "mean_fraction": 0.31080511761055957,
+      "p_le_25pct": 0.5541516245487365
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 512,
+      "observations": 554,
+      "mean_fraction": 0.39306949105934114,
+      "p_le_25pct": 0.01263537906137184
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 1024,
+      "observations": 554,
+      "mean_fraction": 0.4868393219765343,
+      "p_le_25pct": 0.01263537906137184
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 2048,
+      "observations": 554,
+      "mean_fraction": 0.606573993118231,
+      "p_le_25pct": 0.01263537906137184
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 4096,
+      "observations": 554,
+      "mean_fraction": 0.6953125,
+      "p_le_25pct": 0.01263537906137184
+    }
+  ],
+  "turnover": [],
+  "placement_cost": [],
+  "assumptions": {
+    "fast_ns": 100,
+    "slow_ns": 220,
+    "meaning": "serial memory cost only, not application speedup; promotions charged, no demotion cost or feedback",
+    "capacity": "fixed from first-window footprint",
+    "granularity": "virtual aligned grouping, not OS huge pages"
+  }
+}

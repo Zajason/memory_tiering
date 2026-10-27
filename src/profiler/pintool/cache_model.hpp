@@ -21,18 +21,18 @@
 // ---------------------------------
 //   * Non-inclusive by default (matches Sapphire Rapids' L3). Levels are modelled as
 //     independent filters: a miss at level N queries level N+1. There are no
-//     back-invalidations from LLC to L1/L2. Turning on `inclusive` adds them.
+//     back-invalidations from LLC to L1/L2. No inclusive mode is implemented.
 //   * Writeback + write-allocate. A store that misses fills the line and marks it
 //     dirty; evicting a dirty line generates a write to the next level down.
 //   * True LRU (not tree-pseudo-LRU). Cheaper to reason about than to defend an
 //     approximation, and the associativities here are small.
 //   * No coherence traffic between per-core L1/L2 copies. Documented in
-//     docs/methodology.md as a known deviation; it matters only for shared,
-//     write-heavy lines in multithreaded runs.
-//   * No prefetchers. Hardware prefetch would *increase* the number of words touched
-//     per page (adjacent-line and stream prefetchers pull in neighbours), so
-//     omitting it makes our sparsity numbers a conservative upper bound on density
-//     -- i.e. it biases against our own conclusion, which is the safe direction.
+//     docs/methodology.md as a known deviation. Multithreaded measurements are
+//     not a coherent multicore simulation.
+//   * No hardware prefetchers. Their net effect on traffic and page coverage is
+//     workload-dependent; omitting them establishes no general density bound.
+//   * Virtual indexing and un-hashed sets approximate, rather than reproduce,
+//     the physical and sliced LLC. CAT way counts match capacity only.
 //
 // Everything here is single-threaded-safe only; the caller serialises shared levels.
 
@@ -65,6 +65,8 @@ class CacheLevel {
     // Real geometries cooperate -- e.g. SPR's 60 MB 15-way L3 gives exactly 65536 sets.
     // Returns false if the geometry is not representable, so main() can complain.
     bool init(const std::string& name, uint64_t sizeBytes, uint32_t assoc, uint32_t lineBytes) {
+        if (!assoc || !lineBytes || (lineBytes & (lineBytes - 1)) ||
+            sizeBytes % (uint64_t(lineBytes) * assoc)) return false;
         name_ = name;
         assoc_ = assoc;
         lineShift_ = log2u(lineBytes);

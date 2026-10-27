@@ -74,11 +74,15 @@ def coarsen_popcount(masks: np.ndarray, word_size: int) -> np.ndarray:
 
 
 def sweep(path: str) -> dict:
-    recs = H.load_pages(path).records
+    recs = H.load_pages(path, require_complete=True).records
+    return sweep_records(recs)
+
+
+def sweep_records(recs):
     if recs.size == 0:
         return {}
-    ep = recs["epoch"].astype(np.int64)
-    pg = recs["page"].astype(np.int64)
+    ep = recs["epoch"]
+    pg = recs["page"]
     masks = recs["mask"]
 
     res = {}
@@ -86,12 +90,11 @@ def sweep(path: str) -> dict:
         j = ps // 4096                        # 4 KB sub-pages per page
         big = pg // j
         # (epoch, big page) identifies one page-sized region in one window
-        key = ep * (big.max() + 2) + big
-        order = np.argsort(key, kind="stable")
-        k_sorted = key[order]
-        starts = np.empty(k_sorted.shape, dtype=bool)
+        order = np.lexsort((big, ep))
+        starts = np.empty(len(order), dtype=bool)
         starts[0] = True
-        starts[1:] = k_sorted[1:] != k_sorted[:-1]
+        starts[1:] = ((ep[order][1:] != ep[order][:-1]) |
+                      (big[order][1:] != big[order][:-1]))
         grp_idx = np.cumsum(starts) - 1
         n_groups = int(grp_idx[-1]) + 1
 

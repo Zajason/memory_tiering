@@ -1,0 +1,19 @@
+[0;33m[2026-10-26T15:44:54.739, 40000, 40000, Warning] at signalwrappers.cpp:158 in sigaction; REASON='JWARNING(false) failed; (stopSignal = 12);Message: Application trying to use DMTCP's signal for it's own use.
+  You should employ a different signal by setting the
+  environment variable DMTCP_SIGCKPT to the number
+  of the signal that DMTCP should use for checkpointing.
+  (Further warnings will be suppressed.)[0m
+Global frequency set at 1000000000000 ticks per second
+warn: No dot file generated. Please install pydot to generate the dot file and pdf.
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (16384 Mbytes) does not match the address range assigned (512 Mbytes)
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 23.1.0.0
+gem5 compiled Oct 25 2026 00:19:52
+gem5 started Oct 26 2026 15:44:54
+gem5 executing on zajason-MS-7D25, pid 40000
+command line: /home/zajason/dev/advarch/simcxl/build/X86/gem5.opt -d /home/zajason/dev/advarch/memory_tiering/results/checkpoint-tests/2026-10-26-synthetic-1/resumed /home/zajason/dev/advarch/memory_tiering/src/sim/simcxl/cxl_hotskew_test.py --duration-ticks 50000000000 --epoch-events 100000
+
+info: Standard input is not a terminal, disabling listeners.
+src/sim/simulate.cc:199: info: Entering event queue @ 0.  Starting simulation...

@@ -1,0 +1,112 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     10000000
+benchmark          gapbs-sssp
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                36864 KB, 9-way (shared)
+count_writebacks   yes
+epochs             199
+epoch_len_dram_acc 0
+instructions       3772013950
+mem_refs_profiled  1989966115
+dram_accesses      77531025
+llc_miss_ratio     0.038961  (DRAM accesses per memory ref)
+page_observations  7316121   (page x epoch pairs with >=1 access)
+mean_unique_words  10.177 / 64
+top4_word_share    0.3031   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.5270
+  8         12.5%   0.6528
+ 16           25%   0.7831
+ 32           50%   0.9406
+ 48           75%   0.9546
+
+# P(page has at least 48 of 64 words accessed) = 0.0462
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,1824856
+2,1090219
+3,653797
+4,286876
+5,196163
+6,247768
+7,279172
+8,197351
+9,131404
+10,113232
+11,109753
+12,111641
+13,116127
+14,120878
+15,123827
+16,126399
+17,130325
+18,139851
+19,147461
+20,142597
+21,122910
+22,98335
+23,78675
+24,63806
+25,52884
+26,43487
+27,35694
+28,28714
+29,22942
+30,18046
+31,14693
+32,11850
+33,9942
+34,8639
+35,7635
+36,6928
+37,6441
+38,6312
+39,6012
+40,5887
+41,5811
+42,5595
+43,5567
+44,5371
+45,5484
+46,5554
+47,5435
+48,5462
+49,5597
+50,5457
+51,5536
+52,5517
+53,5489
+54,5509
+55,5503
+56,5667
+57,5893
+58,5698
+59,5460
+60,5236
+61,4511
+62,3855
+63,3440
+64,253945
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,1822121
+1,1743665
+2,1001310
+3,917840
+4,1325305
+5,249307
+6,256523
+7,50

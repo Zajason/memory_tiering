@@ -1,3 +1,9 @@
+> **October 2026 audit:** Historical results below predate confirmed cache-path
+> corrections. The window-fit causal explanation, HWT-gating explanation and
+> 1.505x speedup claim are withdrawn. See [the audit](audit-2026-10.md) and
+> [current methodology](methodology.md) for the corrected interpretation and paired
+> access/miss measurements. Historical numerical agreement is not proof of replication.
+
 # Evaluating M5's hardware without M5's hardware
 
 Deliverables 1 and 2: implement the trackers M5 proposes, score them against exact
@@ -207,14 +213,10 @@ BFS / CC on kron-23, 23 and 28 epochs:
 Degrading the tracker degrades count-only substantially (BFS 0.114 → 0.031), which is
 the expected direction. **But the nominators degrade with it and never overtake.**
 
-The reason is structural and, in hindsight, obvious: **HWT is gated on HPT
-membership** — a word address is only tracked if its page is currently in the HPT. The
-word signal is therefore *downstream* of the page signal, not independent of it. A
-weak HPT produces a weak HWT, so sub-page information cannot compensate for the
-deficiency it was hypothesised to cover.
-
-This closes the loophole in §2 rather than opening one. The null result now holds both
-with perfect information and with realistically degraded information.
+**Interpretation withdrawn in the October audit.** The membership check occurred
+after insertion and did not filter Space-Saving's input. HWT is independent of HPT.
+The placement analysis also selected from future-touched pages. These historical
+numbers cannot establish whether HWT compensates for a weak HPT in M5.
 
 ### The waste is real, even though re-ranking does not fix it
 

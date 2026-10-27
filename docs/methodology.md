@@ -1,687 +1,158 @@
-# Methodology: reproducing sub-page hot skewness with Intel Pin
+# Measurement methodology
 
-This document explains what is being measured, why each design decision was made, and
-where the setup deviates from M5's hardware. It is written so that someone who has
-not seen the code can decide whether to believe the numbers.
+The primary target is **M5 Figure 4**: the CDF of distinct 64-byte lines observed
+within each 4 KiB page. Figure 3 instead compares ANB/DAMON page selection with PAC;
+we have not reproduced that experiment. Coverage measures sparsity, not frequency.
 
-**Target.** M5 (ASPLOS'25) Figure 4: *the probability that a 4 KB page has at most
-$N$ unique 64 B words accessed*, for $N \in \{4, 8, 16, 32, 48\}$, and Figure 10, the
-distribution of access counts per 4 KB page. These are the figures that quantify
-"hot skewness at cache-line granularity" — the observation that a page can be
-classified hot on the strength of a handful of 64 B words.
+See [the October audit](audit-2026-10.md) for corrections to historical results.
+The subsequent [dataset/window control](reproduction-followup.md) tests Google+
+(not web-Google) on BC/SSSP, with both raw-reference and memory-event windows.
+All settings are reported; no window is selected by fitting M5's curve.
+The [uniform-window campaign](uniform-windows.md) applies the memory-event
+definition to all six kernels, alongside an all-synthetic input control.
 
----
+## Observation streams
 
-## 1. What M5 measured, and why we cannot just count loads
+M5 places PAC/WAC between the CXL IP and memory controllers (section 3). Pin sees
+user-space memory instructions before CPU cache filtering. The professor's
+access-based extension deliberately measures this earlier point.
 
-M5 put two counter arrays inside a CXL controller on an Agilex 7 FPGA:
-
-| | Indexed by | Counts | Answers |
-|---|---|---|---|
-| **PAC** (Page Access Counter) | `PA[47:12]` | accesses per 4 KB page | how hot is this page |
-| **WAC** (Word Access Counter) | `PA[47:6]` | accesses per 64 B word | how much *of* it is hot |
-
-The critical property is stated in their §3: an address-to-PFN converter *"snoops
-every memory access address (PA[47:6]) from the CXL IP to the MCs"*. Those counters
-sit **behind the entire CPU cache hierarchy**. They see the LLC miss stream, not the
-program's load/store stream.
-
-M5 explicitly rejects the tool we are using, and says why:
-
-> A dynamic binary instrumentation using Intel Pin can capture every memory access
-> address, but it requires notable effort to precisely determine DRAM access
-> addresses, especially when other applications co-run and cause interference at L2
-> cache and LLC. — M5 §3
-
-That is the problem this setup has to solve. A stock Pin memory tracer answers a
-*different question*: which words the program touches. PAC/WAC answer: which words
-reach memory. The two distributions differ, because caches absorb exactly the
-high-reuse traffic that makes a page look hot.
-
-**Our answer:** put the hierarchy back in software. Every reference goes through a
-modelled L1d → L2 → LLC before it is counted.
-
-```
-Pin memory refs ──▶ [L1d] ──▶ [L2] ──▶ [LLC] ──▶ DRAM stream ──▶ PAC/WAC counters
-                    private    private   shared    misses + dirty
-                    per-thread           (CAT-     writebacks
-                                          sized)
-```
-
-`-cache 0` disables the filter and reproduces the naive measurement, so the two can
-be plotted side by side. That comparison is itself a result: see §4.
-
----
-
-## 2. Virtual vs. physical addresses
-
-Pin sees virtual addresses. PAC and WAC index physical ones. This matters less than
-it first appears, and exactly where it matters is worth being precise about.
-
-**For the Figure 4 metric it does not matter at all.** The metric is the popcount of
-which of a page's 64 words were touched. The word index within a page is `addr[11:6]`,
-and under 4 KB paging
-
-$$\text{VA}[11{:}0] \equiv \text{PA}[11{:}0]$$
-
-by definition — translation replaces the bits above 11 and leaves the page offset
-untouched. A virtual page maps to exactly one physical page, so grouping by virtual
-page number and grouping by PFN produce the *same partition* of accesses into pages,
-and within each page the *same* word indices. The density histogram is therefore
-identical under either address space. This is not an approximation; it is exact.
-
-**Two caveats, both bounded:**
-
-1. **Aliasing.** If two virtual addresses map to one physical page (shared memory,
-   `MAP_SHARED` file mappings, `fork` sharing), PA-space would merge them and
-   VA-space would not. The benchmarks here use private anonymous memory for their
-   data structures, so this affects only library text and a handful of shared pages —
-   a rounding error against hundreds of thousands of data pages.
-
-2. **Cache set indexing.** This one is a genuine approximation. L1d here is 48 KB /
-   12-way / 64 sets, so its index bits are `addr[11:6]` — inside the page offset,
-   making it VIPT-equivalent and exact. L2 and LLC index with bits above 11, where
-   VA and PA diverge, so our modelled conflict-miss pattern is not the machine's.
-   Trace-driven simulators universally accept this; the standard argument is that
-   with a scattered VA→PA mapping the set-load distribution is statistically
-   equivalent, and it is the *aggregate* miss stream, not the identity of individual
-   conflict misses, that feeds the counters. Worth stating out loud rather than
-   hiding.
-
----
-
-## 3. Why epochs are mandatory (the most important thing in this document)
-
-Running the sweep in `experiments/sensitivity_sweep.sh` turned up a fact that is not
-obvious and that silently invalidates a naive reproduction.
-
-Measured over an **unbounded window**, `mean_unique_words` for GAPBS BFS was
-identical — to four significant figures — for every cache configuration tried:
-
-| Config | LLC | DRAM accesses | mean unique words |
-|---|---|---|---|
-| `nocache` | — | 168,833,290 | **18.298** |
-| `spr-full` | 60 MB | 8,873,468 | **18.298** |
-| `spr-20t` | 36 MB | 9,646,745 | **18.298** |
-| `spr-8t` | 16 MB | 10,857,031 | **18.298** |
-| `spr-1t` | 4 MB | 13,056,974 | **18.298** |
-
-The DRAM access *count* varies by 19×. The set of *touched words* does not vary at
-all. The reason is compulsory misses: over a long enough window, every line the
-program ever touches misses at least once, so the touched-mask converges to the
-program's architectural footprint regardless of how big the cache is.
-
-Two consequences:
-
-1. **Figure 4's metric is only cache-sensitive inside a bounded window.** Over a
-   whole run it degenerates into "which words does the program touch", and the
-   elaborate cache model contributes nothing. The measurement window is not a
-   detail; it is the parameter that makes the question well-posed.
-
-2. **Word coverage only ever increases with window length.** Measure long enough and
-   every page looks dense. Any reported sparsity number is meaningless without the
-   window it was measured over.
-
-M5's hardware has the same property and handles it the same way: WAC's counters are
-4 bits wide, are read and reset periodically, and the artifact's PAC daemon dumps
-every 10 ms (`m5_manager -s 10` — later found to be the *polling* cadence rather than a
-reset interval; see report §5.4b). Their Figure 4 comes from bounded sampling windows,
-not from whole runs. Their §4.1 says the measurement is repeated *"at 10 different
-random execution points"*.
-
-**What we do:** `-epoch N` closes the measurement window every $N$ million DRAM
-accesses, folds that epoch's distribution into the aggregate, and zeroes the
-counters. `-roi_epoch` additionally closes the window when the region of interest is
-left, so one epoch never straddles two kernel invocations. Results are reported with
-the epoch length stated, and `sensitivity_sweep.sh epoch` shows how much it moves:
-
-| epoch (M DRAM accesses) | mean unique words | P(≤4) | P(≤16) |
-|---|---|---|---|
-| 1 | 19.970 | 0.4033 | 0.6797 |
-| 2 | 20.452 | 0.3847 | 0.6830 |
-| 5 | 20.308 | 0.2676 | 0.6812 |
-| 10 | 18.298 | 0.1662 | 0.7078 |
-| ≥25 (whole run) | 18.298 | 0.1662 | 0.7078 |
-
-BFS on kron-23 emits about 9.6M DRAM accesses in total, so any window at or above
-10M is the whole run and the curve flattens. Below that, `P(≤4)` moves by a factor of
-2.4 — which is the point.
-
-### Two kinds of window, and why the choice matters
-
-A window measured in DRAM accesses and a window measured in time are not
-interchangeable, and the difference produced a misleading result before it was
-noticed.
-
-Sweeping LLC size with an *access-based* window gave byte-identical distributions for
-4 MB, 16 MB, 36 MB and 60 MB. That is not a bug and not only the compulsory-miss
-effect above: a smaller cache emits *more* DRAM accesses, so a fixed count of them
-spans proportionally *less* execution. The two effects cancel exactly, and the axis
-reports nothing.
-
-The question M5's hardware actually asks is time-based — their PAC daemon dumps every
-10 ms (`m5_manager -s 10`). So the tool grew `-epoch_ins N`, which closes the window
-every $N$ million instructions. Under a time-proportional window a larger cache
-genuinely absorbs more traffic, fewer words per page reach the controller, and pages
-look sparser. `sensitivity_sweep.sh window` runs both kinds side by side over the same
-cache sizes so the difference is explicit rather than folklore.
-
-Stated as a rule: **report the window kind alongside the window length.** A sparsity
-number without both is not reproducible.
-
----
-
-## 3b. The kernel blind spot
-
-This is the largest single difference between what a Pin tool can see and what M5's
-hardware saw, and it was found by chasing the gap in §7 rather than assumed up front.
-
-**Pin instruments the instructions the application executes.** Memory the *kernel*
-touches on the application's behalf executes no user-mode load or store, so no
-instrumentation fires:
-
-- the copy inside `read(2)` / `write(2)`
-- page-fault zeroing of freshly faulted anonymous pages
-- page-cache population, DMA from storage
-- anything else done in kernel context
-
-M5's PAC and WAC sit at the memory controller. They count every byte of it.
-
-### Measured, not assumed
-
-`src/profiler/validate/kernel_blindspot.c` moves the same 512 MiB into the same
-buffers two ways and profiles both:
-
-| how the bytes move | DRAM accesses seen | pages observed | mean words/page |
-|---|---|---|---|
-| `read(2)` — kernel performs the copy | **5** | 4 | 1.250 |
-| `memcpy` — application performs the copy | **24,838,154** | 262,150 | **63.999 / 64** |
-
-Identical bytes, identical destination pages. One is invisible; the other is the
-densest possible signature — every one of 64 words in every one of 131,072 pages.
-
-(The 24.8M figure also checks out arithmetically: 8.4M source line reads, 8.4M
-write-allocate reads on the destination, and 8.4M dirty writebacks = 25.2M.)
-
-### Why this matters for GAPBS specifically
-
-GAPBS loads its serialized CSR with `file.read()` — `reader.h`, `ReadSerializedGraph`,
-lines 290–296. For a kron-23 graph that is **1.05 GB copied by the kernel**, landing
-in roughly 269,000 4 KB pages, every word of every one of them written.
-
-M5's counters record those 269,000 pages as 64/64 words touched. Ours record nothing.
-Since the graph arrays are also most of what the kernel then traverses, this pushes
-their whole distribution toward "dense" relative to ours — in exactly the direction of
-the discrepancy in §7.
-
-The same argument applies to every benchmark that loads a large dataset from a file:
-Liblinear parses a multi-gigabyte SVM-light file, Redis is loaded over a socket.
-
-### What we do about it
-
-`benchmarks/patches/gapbs-userspace-load.patch` routes the load copy through a 4 MB
-user-space staging buffer, so the destination writes become ordinary stores that Pin
-observes. The bytes and their layout are unchanged; only which agent performs the
-final copy differs.
-
-That gives two measurements, both legitimate, answering different questions:
-
-- **without the patch** — the application's own access pattern, which is what a
-  tiering policy operating in steady state has to work with;
-- **with the patch** — the traffic a memory controller would see, which is what M5's
-  Figure 4 actually plots.
-
-They are reported separately (`results/spr-20t/` and `results/spr-20t-ul/`), selected
-with `GAPBS_VARIANT=stock|userspace-load`. Conflating them is how a reproduction ends
-up with a number it cannot explain.
-
-### It closes most of the gap
-
-BFS on kron-23, `P(page has ≤ N of 64 words touched)`:
-
-| N | stock (kernel copies) | **user-space copy** | M5 Fig. 4 | remaining Δ |
-|---|---|---|---|---|
-| 4 | 0.150 | **0.063** | 0.050 | +0.013 |
-| 8 | 0.289 | **0.136** | 0.110 | +0.026 |
-| 16 | 0.588 | **0.265** | 0.170 | +0.095 |
-| 32 | 0.807 | **0.319** | 0.260 | +0.059 |
-| 48 | 0.813 | **0.320** | 0.345 | −0.025 |
-
-Mean unique words goes from 21.9 to 46.9 of 64. The discrepancy at $N=48$ — the point
-where the CDF has almost converged — drops from +0.47 to **−0.025**, which is inside
-the error of reading values off the paper's bar chart.
-
-This was not a parameter that got tuned until the numbers matched. The blind spot was
-hypothesised from the shape of the disagreement, tested in isolation on a
-microbenchmark that does nothing but move 512 MiB two different ways, and only then
-applied to the benchmark. The residual (largest at $N=16$) is consistent with the
-remaining known deviations: the dataset, and the kernel traffic that *cannot* be made
-visible in user space — page-fault zeroing and page-cache population.
-
-### Attributing the change
-
-The controller-view run differs from the steady-state run in *two* ways — the ROI is
-off, and the load copy is visible — so the improvement has to be decomposed before it
-can be attributed. Mean unique words per page, BFS on kron-23:
-
-| configuration | mean unique words |
+| Stream | Counted event |
 |---|---|
-| stock, ROI on (kernel only) | 18.30 |
-| stock, ROI off (whole process) | 20.14 |
-| user-space load, ROI off | **46.86** |
+| Demand accesses | Predicated memory operands, split into overlapping 64-byte lines |
+| Demand misses / fills | Demand references missing every modeled cache level |
+| Total modeled traffic | Demand fills plus dirty LLC evictions |
 
-Turning the ROI off accounts for **1.8** words of the 28.6-word change. Making the
-load copy visible accounts for the other **26.7**. The effect is the load, not the
-ROI, by an order of magnitude — which is what the isolated microbenchmark predicted.
+Read-modify-write operands count once as write-capable operands. A split operand
+counts once per overlapping line. This convention affects frequency, not a coverage
+mask within the same window. Software prefetch hints and instruction fetches are
+excluded. Kernel execution and hardware prefetches are absent. Callbacks execute
+before instructions; this is not a hardware retired-load trace.
+Active gather/scatter memory-vector instructions are rejected because their
+noncontiguous addresses need separate instrumentation. Results cannot silently
+include only one address from such an instruction.
 
-### One asymmetry to keep in mind
+The paired mode (`-paired 1`) counts all three streams in **one execution**. It
+retains bitmasks, not a full address trace. Comparing 10M accesses in one execution
+interval to 10M misses in a different interval would confound the experiment.
 
-Because the two variants use different ROI settings, they are not a controlled A/B on
-a single knob; they are two deliberately different measurements. `USE_ROI` overrides
-the default if you want the four-way matrix. The default pairing is chosen so that
-each variant answers its own question properly: steady-state behaviour needs the ROI,
-and the controller view needs it off, because M5's counters have no ROI at all.
+## Windows and populations
 
-### The general lesson
+The runner default and initial audited experiment use 10 million **line-operand references** per window
+(`-epoch_refs 10`). All streams reset at the same boundary. The final partial
+window is included and identifiable in per-epoch records. A separate whole-ROI
+union counts each touched page once. Neither interval is fitted to M5.
 
-Any Pin-based reproduction of a memory-controller measurement has this gap. It is
-probably part of what M5 meant by *"requires notable effort to precisely determine
-DRAM access addresses"*. It cannot be fully closed in user space — page-fault zeroing
-and page-cache traffic remain invisible whatever you do — which is a real argument
-for moving this work into CXLRAMSim, where the simulator sees every request including
-the kernel's.
+The uniform-window follow-up explicitly sets `--epoch-traffic 10`: 10 million
+**modeled memory events** (fills plus dirty writebacks), with `epoch_refs=0`.
+This is a different experimental clock, not a new definition of an access.
+All three streams still reset together. A workload with fewer than 10M memory
+events contributes one final partial window, equal to its whole-ROI observation.
+There is no evidence yet that either local clock is the one used for M5 Figure 4.
 
----
+Let U(p,e,S) be the number of distinct lines in page p, window e, stream S:
 
-## 4. Region of interest
+`F_S(N) = count((p,e): 1 <= U(p,e,S) <= N) / count((p,e): U(p,e,S) >= 1)`.
 
-Benchmarks spend most of their memory traffic outside the part that matters. GAPBS
-builds and sorts a CSR graph before it runs a single BFS step; that construction
-streams sequentially over the whole structure, writing every 64 B word of every page
-it allocates. Counting it makes *every* workload look perfectly dense.
+Every page-window pair has equal weight. A page touched in ten windows contributes
+ten observations; in the whole-ROI distribution it contributes one. Do not take an
+unweighted average of per-window CDFs with different page counts.
 
-`src/profiler/roi/hotskew_roi.h` provides two empty, `noinline`, `weak` functions.
-`benchmarks/patches/gapbs-roi.patch` calls them around the timed kernel invocation in
-GAPBS's `BenchmarkKernel` — the exact region GAPBS itself reports as "Trial Time". No
-kernel code and no compiler flags change.
+The access and miss streams can touch different page sets. We therefore also plot
+both over the **same fill-touched pages**. CSVs additionally contain the
+access-touched population, including pages with zero misses. This separates
+filtering from denominator changes. Allocated pages never touched by an observed
+event are absent; Pin does not enumerate allocations.
 
-This is a *deviation* from M5, whose FPGA counters run continuously with no ROI
-concept. Both were measured:
+With initially empty caches, no prefetches and no unobserved warming, every first
+demand touch causes a fill. The whole-ROI unions should then agree even if event
+counts differ greatly. Setup-warmed runs can legitimately break this equality.
 
-| BFS, kron-23, 36 MB LLC | mean unique words | P(≤16) |
+Longer nested windows only add bits for a fixed page. They do not necessarily make
+every page dense or make a pooled CDF monotonic: its page population and partial
+windows also change. Smaller caches and fixed miss-count windows do **not** obey
+an exact cancellation law. Instruction counts are not elapsed time.
+
+M5 describes 128 MiB WAC regions and multiple collection strategies. We have not
+established Figure 4's exact reset interval, region schedule, or population
+treatment. The daemon's 10 ms polling interval does not establish these. The ten
+random execution points in section 4.1 describe Figure 3; they cannot be assigned
+to Figure 4 without further evidence.
+
+## Cache approximation
+
+The filter uses private L1D/L2 and a shared LLC: write-allocate, writeback, LRU,
+non-inclusive. Demand stores dirty L1; lower read fills stay clean until a dirty
+eviction reaches them. Every eviction is propagated, including an L2 eviction
+caused by an L1 writeback. A full-line writeback allocating in a lower cache does
+not need another memory read.
+
+There is no coherence, hardware prefetching, physical translation, slice hashing,
+out-of-order execution or memory timing. Private caches are per software thread,
+not scheduled physical core. Locking instrumentation state prevents data races;
+it does not simulate coherent multicore ordering.
+
+The legacy `spr-20t` configuration uses 9 LLC ways / 36 MiB, matching mask
+`0x7FC0` in the artifact. Table 3 reports 10 ways; `spr-paper` uses 10 ways /
+40 MiB. Matching modeled capacity and ways does not reproduce real CAT behavior,
+physical indexing or replacement exactly. Both choices are explicit controls.
+
+Omitting prefetching establishes no general density bound. Prefetches can add
+traffic, replace demand fills, and change evictions and window boundaries.
+
+Translation preserves offsets (`VA[11:0] = PA[11:0]`). This preserves line position
+inside a page; it does not establish the same miss stream or physical page identity
+under virtual aliases, remapping or reuse.
+
+## Workload fidelity
+
+| Parameter | M5 | Local paired experiment |
 |---|---|---|
-| ROI only (kernel) | 18.298 | 0.708 |
-| whole process (incl. graph build) | 20.140 | 0.679 |
+| GAPBS graphs | Resized Twitter for BFS/CC/PR/TC; directed Google for BC/SSSP | Existing synthetic kron-23 |
+| Threads | 20 for graph workloads | 1 |
+| Trials | Figure-specific invocation unresolved | 1 |
+| Scope | Exact Figure 4 collection unresolved | Stock timed-kernel ROI |
+| Initial cache state | Real machine | Cold at first ROI; separate setup-warmed controls |
+| Addresses | Physical device requests | Virtual demand operands and modeled filtering |
+| Liblinear | 2.47, KDD2012 | Historical 2.50/KDD2010 is not equivalent |
+| Redis | 6.0.16, YCSB-A | Historical 7.2.5/custom client is approximate |
 
-The difference is small, so the ROI choice is not driving the headline result — but
-it is stated rather than assumed.
+The `userspace-load` patch adds a staging-buffer copy. Its harness includes setup;
+stock GAPBS defaults to kernel-only ROI. This changes both traffic and scope. It is
+a visibility sensitivity experiment, not a transparent reconstruction of kernel
+traffic. The read(2)/memcpy test demonstrates Pin's blind spot, not how many real
+DRAM requests every kernel copy must cause.
 
----
+Full-system gem5 observes physical requests and kernel activity, but changes cache,
+CPU, OS, placement and measurement scope too. Pin-versus-gem5 deltas do not isolate
+kernel visibility. Historical simulator outputs require separate completion
+evidence; a per-epoch summary file is not proof the workload finished.
 
-## 5. Matching M5's testbed
+## Analysis and verification
 
-The cache geometry is not invented. It is the **Intel Xeon Gold 6430 (Sapphire
-Rapids)** from M5's own testbed, including their Intel CAT way-partitioning, which
-their setup scripts (`setup/core_pqos/set_*_llc.sh`) apply per workload class:
-
-| Workload class | CAT mask | Ways of 15 | LLC | Config file |
-|---|---|---|---|---|
-| GAPBS, Liblinear (20 threads) | `0x7FC0` | 9 | 36 MB | `configs/spr-20t.env` |
-| SPEC CPU2017 (8 threads) | `0x7800` | 4 | 16 MB | `configs/spr-8t.env` |
-| Redis (1 thread) | `0x4000` | 1 | 4 MB | `configs/spr-1t.env` |
-
-CAT partitions the L3 **by way**, not by set. The set count stays at 65536 in all
-three cases and only the associativity changes — so setting `L3_ASSOC` to the number
-of granted ways reproduces the partition *exactly*, not approximately. This is a
-piece of luck worth noticing: it is one of the few hardware knobs a software cache
-model can match without hand-waving.
-
-It also explains a result that would otherwise look strange. Redis shows the most
-extreme sparsity in M5's Figure 4 (86% of pages with ≤25% of words touched) — and
-Redis was running with **4 MB** of last-level cache.
-
----
-
-## 6. Validation
-
-None of the above is worth anything if the tool miscounts. `src/profiler/validate/`
-contains synthetic workloads whose word-density is known analytically, and
-`run_validation.sh` asserts the tool recovers it.
-
-```
-1. Strided access -- a page must show exactly 4096/stride unique words
-  PASS  stride=4096          expected 1      got 1.000
-  PASS  stride=1024          expected 4      got 3.999
-  PASS  stride=256           expected 16     got 15.996
-  PASS  stride=64            expected 64     got 63.981
-2. Dense scan
-  PASS  dense                expected 64     got 63.981
-3. Mixture -- p% of pages dense, the rest one word
-  PASS  hotset 10% mean      expected 7.300  got 7.301
-  PASS  hotset 10% P(<=4)    expected 0.900  got 0.9000
-  PASS  hotset 25% mean      expected 16.750 got 16.745
-  PASS  hotset 50% mean      expected 32.500 got 32.491
-4. Cache filter must actually filter
-  PASS  streaming miss ratio expected 1.0    got 0.999996
-  PASS  cache=0 counts all   expected 65564  got 65564
-```
-
-Four orders of granularity, exact. The residual (63.981 vs 64) is partial pages at
-the ends of the buffer plus stack pages, and is expected.
-
-Run it after any change to the tool:
+- Report all five thresholds (4, 8, 16, 32, 48). State maximum absolute difference
+  and approximate digitization uncertainty. Prose percentages are rounded.
+- The complement of P(U >= 48) is P(U <= 47), not P(U <= 48).
+- Window fitting is exploratory. A fit cannot identify the original interval or
+  establish why two experiments differ. Require complete dumps and compatible ROI
+  boundaries before merging windows.
+- Disk records are 164 bytes. Saturated 16-bit word counts preserve coverage masks
+  but compromise frequency rankings. Saturation is reported. Capped dumps cannot
+  support whole-run reconstruction.
+- Placement and latency models are exploratory heuristics, not M5 implementations.
+  Historical estimates used future page membership and are withdrawn. A serial
+  memory-cost ratio is neither measured application speedup nor a proven bound.
+- `make audit-test` checks dirty evictions, clean fills, populations, mask union,
+  thresholds, incomplete dumps and previous-window-only placement.
+- The runner records commands, binary/tool hashes, input identity, settings, return
+  codes and completion status. Plotting excludes interrupted and limited runs.
 
 ```bash
-./src/profiler/validate/run_validation.sh $PIN_ROOT
+make -C src/profiler/pintool PIN_ROOT="$HOME/dev/advarch/pin"
+make audit-test
+python3 experiments/run_paired.py
+./.venv/bin/python src/analysis/plot_paired.py
 ```
 
----
-
-## 7. Results against the paper
-
-All six GAPBS kernels, both variants, `spr-20t` (36 MB LLC), 10M-DRAM-access epochs,
-single-threaded, kron-23 (kron-21 for `tc`). M5's values are digitised from their
-Figure 4 bar chart — no numeric data was released — so treat anything under ±0.02 as
-agreement.
-
-### Mean unique 64 B words touched per 4 KB page (of 64)
-
-| kernel | stock (app's own pattern) | user-space load (controller view) |
-|---|---|---|
-| bc | 26.97 | 31.06 |
-| bfs | 21.85 | **46.86** |
-| cc | 23.27 | **44.76** |
-| pr | 63.11 | 63.20 |
-| sssp | 26.12 | 36.35 |
-| tc | 42.43 | 44.56 |
-
-### P(page has ≤ N of 64 words touched), controller view vs M5
-
-| kernel | N=4 | N=8 | N=16 | N=32 | N=48 | vs M5 at N=48 |
-|---|---|---|---|---|---|---|
-| **pr** | 0.000 / 0.000 | 0.000 / 0.000 | 0.001 / 0.005 | 0.001 / 0.010 | 0.006 / 0.020 | −0.014 ✓ |
-| **tc** | 0.022 / 0.020 | 0.044 / 0.050 | 0.090 / 0.120 | 0.281 / 0.265 | 0.527 / 0.520 | +0.007 ✓ |
-| **bfs** | 0.063 / 0.050 | 0.136 / 0.110 | 0.265 / 0.170 | 0.319 / 0.260 | 0.320 / 0.345 | −0.025 ✓ |
-| **cc** | 0.056 / 0.060 | 0.121 / 0.125 | 0.267 / 0.200 | 0.372 / 0.290 | 0.374 / 0.385 | −0.011 ✓ |
-| bc | 0.160 / 0.005 | 0.260 / 0.020 | 0.418 / 0.040 | 0.576 / 0.090 | 0.638 / 0.145 | +0.493 |
-| sssp | 0.139 / 0.005 | 0.246 / 0.015 | 0.356 / 0.025 | 0.486 / 0.070 | 0.543 / 0.110 | +0.433 |
-
-*(each cell is ours / M5)*
-
-**Four of six agree *at N=48* to within 0.03** — but N=48 is the cheapest point to
-agree at, since the CDF has nearly saturated there. Scored across the whole curve the
-result is weaker: see report §5.1. The rest of this section, including the two extremes: PageRank,
-which is maximally dense, and triangle counting, which the paper puts at 0.52 and we
-measure at 0.527. `tc` matches at all five values of N. That is a strong result for an
-independent method on different hardware with a different dataset.
-
-### bc and sssp: the window explains them
-
-The two that disagree do so in one direction — we report them sparser. The
-measurement window accounts for it entirely. Running the same binaries with the
-window opened to the whole run (the upper bound on coverage):
-
-The window sets an upper and a lower bound on word coverage: a 10M-DRAM-access epoch
-is the sparsest we measured, the whole run is the densest possible. Every kernel, at
-N=48:
-
-| kernel | 10M-access epochs | whole run | M5 Fig. 4 | where M5 falls |
-|---|---|---|---|---|
-| bc | 0.638 | 0.0007 | 0.145 | **inside the range** |
-| sssp | 0.543 | 0.0006 | 0.110 | **inside the range** |
-| tc | 0.527 | 0.0015 | 0.520 | **inside the range** |
-| bfs | 0.320 | 0.0008 | 0.345 | +0.025 above (≈ digitisation error) |
-| cc | 0.374 | 0.0008 | 0.385 | +0.011 above (≈ digitisation error) |
-| pr | 0.006 | — | 0.020 | +0.014 above (≈ digitisation error) |
-
-So for all six kernels, M5's published value is either bracketed by the window range
-or sits within the ±0.02 error of reading it off their bar chart. Nothing else needs
-to be invoked to account for the disagreement: at some window between 10M DRAM
-accesses and the whole run, we reproduce their number for every kernel.
-
-The three that need a longer window than our default (bc, sssp, tc) are also the three
-that spread a fixed number of accesses over the most pages, so a fixed access budget
-buys less coverage per page. That is consistent, but it is a hypothesis rather than a
-measurement — pinning M5's window down exactly needs their miss rate, which was not
-published.
-
-### The datasets are named in the paper, not in the artifact
-
-The artifact's `env.sh` points `GAPBS_PATH` at a Memtis `bench_dir` that was never
-published, and `testing_scripts/20_threads/bench_cmds/` is empty — which is why the
-input looked like a dead end. But §6 and Table 3 of the paper state it outright:
-
-> *As inputs, we use YCSB-A (Redis), KDD 2012 (Liblinear), **Twitter** (BFS, CC, TC,
-> and PR with undirected graph), and **Google** (BC and SSSP with directed graph). We
-> adjust the size of these input datasets to have a memory footprint close to 8GB.*
-
-Two things follow, and the first is not a coincidence:
-
-1. **BC and SSSP — our only two disagreements — are precisely the two kernels M5 runs
-   on a different graph.** The other four use Twitter; those two use Google, and
-   directed rather than undirected. A directed graph changes what a traversal touches
-   (BC and SSSP walk in-edges and out-edges differently), and a web graph's degree
-   distribution is not a Kronecker graph's. We use synthetic kron-23 throughout.
-
-   That does not *prove* the input explains the gap — §7 already shows the window is
-   sufficient on its own — but it means the two candidate explanations point at exactly
-   the same two benchmarks, which is worth more than either alone.
-
-2. **Footprints are ~6.9 GB**, against our 1.05 GB kron-23. Table 3 in full:
-
-   | benchmark | footprint | cores/ways |
-   |---|---|---|
-   | BC, BFS, CC, PR, SSSP | 6.9 GB | 20 / 10 |
-   | TC | 5.0 GB | 20 / 10 |
-   | Liblinear | 6.0 GB | 20 / 10 |
-   | SPEC CPU2017 | 4.9–6.8 GB | 8 / 4 |
-   | Redis (YCSB-A) | 6.0 GB | 1 / 1 |
-
-   They also cap DDR at 3 GB so *"roughly 50% of the pages can be migrated"*.
-
-**A discrepancy inside M5's own artifact, worth noting.** Table 3 says 20 cores / **10
-ways**, and the setup script's comment agrees (*"20 / 32 * 15 ≈ 10 way"*) — but the CAT
-mask it actually programs, `0x7FC0`, has **9** bits set, granting 9 ways (36 MB, not
-40 MB). We model 9 ways, matching what the hardware was actually configured with
-rather than what the table claims. The difference is small, and §3 shows LLC size
-barely moves this metric under an access-based window anyway.
-
-**Redis: we run YCSB-C, they ran YCSB-A.** Workload A is 50% read / 50% update;
-ours was 100% read. Updates in Redis rewrite values in place, touching the same
-objects a read would, so the *spatial* distribution should be similar — but this is a
-stated deviation, not an equivalence, and `benchmarks/zipf_client.c` takes an update
-fraction so the A mix can be run directly.
-
-**This is not a per-benchmark fit.** The window sensitivity was established in §3
-before these two were run, all six kernels use the same 10M-access window, and no
-kernel's window was adjusted to improve its agreement. The claim is only that the
-disagreement is bounded by a parameter already known to dominate.
-
-Why the *same* window suits four kernels and not the other two is the open question.
-M5's cadence is specified in wall-clock milliseconds on their machine
-(`m5_manager -s 10`), and converting that to DRAM accesses needs their miss rate,
-which was not published. The kernels that need a longer window (bc, sssp) are the two
-with the most irregular access patterns, which is consistent with them spreading a
-fixed number of accesses over more distinct pages — but that is a hypothesis, not a
-measurement.
-
----
-
-## 7b. The trials sensitivity, kept for reference
-
-Before the kernel blind spot was found, the traversal kernels were much sparser than
-the paper and the trial count was the largest lever available. Measured on stock
-GAPBS, BFS, whole process:
-
-```
-trials  mean_unique_words  P(<=4)  P(<=16)  P(<=48)
-1       20.140             0.1596  0.6791   0.8190
-2       22.232             0.1167  0.5667   0.8189
-4       22.824             0.1082  0.5364   0.8184
-8       23.220             0.1033  0.5178   0.8175
-16      27.077             0.0873  0.4468   0.7540
-```
-
-One BFS from one source visits part of the graph; sixteen from sixteen sources visit
-much more, and coverage accumulates. The effect is real but second-order — moving
-`P(≤48)` by 0.065 across a 16× change in trials, against the 0.49 the load copy moves
-it. The headline runs use one trial for this reason: with the load visible, the ratio
-of load traffic to traversal traffic depends on trial count, and one invocation is
-what a user actually runs.
-
----
-
-## 7c. A qualification the paper does not make
-
-Figure 4 plots every page that received an access. A migration policy never sees that
-population — it acts on the top-$K$ hottest pages. Restricting to those changes the
-answer completely, and not just for one benchmark.
-
-**P(page has ≤ 16 of 64 words touched)**, controller view, by population:
-
-| kernel | all pages | top-100k | top-10k | top-1k |
-|---|---|---|---|---|
-| bc | 0.418 | 0.200 | **0.000** | **0.000** |
-| bfs | 0.265 | 0.100 | **0.000** | **0.000** |
-| cc | 0.267 | 0.096 | **0.000** | **0.000** |
-| pr | 0.001 | 0.000 | **0.000** | **0.000** |
-| sssp | 0.356 | 0.056 | **0.000** | **0.000** |
-| tc | 0.090 | 0.090 | **0.002** | **0.001** |
-
-**For every GAPBS kernel, the hottest pages are dense.** Sparsity lives entirely in
-the lukewarm tail. A count-only top-$K$ policy on these workloads is already selecting
-dense pages, so a Hot Word Tracker has essentially nothing left to correct.
-
-The cost side agrees. Migrating a 4 KB page moves 4096 bytes; only
-`unique_words × 64` of them are used in the window:
-
-| kernel | share of accesses in the 4 hottest words | wasted bytes per migrated page |
-|---|---|---|
-| bc | 0.149 | 51.5% |
-| sssp | 0.108 | 43.2% |
-| cc | 0.086 | 30.1% |
-| tc | 0.162 | 30.4% |
-| bfs | 0.080 | 26.8% |
-| pr | 0.087 | **1.3%** |
-
-Even for the sparsest kernel, no page concentrates more than ~16% of its accesses in
-four words. That is a long way from the pathological case sub-page tracking is
-designed for — a hash-table probe touching 64 bytes of a 4 KB page.
-
-**So the honest reading of this reproduction is narrower than the paper's framing.**
-M5's Observation 2 says *"a large percentage of pages in **certain** applications can
-be sparsely accessed"*, and their own Figure 4 makes clear which ones: Redis 86%,
-Memcached 76%, CacheLib 74%, against ~0% for PageRank. The graph kernels sit at the
-dense end of their figure too. Our data agrees with that and sharpens it: on graph
-analytics, sub-page tracking has little to work with, and the case for HWT rests on
-the key-value workloads.
-
-That is worth settling before committing to implement HWT rather than HPT alone —
-and it means **Redis is the benchmark that matters most** for the rest of this
-project. `hot_vs_all.png` plots the top-$K$ comparison.
-
----
-
-## 8. Known deviations from M5's setup
-
-Stated plainly, worst first.
-
-| # | Deviation | Effect | Mitigation |
-|---|---|---|---|
-| 1 | Datasets differ (theirs from Memtis' `bench_dir`, unpublished) | Unknown; likely the main residual gap on traversal kernels | Sensitivity sweep over graph scale reported |
-| 2 | No coherence between per-thread L1/L2 | Overstates private-cache hit rate for shared, write-heavy lines | Headline runs are single-threaded, where it cannot apply |
-| 3 | No hardware prefetchers | Prefetch pulls in neighbouring lines, so omitting it makes pages look *sparser* | Biases against our own conclusion — the safe direction |
-| 4 | L2/LLC indexed by virtual address | Conflict-miss pattern differs from the machine's | Standard trace-driven practice; §2 |
-| 5 | Counters see only the application | PAC also sees kernel and page-cache traffic | M5 used cgroups to put all benchmark pages on CXL, which is close |
-| 6 | ROI restricted to the timed kernel | Excludes construction traffic M5 would include | Both measured; difference is 18.3 vs 20.1 words (§4) |
-| 7 | Single socket, no real CXL device | We model the request stream, not its timing | Out of scope: Figure 4 is a distribution, not a latency |
-| 8 | SPEC CPU2017, Memcached, CacheLib not run | 4 of M5's 14 Figure 4 bars missing | SPEC needs a licence; the rest is future work |
-
-### Why the headline runs are single-threaded
-
-Thread count was swept, and the metric barely moves:
-
-| threads | mean unique words |
-|---|---|
-| 1 | 18.298 |
-| 4 | 18.309 |
-| 16 | 18.353 |
-
-Word coverage per page is a property of the data-structure access pattern, not of how
-many cores walk it. Single-threaded runs avoid deviation #2 entirely and run faster
-under Pin, so they are the default. `HOST_THREADS` overrides it.
-
----
-
-## 8b. An operational hazard worth knowing about
-
-Pin replaces the injected process's command line with the **application's**. A
-pin-controlled BFS appears in `ps` as plain `bfs`, with no mention of `pin` and no
-mention of the tool. Anything that cleans up by matching on the command line —
-`pkill -f pin`, `pkill -f hotskew` — silently misses them.
-
-During development a PageRank run survived three separate cleanup attempts and kept
-going for 38 minutes, appending to a `.pages.bin` that a later run had already
-written. The result was one file containing interleaved records from two runs, with
-nothing in the output to indicate it.
-
-The reliable signal is the mapped library: a process running the tool has
-`obj-intel64/hotskew.so` in `/proc/PID/maps`, which argv rewriting cannot affect.
-`experiments/stop_runs.sh` uses that, and also reports which result files each
-process holds open so it is obvious what would be corrupted.
-
-```bash
-./experiments/stop_runs.sh          # list
-./experiments/stop_runs.sh --kill   # stop them
-```
-
-Two related rules learned the same way:
-
-- **Never edit a shell script while it is running.** Bash re-reads the file by byte
-  offset as it executes, so an edit shifts the offsets and it resumes mid-token. The
-  failure looks like a nonsense syntax error in a line that is perfectly valid.
-- **Never rebuild the `.so` while a run has it mapped.** The linker rewrites the file
-  in place.
-
-Neither affects the results reported here — the contaminated PageRank run was
-re-collected — but both cost time to diagnose and would be easy to repeat.
-
----
-
-## 9. Cost
-
-Pin instrumentation costs roughly 40× on the region of interest — BFS on kron-23 took
-0.09 s natively and 3.6 s instrumented. Memory overhead is 160 bytes per touched page
-per epoch (64 × `uint16` word counters plus a mask and two 64-bit totals), so a 4 GB
-working set costs about 160 MB of counter state. Both are comfortable on a desktop,
-which was the constraint: this had to run on a personal machine, not a lab server.
-
----
-
-## 10. Relationship to the CXLRAMSim work
-
-This is the profiling stage, deliberately built to be simulator-independent. The
-pintool produces the *ground-truth* access distribution that a hardware tracker must
-approximate. In CXLRAMSim, the same counters would hang off the CXL device's request
-path; the difference is that the simulator supplies physical addresses and real
-timing, and can then model migration.
-
-The value of doing it in Pin first is that it gives an exact reference. When an HPT
-or HWT top-$K$ tracker is implemented later, its output can be scored against the
-exact counts recorded here — which is precisely the comparison M5's Figure 8 makes
-(*"average access-count ratio of hot pages identified by ANB and DAMON"* against
-PAC's exact counts). Without an exact reference there is nothing to measure a
-tracker's accuracy against.
-
----
-
-## References
-
-- Sun et al., *M5: Mastering Page Migration and Memory Management for CXL-based
-  Tiered Memory Systems*, ASPLOS '25. Artifact:
-  <https://github.com/ece-fast-lab/ASPLOS-2025-M5>
-- Zhou et al., *NeoMem: Hardware/Software Co-Design for CXL-Native Memory Tiering*,
-  MICRO '24.
-- Zhong et al., *Managing Memory Tiers with CXL in Virtualized Environments*
-  (Memstrata), OSDI '24.
-- Beamer et al., *The GAP Benchmark Suite*. <https://github.com/sbeamer/gapbs>
+Use a different `--out` for controls or reruns. Retaining partial statistics does
+not resume execution after reboot; real checkpointing is a separate capability.

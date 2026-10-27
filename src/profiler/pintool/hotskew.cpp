@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <algorithm>
+#include <atomic>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -39,6 +40,8 @@
 #include <vector>
 
 #include "cache_model.hpp"
+#include "cache_hierarchy.hpp"
+#include "paired_observer.hpp"
 #include "counter_table.hpp"
 #include "tracker.hpp"
 
@@ -66,12 +69,16 @@ KNOB<UINT64> KnobL3Size(KNOB_MODE_WRITEONCE, "pintool", "l3_kb", "61440", "LLC s
 KNOB<UINT32> KnobL3Assoc(KNOB_MODE_WRITEONCE, "pintool", "l3_assoc", "15", "LLC associativity");
 KNOB<UINT32> KnobCountWB(KNOB_MODE_WRITEONCE, "pintool", "count_wb", "1",
                          "count dirty LLC writebacks as DRAM accesses (PAC snoops them too)");
+KNOB<UINT32> KnobPaired(KNOB_MODE_WRITEONCE, "pintool", "paired", "0",
+                       "record access/fill/traffic coverage in the same execution intervals");
+KNOB<UINT64> KnobEpochRefs(KNOB_MODE_WRITEONCE, "pintool", "epoch_refs", "0",
+                          "profiled line-operand references per epoch (Millions); overrides epoch");
+KNOB<UINT32> KnobWarmOutsideROI(KNOB_MODE_WRITEONCE, "pintool", "warm_outside_roi", "0",
+                               "simulate caches outside ROI without recording observations");
 
-// --- measurement window. See docs/methodology.md, "Why epochs are mandatory".
+// --- phase limits. See docs/methodology.md for distinct window definitions.
 // All three are in millions of *instructions*, counted at basic-block granularity.
-// Using one clock for every phase transition keeps the semantics obvious; memory
-// references are counted per thread and never drive control flow, so they cost
-// nothing in contention.
+// Instruction counts are BBL-granular approximations, not elapsed time.
 KNOB<UINT64> KnobFastForward(KNOB_MODE_WRITEONCE, "pintool", "ff", "0",
                              "skip this many instructions before profiling (Millions)");
 KNOB<UINT64> KnobWarmup(KNOB_MODE_WRITEONCE, "pintool", "warmup", "0",
@@ -81,16 +88,13 @@ KNOB<UINT64> KnobLength(KNOB_MODE_WRITEONCE, "pintool", "len", "0",
 KNOB<UINT64> KnobEpoch(KNOB_MODE_WRITEONCE, "pintool", "epoch", "50",
                        "DRAM accesses per measurement epoch (Millions); 0 = one epoch for the "
                        "whole run");
-// A window measured in DRAM accesses normalises away the effect of cache size: a
-// smaller cache emits more DRAM accesses, so a fixed number of them spans less
-// execution. To ask "what does the controller see in a fixed slice of *time*" --
-// which is what M5's 10 ms PAC dumps ask -- the window has to be defined in
-// instructions instead. Set this and it takes precedence over -epoch.
+// Device-event windows change execution span when cache filtering changes.
+// Instruction windows supply a different clock, but do not reproduce wall time.
 KNOB<UINT64> KnobEpochIns(KNOB_MODE_WRITEONCE, "pintool", "epoch_ins", "0",
-                          "instructions per measurement epoch (Millions); a time-proportional "
+                          "instructions per measurement epoch (Millions); a BBL-granular "
                           "window, overrides -epoch when non-zero");
 KNOB<UINT32> KnobMaxEpochs(KNOB_MODE_WRITEONCE, "pintool", "max_epochs", "0",
-                           "detach after this many epochs; 0 = unlimited");
+                           "stop collecting after this many epochs; application continues; 0 = unlimited");
 
 // --- region-of-interest by routine name, for benchmarks that spend most of their
 // --- time in setup (GAPBS graph construction, Redis dataset load, ...).
@@ -126,8 +130,7 @@ KNOB<UINT32> KnobTrackK(KNOB_MODE_WRITEONCE, "pintool", "track_k", "128",
 KNOB<UINT32> KnobTrackDepth(KNOB_MODE_WRITEONCE, "pintool", "track_depth", "2",
                             "CM-Sketch rows D (NeoMem uses D=2); width W = track_n / D");
 KNOB<UINT32> KnobTrackWord(KNOB_MODE_WRITEONCE, "pintool", "track_word", "1",
-                           "also run the Hot Word Tracker (64 B granularity), gated on "
-                           "pages the HPT currently holds -- this is M5's HWT");
+                           "also run an independent word tracker (64 B granularity)");
 
 // --- raw dump control.
 KNOB<UINT32> KnobDumpPages(KNOB_MODE_WRITEONCE, "pintool", "dump_pages", "1",
@@ -155,7 +158,7 @@ enum Phase { PHASE_FASTFORWARD, PHASE_WARMUP, PHASE_PROFILE, PHASE_DONE };
 
 // `g_active` is read by an inlinable predicate on every memory reference, so keep it
 // a plain scalar. It is 1 only while we want the heavyweight analysis to run.
-ADDRINT g_active = 0;
+std::atomic<ADDRINT> g_active(0);
 
 Phase g_phase = PHASE_FASTFORWARD;
 bool g_roiEnabled = true;  // false until we enter the ROI routine, if one was named
@@ -171,6 +174,12 @@ UINT32 g_epochId = 0;
 
 bool g_useCache = true;
 bool g_countWB = true;
+bool g_paired = false;
+UINT64 g_epochRefsTarget = 0, g_epochRefs = 0;
+UINT64 g_wacSaturations = 0;
+INT32 g_exitCode = 0;
+PairedObserver g_pair;
+std::ofstream g_pairCsv;
 
 CounterTable g_counters;
 
@@ -233,6 +242,10 @@ ThreadState* threadState(THREADID tid) {
 
 // One DRAM access reached the "device". Caller holds g_lock.
 inline void recordDram(UINT64 lineAddr, bool isWrite) {
+    if (g_paired) {
+        if (!isWrite) g_pair.record(lineAddr, PairedObserver::FILLS);
+        g_pair.record(lineAddr, PairedObserver::TRAFFIC);
+    }
     g_counters.record(lineAddr, isWrite);
     ++g_dramAccesses;
 
@@ -247,10 +260,9 @@ inline void recordDram(UINT64 lineAddr, bool isWrite) {
                 if (g_trackWord) t.hwtCM.access(lineAddr);
             } else {
                 t.hpt.access(page);
-                // HWT sees a word address only if the HPT currently holds its page.
-                // That gating is what keeps the word tracker small: it never sees
-                // addresses from pages nobody thinks are hot.
-                if (g_trackWord && t.hpt.contains(page)) t.hwt.access(lineAddr);
+                // M5 section 5.1 feeds independent page and word trackers.
+                // Filtering their output lists is a separate nominator operation.
+                if (g_trackWord) t.hwt.access(lineAddr);
             }
         }
     }
@@ -261,73 +273,57 @@ void finishEpoch();
 /* -------------------------------------------------------- analysis path */
 
 // Inlinable gate. Pin will fold this into the generated code.
-ADDRINT PIN_FAST_ANALYSIS_CALL isActive() { return g_active; }
+ADDRINT PIN_FAST_ANALYSIS_CALL isActive() { return g_active.load(std::memory_order_relaxed); }
 
 // The real work: push one access through the hierarchy and, if it falls out the
 // bottom, into the PAC/WAC counters. `size` may straddle cache lines.
 VOID analyzeMemRef(THREADID tid, ADDRINT addr, UINT32 size, BOOL isWrite) {
     ThreadState* ts = threadState(tid);
-    if (ts == NULL) return;
+    if (ts == NULL || size == 0) return;
 
     const UINT64 firstLine = (UINT64)addr >> kWordShift;
     const UINT64 lastLine = ((UINT64)addr + size - 1) >> kWordShift;
     const AccessType type = isWrite ? ACCESS_WRITE : ACCESS_READ;
 
     for (UINT64 line = firstLine; line <= lastLine; ++line) {
-        // Per-thread and uncontended. Summed in onFini.
-        ++ts->refs;
+        // Serialize state transitions and both observation streams. This is an
+        // instrumentation order, not a model of coherent multicore execution.
+        PIN_GetLock(&g_lock, tid + 1);
+        if (g_phase == PHASE_DONE) { PIN_ReleaseLock(&g_lock); return; }
+        const bool recording = g_phase == PHASE_PROFILE && g_roiEnabled;
+        if (recording) {
+            ++ts->refs;
+            ++g_epochRefs;
+            if (g_paired) g_pair.record(line, PairedObserver::ACCESSES);
+        }
 
         if (!g_useCache) {
-            PIN_GetLock(&g_lock, tid + 1);
-            if (g_phase == PHASE_PROFILE) recordDram(line, isWrite);
-            if (g_epochTarget && g_dramAccesses >= g_epochTarget) finishEpoch();
-            PIN_ReleaseLock(&g_lock);
-            continue;
+            if (recording) recordDram(line, isWrite);
+        } else {
+            const PrivateResult r = accessPrivate(ts->l1, ts->l2, line, type);
+            accessShared(g_llc, line, r, [&](uint64_t evicted, bool write) {
+                if (recording && (!write || g_countWB)) recordDram(evicted, write);
+            });
         }
-
-        // L1 and L2 are private to the thread: no lock, no shared writes. The vast
-        // majority of references stop here, which is what keeps multithreaded runs
-        // from serialising on the LLC lock.
-        Outcome o1 = ts->l1.access(line, type);
-        if (o1.hit) continue;
-
-        // An L1 dirty eviction is a write into L2; the demand miss also fills L2.
-        if (o1.wroteBack) ts->l2.access(o1.wbLineAddr, ACCESS_WRITE);
-        Outcome o2 = ts->l2.access(line, type);
-        if (o2.hit) continue;
-
-        // Only L2 misses reach shared state.
-        PIN_GetLock(&g_lock, tid + 1);
-
-        if (o2.wroteBack) {
-            Outcome ow = g_llc.access(o2.wbLineAddr, ACCESS_WRITE);
-            if (ow.wroteBack && g_countWB && g_phase == PHASE_PROFILE)
-                recordDram(ow.wbLineAddr, true);
-        }
-
-        Outcome o3 = g_llc.access(line, type);
-        if (!o3.hit && g_phase == PHASE_PROFILE) {
-            // The fill: this is the read the CXL controller sees.
-            recordDram(line, false);
-        }
-        if (o3.wroteBack && g_countWB && g_phase == PHASE_PROFILE)
-            recordDram(o3.wbLineAddr, true);
-
-        if (g_epochTarget && g_dramAccesses >= g_epochTarget) finishEpoch();
-
+        if (recording && ((g_epochTarget && g_dramAccesses >= g_epochTarget) ||
+                          (g_epochRefsTarget && g_epochRefs >= g_epochRefsTarget)))
+            finishEpoch();
         PIN_ReleaseLock(&g_lock);
     }
 }
 
 // Phase advance, driven by the instruction counter at basic-block granularity.
 VOID PIN_FAST_ANALYSIS_CALL countBbl(UINT32 numIns) {
+    PIN_GetLock(&g_lock, 1);
     g_insCount += numIns;
 
     switch (g_phase) {
         case PHASE_FASTFORWARD:
             if (g_insCount >= g_ffTarget) {
                 g_phase = g_warmupTarget ? PHASE_WARMUP : PHASE_PROFILE;
-                g_active = g_roiEnabled ? 1 : 0;
+                g_active = (g_roiEnabled || KnobWarmOutsideROI.Value()) ? 1 : 0;
+                g_profileStartIns = g_insCount;
+                g_epochStartIns = g_insCount;
             }
             break;
         case PHASE_WARMUP:
@@ -353,15 +349,14 @@ VOID PIN_FAST_ANALYSIS_CALL countBbl(UINT32 numIns) {
                 //
                 // finishEpoch touches shared state, so take the lock. This fires
                 // once per epoch, not per basic block, so the cost is irrelevant.
-                PIN_GetLock(&g_lock, 1);
                 g_epochStartIns = g_insCount;
                 finishEpoch();
-                PIN_ReleaseLock(&g_lock);
             }
             break;
         case PHASE_DONE:
             break;
     }
+    PIN_ReleaseLock(&g_lock);
 }
 
 /* -------------------------------------------------- epoch bookkeeping */
@@ -372,7 +367,9 @@ void finishEpoch() {
     // Nothing was recorded: do not burn an epoch id on it. An empty epoch would
     // otherwise inflate the reported epoch count and make the run look like it
     // sampled more windows than it actually did.
-    if (g_counters.totalAccesses() == 0) return;
+    if (g_counters.totalAccesses() == 0 && (!g_paired || g_pair.empty())) return;
+    if (g_paired) g_pair.endEpoch(g_pairCsv, g_epochId);
+    g_wacSaturations += g_counters.wacSaturations();
 
     UINT64 pagesThisEpoch = 0;
     UINT64 accessesThisEpoch = 0;
@@ -413,7 +410,8 @@ void finishEpoch() {
 
         if (g_pagesBin && total >= dumpMin) {
             const UINT64 cap = KnobDumpMaxMB.Value() * 1024ULL * 1024ULL;
-            if (cap && g_pagesBinBytes >= cap) {
+            const UINT64 recordBytes = 4 + 8 * 4 + 2 * kWordsPerPage;
+            if (cap && g_pagesBinBytes + recordBytes > cap) {
                 if (!g_pagesBinCapped) {
                     g_pagesBinCapped = true;
                     std::cerr << "[hotskew] pages.bin hit the " << KnobDumpMaxMB.Value()
@@ -422,7 +420,7 @@ void finishEpoch() {
                 }
                 goto skip_dump;
             }
-            g_pagesBinBytes += 4 + 8 * 3 + 2 * kWordsPerPage;
+            g_pagesBinBytes += recordBytes;
             // Record: epoch(u32) page(u64) reads(u64) writes(u64) mask(u64) word[64](u16)
             fwrite(&g_epochId, sizeof(UINT32), 1, g_pagesBin);
             fwrite(&pageNo, sizeof(UINT64), 1, g_pagesBin);
@@ -549,6 +547,7 @@ void finishEpoch() {
 
     g_counters.resetCounters();
     g_dramAccesses = 0;
+    g_epochRefs = 0;
     ++g_epochId;
 
     if (KnobMaxEpochs.Value() && g_epochId >= KnobMaxEpochs.Value()) {
@@ -559,22 +558,35 @@ void finishEpoch() {
 
 /* --------------------------------------------------------- instrumentation */
 
+VOID unsupportedMemoryVector() {
+    std::cerr << "[hotskew] unsupported gather/scatter memory operands in active region; "
+                 "refusing an incomplete measurement\n";
+    PIN_ExitProcess(2);
+}
+
 VOID instrumentTrace(TRACE trace, VOID*) {
     for (BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl)) {
-        BBL_InsertCall(bbl, IPOINT_ANYWHERE, (AFUNPTR)countBbl, IARG_FAST_ANALYSIS_CALL,
+        BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)countBbl, IARG_FAST_ANALYSIS_CALL,
                        IARG_UINT32, BBL_NumIns(bbl), IARG_END);
 
         for (INS ins = BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins)) {
             if (!INS_IsMemoryRead(ins) && !INS_IsMemoryWrite(ins)) continue;
+            // This experiment concerns demand operands, not prefetch hints.
+            if (INS_IsPrefetch(ins)) continue;
+            if (INS_HasMemoryVector(ins)) {
+                INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)isActive,
+                                 IARG_FAST_ANALYSIS_CALL, IARG_END);
+                INS_InsertThenPredicatedCall(ins, IPOINT_BEFORE,
+                    (AFUNPTR)unsupportedMemoryVector, IARG_END);
+                continue;
+            }
 
             UINT32 numOps = INS_MemoryOperandCount(ins);
             for (UINT32 op = 0; op < numOps; ++op) {
-                // Software prefetches are deliberately *not* skipped: prefetcht0 really
-                // does pull a line in from memory, so the CXL controller would count it.
                 const BOOL isWrite = INS_MemoryOperandIsWritten(ins, op);
                 INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)isActive, IARG_FAST_ANALYSIS_CALL,
                                  IARG_END);
-                INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)analyzeMemRef, IARG_THREAD_ID,
+                INS_InsertThenPredicatedCall(ins, IPOINT_BEFORE, (AFUNPTR)analyzeMemRef, IARG_THREAD_ID,
                                    IARG_MEMORYOP_EA, op, IARG_UINT32,
                                    INS_MemoryOperandSize(ins, op), IARG_BOOL, isWrite, IARG_END);
             }
@@ -583,25 +595,27 @@ VOID instrumentTrace(TRACE trace, VOID*) {
 }
 
 VOID roiEnter() {
+    PIN_GetLock(&g_lock, 1);
     g_roiEnabled = true;
     // Restart the time-proportional epoch clock, so the first epoch inside the
     // region is a full window rather than however long we spent outside it.
     g_epochStartIns = g_insCount;
     if (g_phase == PHASE_WARMUP || g_phase == PHASE_PROFILE) g_active = 1;
+    PIN_ReleaseLock(&g_lock);
 }
 
 VOID roiExit() {
+    PIN_GetLock(&g_lock, 1);
     g_roiEnabled = false;
-    g_active = 0;
+    g_active = KnobWarmOutsideROI.Value() && g_phase != PHASE_DONE;
     // Close the epoch at the ROI boundary. Without this, a short kernel invocation
     // would leave a partial epoch open and the next invocation's accesses would be
     // merged into it -- which silently widens the measurement window and inflates
     // the apparent word coverage per page.
-    if (KnobRoiEpoch.Value() && g_dramAccesses > 0) {
-        PIN_GetLock(&g_lock, 1);
+    if (KnobRoiEpoch.Value() && (g_dramAccesses > 0 || (g_paired && !g_pair.empty()))) {
         finishEpoch();
-        PIN_ReleaseLock(&g_lock);
     }
+    PIN_ReleaseLock(&g_lock);
 }
 
 // Hook whichever of the three ROI knobs the user supplied. Symbol names are matched
@@ -689,6 +703,15 @@ void writeSummary() {
     }
 
     f << "# hotskew summary\n";
+    f << "instrument_version cache-path-v2\n";
+    f << "exit_code          " << g_exitCode << "\n";
+    f << "collection_status  " << (g_exitCode ? "application_failed" :
+        (g_phase == PHASE_DONE ? "limited" : "complete")) << "\n";
+    f << "wac_saturations    " << g_wacSaturations << "\n";
+    f << "warm_outside_roi   " << KnobWarmOutsideROI.Value() << "\n";
+    f << "roi_begin          " << KnobRoiBegin.Value() << "\n";
+    f << "roi_end            " << KnobRoiEnd.Value() << "\n";
+    f << "epoch_len_refs     " << g_epochRefsTarget << "\n";
     f << "benchmark          " << g_tag << "\n";
     f << "cache_filter       " << (g_useCache ? "on" : "off") << "\n";
     if (g_useCache) {
@@ -702,7 +725,7 @@ void writeSummary() {
     }
     f << "epochs             " << g_epochId << "\n";
     if (g_epochInsTarget)
-        f << "epoch_len_ins      " << g_epochInsTarget << "   (time-proportional window)\n";
+        f << "epoch_len_ins      " << g_epochInsTarget << "   (BBL-granular instruction window)\n";
     else
         f << "epoch_len_dram_acc " << g_epochTarget << "\n";
     f << "instructions       " << g_insCount << "\n";
@@ -769,7 +792,8 @@ void writeSummary() {
     std::cerr << "[hotskew] wrote " << path << "\n";
 }
 
-VOID onFini(INT32, VOID*) {
+VOID onFini(INT32 code, VOID*) {
+    g_exitCode = code;
     PIN_GetLock(&g_lock, 1);
     // Roll the per-thread reference counters up now that every thread has stopped.
     PIN_GetLock(&g_threadsLock, 1);
@@ -777,7 +801,8 @@ VOID onFini(INT32, VOID*) {
     for (size_t i = 0; i < g_threads.size(); ++i) g_memRefs += g_threads[i]->refs;
     PIN_ReleaseLock(&g_threadsLock);
 
-    if (g_dramAccesses > 0 || g_epochId == 0) finishEpoch();
+    if (g_dramAccesses > 0 || (g_paired && !g_pair.empty()) || g_epochId == 0) finishEpoch();
+    if (g_paired) { g_pair.finish(g_pairCsv, g_epochId); g_pairCsv.close(); }
     PIN_ReleaseLock(&g_lock);
 
     if (g_pagesBin) {
@@ -806,6 +831,11 @@ int main(int argc, char* argv[]) {
     g_tag = KnobTag.Value();
     g_useCache = KnobCacheOn.Value() != 0;
     g_countWB = KnobCountWB.Value() != 0;
+    g_paired = KnobPaired.Value() != 0;
+    if (g_paired && (!g_useCache || !g_countWB)) {
+        std::cerr << "[hotskew] paired measurements require -cache 1 -count_wb 1\n";
+        return 1;
+    }
 
     const UINT64 M = 1000000ULL;
     g_ffTarget = KnobFastForward.Value() * M;
@@ -813,6 +843,9 @@ int main(int argc, char* argv[]) {
     g_lenTarget = KnobLength.Value() * M;
     g_epochTarget = KnobEpoch.Value() * M;
     g_epochInsTarget = KnobEpochIns.Value() * M;
+    g_epochRefsTarget = KnobEpochRefs.Value() * M;
+    if (g_epochRefsTarget && g_epochInsTarget) return usage();
+    if (g_epochRefsTarget) g_epochTarget = 0;
     // A time-proportional window and an access-proportional window are different
     // questions; running both at once would close epochs at whichever fires first
     // and make the result impossible to interpret. -epoch_ins wins outright.
@@ -822,6 +855,12 @@ int main(int argc, char* argv[]) {
     memset(g_pageAccessHist, 0, sizeof(g_pageAccessHist));
 
     if (g_useCache) {
+        CacheLevel test;
+        if (!test.init("L1", KnobL1Size.Value()*1024, KnobL1Assoc.Value(), 64) ||
+            !test.init("L2", KnobL2Size.Value()*1024, KnobL2Assoc.Value(), 64)) {
+            std::cerr << "[hotskew] invalid private cache geometry\n";
+            return 1;
+        }
         if (!g_llc.init("LLC", KnobL3Size.Value() * 1024, KnobL3Assoc.Value(), 1u << kWordShift)) {
             std::cerr << "[hotskew] LLC geometry gives a non-power-of-two set count; "
                       << "adjust -l3_kb / -l3_assoc\n";
@@ -833,7 +872,8 @@ int main(int argc, char* argv[]) {
     const bool haveRoi = !KnobRoiRtn.Value().empty() || !KnobRoiBegin.Value().empty();
     g_roiEnabled = !haveRoi;
     g_phase = g_ffTarget ? PHASE_FASTFORWARD : (g_warmupTarget ? PHASE_WARMUP : PHASE_PROFILE);
-    g_active = (g_phase != PHASE_FASTFORWARD && g_roiEnabled) ? 1 : 0;
+    g_active = (g_phase != PHASE_FASTFORWARD &&
+                (g_roiEnabled || KnobWarmOutsideROI.Value())) ? 1 : 0;
 
     PIN_InitLock(&g_lock);
     PIN_InitLock(&g_threadsLock);
@@ -841,6 +881,12 @@ int main(int argc, char* argv[]) {
 
     const string csvPath = g_outPrefix + ".epochs.csv";
     g_epochCsv.open(csvPath.c_str());
+    if (g_paired) {
+        g_pairCsv.open((g_outPrefix + ".paired.csv").c_str());
+        if (!g_pairCsv) { std::cerr << "cannot open paired output\n"; return 1; }
+        g_pairCsv << "scope,epoch,stream,population,words,pages,events\n";
+    }
+    if (!g_epochCsv) { std::cerr << "cannot open epoch output\n"; return 1; }
     g_epochCsv << "epoch,pages,accesses,mean_unique_words,p_le_4,p_le_8,p_le_16,p_le_32,p_le_48\n";
 
     g_track = KnobTrack.Value() != 0;

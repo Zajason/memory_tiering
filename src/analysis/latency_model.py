@@ -1,55 +1,12 @@
 #!/usr/bin/env python3
-"""latency_model.py -- close the loop: turn placement quality into a time number.
+"""Serial memory-cost model over a fixed observed stream, not measured speedup.
 
-    python3 src/analysis/latency_model.py [--config spr-20t] [--fast-frac 0.5]
-
-Everything else in this repository reports *distributions* -- how sparse a page is,
-how good a tracker's top-K is, what share of accesses a policy captures. None of that
-is a performance number, and "we characterised the problem" is a weaker claim than
-"policy X cuts memory stall time by Y%".
-
-This turns the placement results into time, using an analytical latency model over
-the DRAM access stream the profiler already recorded.
-
-The model
----------
-Each DRAM access costs one of two latencies depending on where its page lives, and
-each promotion costs a fixed migration penalty:
-
-    stall_time = hits_fast x L_fast
-               + hits_slow x L_slow
-               + migrations x L_migrate
-
-    AMAT       = stall_time / total_accesses
-
-Defaults come from the papers rather than from thin air:
-
-    L_fast      100 ns   NeoMem Fig. 1 puts local DDR at ~100 ns and measures 118 ns
-    L_slow      220 ns   Memstrata: CXL is "roughly 200-220% the latency of the local
-                         memory". NeoMem: the field "tends to assume a CXL-memory
-                         latency of 170-250ns". 220 ns sits in both.
-    L_migrate     3 us   a 4 KB page copy plus TLB shootdown and page-table work.
-                         This is the literature's order of magnitude for
-                         migrate_pages(), not something measured here -- sweep it
-                         with --migrate-ns and see --sensitivity.
-
-What this is NOT
-----------------
-This is an analytical model over a trace, not a timing simulation. Three assumptions,
-all of which inflate the apparent benefit and none of which are hidden:
-
- 1. **No memory-level parallelism.** Real cores overlap misses; a 2.2x latency ratio
-    does not translate to 2.2x stall time when several misses are in flight. This is
-    the big one, and it means the numbers here are an *upper bound* on the benefit.
- 2. **No bandwidth contention.** Migration traffic competes with demand traffic for
-    the same channels; that is not modelled.
- 3. **Placement-independent access stream.** True for addresses -- migration changes
-    a page's latency, not which addresses are touched -- but it breaks for anything
-    whose behaviour depends on timing (a server under load, lock contention).
-
-So: report these as *memory stall time*, and as a bound. Converting to application
-speedup needs the fraction of runtime spent stalled on memory, which is why
---stall-frac exists and why it is not applied by default.
+Cost = fast accesses * fast latency + slow accesses * slow latency + promotions
+* migration cost. Latencies and migration cost are assumptions. There is no CPU
+execution, memory-level parallelism, bandwidth contention or migration feedback.
+Consequently the ratio is neither application speedup nor a proven upper bound.
+The non-oracle policies use only the previous window. Archived CSVs used future
+page membership and must not be cited as corrected results.
 """
 
 from __future__ import annotations
@@ -62,14 +19,14 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hotskew as H  # noqa: E402
-from placement_study import select  # noqa: E402
+from causal_placement import candidates, choose, fixed_capacity
 
 PAGE_BYTES = 4096
 
 
 def evaluate(path: str, fast_frac: float, l_fast: float, l_slow: float,
              l_mig: float, hwt_words_per_page: float = 8.0) -> dict | None:
-    recs = H.load_pages(path).records
+    recs = H.load_pages(path, require_complete=True, require_unsaturated=True).records
     if recs.size == 0:
         return None
     epochs = np.unique(recs["epoch"])
@@ -85,44 +42,21 @@ def evaluate(path: str, fast_frac: float, l_fast: float, l_slow: float,
     # paid for once. Without this every epoch re-migrates everything and migration
     # cost is meaningless.
     resident = {p: set() for p in policies}
+    capacity = fixed_capacity(recs, fast_frac)
 
     for prev_e, cur_e in zip(epochs[:-1], epochs[1:]):
         prev, cur = by_epoch[int(prev_e)], by_epoch[int(cur_e)]
         if prev.size == 0 or cur.size == 0:
             continue
 
-        capacity = max(1, int(cur.size * fast_frac))
         cur_acc = (cur["reads"] + cur["writes"]).astype(np.float64)
         cur_tot = cur_acc.sum()
         if cur_tot <= 0:
             continue
         total_acc += cur_tot
 
-        prev_acc = (prev["reads"] + prev["writes"]).astype(np.float64)
-        prev_words = H._popcount64(prev["mask"]).astype(np.float64)
-
-        order = np.argsort(prev["page"])
-        sp, sa = prev["page"][order], prev_acc[order]
-        idx = np.clip(np.searchsorted(sp, cur["page"]), 0, max(len(sp) - 1, 0))
-        known = (len(sp) > 0) & (sp[idx] == cur["page"])
-        prev_count_on_cur = np.where(known, sa[idx], 0.0)
-
-        pw = prev["words"].astype(np.int64)
-        w_budget = max(1, int(capacity * hwt_words_per_page))
-        flat = pw.ravel()
-        thresh = max(int(np.partition(flat, -w_budget)[-w_budget]) if flat.size > w_budget else 1, 1)
-        pop = (pw >= thresh).sum(axis=1).astype(np.float64)
-        so = pop[order]
-        prev_pop_on_cur = np.where(known, so[idx], 0.0)
-
-        pos = prev_count_on_cur[prev_count_on_cur > 0]
-        med = np.percentile(pos, 50) if pos.size else 0.0
-        cand = {
-            "oracle": cur_acc,
-            "count-only": prev_count_on_cur,
-            "hpt-driven": np.where(prev_count_on_cur >= med, prev_pop_on_cur, 0.0),
-            "hwt-driven": prev_pop_on_cur,
-        }
+        cand = candidates(prev, capacity, hwt_words_per_page)
+        cand['oracle'] = choose(cur['page'], cur_acc, capacity)
 
         for name in policies:
             if name == "all-CXL":
@@ -132,14 +66,12 @@ def evaluate(path: str, fast_frac: float, l_fast: float, l_slow: float,
                 # Upper bound: everything already local, nothing to migrate.
                 stall[name] += cur_tot * l_fast
                 continue
-            sel = select(cand[name], capacity)
-            chosen = set(cur["page"][sel].tolist())
+            chosen = cand[name]
             new = chosen - resident[name]
             migs[name] += len(new)
             resident[name] = chosen
 
-            hit = np.zeros(cur.shape[0], dtype=bool)
-            hit[sel] = True
+            hit = np.array([int(pg) in chosen for pg in cur['page']], dtype=bool)
             fast = float(cur_acc[hit].sum())
             slow = float(cur_tot) - fast
             stall[name] += fast * l_fast + slow * l_slow + len(new) * l_mig
@@ -150,6 +82,7 @@ def evaluate(path: str, fast_frac: float, l_fast: float, l_slow: float,
     base = amat["all-CXL"]
     return {
         "epochs": int(epochs.size),
+        "capacity_pages": capacity,
         "accesses": total_acc,
         "amat": amat,
         "speedup": {p: base / amat[p] for p in policies},
@@ -185,7 +118,7 @@ def main() -> int:
         print(f"no results under {d}", file=sys.stderr)
         return 1
 
-    print(f"\nMemory stall time under a two-tier latency model")
+    print(f"\nIllustrative serial memory cost (not measured stall time or speedup)")
     print(f"config: {args.config}   fast tier = {args.fast_frac:.0%} of footprint")
     print(f"L_fast = {args.fast_ns:.0f} ns   L_slow = {args.slow_ns:.0f} ns "
           f"({args.slow_ns/args.fast_ns:.1f}x)   L_migrate = {args.migrate_ns/1000:.1f} us\n")

@@ -1,0 +1,363 @@
+{
+  "jobs": {
+    "spacesaving-bfs": {
+      "status": "complete",
+      "started": 1792877261.6595416,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bfs",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "spacesaving",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+        "--dump-pages"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-spacesaving-bfs-1792877262.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/spacesaving-bfs.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving/gapbs-bfs",
+      "elapsed_s": 4.538464307785034
+    },
+    "spacesaving-cc": {
+      "status": "complete",
+      "started": 1792877266.7298913,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "cc",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "spacesaving",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+        "--dump-pages"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-spacesaving-cc-1792877267.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/spacesaving-cc.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving/gapbs-cc",
+      "elapsed_s": 6.505300521850586
+    },
+    "spacesaving-bc": {
+      "status": "complete",
+      "started": 1792877273.7340922,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bc",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "spacesaving",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+        "--gzip-pages",
+        "--graph-prefix",
+        "workloads/gapbs/graphs/gplus-snapshot1",
+        "--graph-family",
+        "Google+ IMC12 snapshot 1"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-spacesaving-bc-1792877274.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/spacesaving-bc.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving/gapbs-bc",
+      "elapsed_s": 4.51287055015564
+    },
+    "spacesaving-sssp": {
+      "status": "complete",
+      "started": 1792877278.77644,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "sssp",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "spacesaving",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+        "--gzip-pages",
+        "--graph-prefix",
+        "workloads/gapbs/graphs/gplus-snapshot1",
+        "--graph-family",
+        "Google+ IMC12 snapshot 1"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-spacesaving-sssp-1792877279.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/spacesaving-sssp.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving/gapbs-sssp",
+      "elapsed_s": 4.522876739501953
+    },
+    "spacesaving-pr": {
+      "status": "complete",
+      "started": 1792877283.8387926,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "pr",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "spacesaving",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+        "--gzip-pages"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-spacesaving-pr-1792877284.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/spacesaving-pr.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving/gapbs-pr",
+      "elapsed_s": 1084.6514518260956
+    },
+    "spacesaving-tc": {
+      "status": "complete",
+      "started": 1792939374.315416,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "tc",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "spacesaving",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving-tc/attempt-1",
+        "--gzip-pages"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving-tc/attempt-1",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-spacesaving-tc-1792939375.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/spacesaving-tc.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving-tc/attempt-1/gapbs-tc",
+      "elapsed_s": 13242.36305475235
+    },
+    "cmsketch-bfs": {
+      "status": "complete",
+      "started": 1792952617.7715404,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bfs",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "cmsketch",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-cmsketch-bfs-1792952619.run.log",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch/gapbs-bfs",
+      "elapsed_s": 3.383671283721924
+    },
+    "cmsketch-cc": {
+      "status": "complete",
+      "started": 1792952622.4733586,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "cc",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "cmsketch",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-cmsketch-cc-1792952623.run.log",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch/gapbs-cc",
+      "elapsed_s": 2.927257537841797
+    },
+    "cmsketch-bc": {
+      "status": "complete",
+      "started": 1792952626.6810706,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bc",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "cmsketch",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch",
+        "--graph-prefix",
+        "workloads/gapbs/graphs/gplus-snapshot1",
+        "--graph-family",
+        "Google+ IMC12 snapshot 1"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-cmsketch-bc-1792952627.run.log",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch/gapbs-bc",
+      "elapsed_s": 143.00392150878906
+    },
+    "cmsketch-sssp": {
+      "status": "complete",
+      "started": 1792952770.7744868,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "sssp",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "cmsketch",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch",
+        "--graph-prefix",
+        "workloads/gapbs/graphs/gplus-snapshot1",
+        "--graph-family",
+        "Google+ IMC12 snapshot 1"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-cmsketch-sssp-1792952771.run.log",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch/gapbs-sssp",
+      "elapsed_s": 82.91063976287842
+    },
+    "cmsketch-pr": {
+      "status": "complete",
+      "started": 1792952854.6984112,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "pr",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "cmsketch",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-cmsketch-pr-1792952855.run.log",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch/gapbs-pr",
+      "elapsed_s": 1475.1713840961456
+    },
+    "cmsketch-tc": {
+      "status": "complete",
+      "started": 1792954331.073969,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "tc",
+        "--epoch-traffic",
+        "10",
+        "--track-algo",
+        "cmsketch",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-cmsketch-tc-1792954332.run.log",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/cmsketch/gapbs-tc",
+      "elapsed_s": 11959.920413732529
+    },
+    "redis-a": {
+      "status": "complete",
+      "started": 1792966292.495376,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_extension_workload.py",
+        "redis-a",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/redis-a/attempt-1"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/redis-a/attempt-1",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-redis-a-1792966293.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/redis-a.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/redis-a/attempt-1/redis-a",
+      "elapsed_s": 3113.13889336586
+    },
+    "redis-c": {
+      "status": "complete",
+      "started": 1792969406.5417383,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_extension_workload.py",
+        "redis-c",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/redis-c/attempt-1"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/redis-c/attempt-1",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-redis-c-1792969408.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/redis-c.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/redis-c/attempt-1/redis-c",
+      "elapsed_s": 4297.8254380226135
+    },
+    "memcached": {
+      "status": "complete",
+      "started": 1792973705.905651,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_extension_workload.py",
+        "memcached",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/memcached/attempt-1"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/memcached/attempt-1",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-memcached-1792973707.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/memcached.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/memcached/attempt-1/memcached",
+      "elapsed_s": 2631.7269134521484
+    },
+    "liblinear": {
+      "status": "complete",
+      "started": 1792976339.1877315,
+      "binary_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_extension_workload.py",
+        "liblinear",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/liblinear/attempt-1"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/liblinear/attempt-1",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/pin-liblinear-1792976340.run.log",
+      "analysis": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/analysis/liblinear.json",
+      "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/liblinear/attempt-1/liblinear",
+      "elapsed_s": 16752.83014678955
+    }
+  },
+  "pid": 30551,
+  "status": "complete",
+  "started": 1792939374.3105433,
+  "planned_jobs": [
+    "spacesaving-bfs",
+    "spacesaving-cc",
+    "spacesaving-bc",
+    "spacesaving-sssp",
+    "spacesaving-pr",
+    "spacesaving-tc",
+    "cmsketch-bfs",
+    "cmsketch-cc",
+    "cmsketch-bc",
+    "cmsketch-sssp",
+    "cmsketch-pr",
+    "cmsketch-tc",
+    "redis-a",
+    "redis-c",
+    "memcached",
+    "liblinear"
+  ],
+  "updated": 1792993093.1858118,
+  "current": null
+}

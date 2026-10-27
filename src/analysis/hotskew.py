@@ -11,7 +11,7 @@ recomputed from it, and it additionally supports questions the tool does not ans
 directly -- most importantly restricting the population to the top-K hottest pages,
 which is the population a real migration policy would actually act on.
 
-Record layout (little-endian, packed, 160 bytes):
+Record layout (little-endian, packed, 164 bytes):
 
     uint32  epoch
     uint64  page_number          (byte address >> 12)
@@ -144,7 +144,8 @@ class Run:
         return float(1.0 - uw.mean() / WORDS_PER_PAGE)
 
 
-def load_pages(path: str, tag: str = "", config: str = "") -> Run:
+def load_pages(path: str, tag: str = "", config: str = "", require_complete=False,
+               require_unsaturated=False) -> Run:
     """Read a .pages.bin file."""
     if not os.path.exists(path):
         raise FileNotFoundError(path)
@@ -155,6 +156,18 @@ def load_pages(path: str, tag: str = "", config: str = "") -> Run:
             "record; the file is truncated or was written by a different tool version"
         )
     recs = np.fromfile(path, dtype=RECORD_DTYPE)
+    if require_unsaturated and np.any(recs['words'] == 65535):
+        raise ValueError(f"{path}: saturated word counts cannot support frequency rankings")
+    if require_complete:
+        summary = load_summary(str(path).removesuffix(".pages.bin") + ".summary.txt")
+        if summary.get("pages_bin_capped", "").startswith("yes"):
+            raise ValueError(f"{path}: capped dump cannot support complete-window analysis")
+        expected = int(summary.get("page_observations", "0").split()[0])
+        accesses = int(summary.get("dram_accesses", "0").split()[0])
+        if len(recs) != expected or int((recs['reads'] + recs['writes']).sum()) != accesses:
+            raise ValueError(f"{path}: dump does not cover the summary's observations")
+        if summary.get("collection_status", "complete") != "complete":
+            raise ValueError(f"{path}: run is not complete")
     return Run(tag=tag or os.path.basename(path).split(".")[0], config=config, records=recs)
 
 
@@ -174,14 +187,18 @@ def load_summary(path: str) -> dict:
             if line.startswith("# M5 Figure 10"):
                 section = "access"
                 continue
-            if line.startswith("#") or not line.strip():
+            if line.startswith("#"):
+                if not line.startswith("# (log2_bucket"):
+                    section = None
+                continue
+            if not line.strip():
                 continue
             if section and "," in line:
                 a, b = line.split(",", 1)
                 try:
-                    if section == "unique":
+                    if section == "unique" and 0 <= int(a) <= WORDS_PER_PAGE:
                         unique_hist[int(a)] = int(b)
-                    else:
+                    elif section == "access":
                         access_hist[int(a)] = int(b)
                 except ValueError:
                     pass
@@ -212,7 +229,7 @@ def figure4_from_summary(path: str, ns=FIG4_N) -> dict[int, float]:
 # ---------------------------------------------------------------------------
 # M5's numbers as stated in the PAPER'S PROSE, not digitised from the bar chart.
 #
-# Section 3 of the paper gives exact percentages for two quantities. These are
+# Section 4.1 of the paper gives rounded percentages for two quantities. These are
 # worth more than our digitised M5_FIGURE4 values (which are +/-0.02 at best),
 # and they independently CONFIRM the digitisation: every one of the eight
 # P(<=16) values below matches our digitised figure to within 0.01.

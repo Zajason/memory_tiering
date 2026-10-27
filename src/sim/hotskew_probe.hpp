@@ -124,11 +124,22 @@ class Probe {
         epoch_ = 0;
         sinceEpoch_ = 0;
         results_.clear();
+        counters_.resetCounters();
     }
 
     // One CXL memory request. `physAddr` is a byte address; the simulator supplies a
     // real physical address, which is the point of running here rather than in Pin.
-    inline void onRequest(uint64_t physAddr, bool isWrite) {
+    // A request may cross lines. Existing one-address callers retain their
+    // one-line semantics; integrations should pass the actual packet byte size.
+    inline void onRequest(uint64_t physAddr, bool isWrite, uint32_t bytes = 1) {
+        if (!bytes) return;
+        const uint64_t first = physAddr >> kWordShift;
+        const uint64_t last = (physAddr + bytes - 1) >> kWordShift;
+        for (uint64_t line = first; line <= last; ++line)
+            onLine(line << kWordShift, isWrite);
+    }
+
+    inline void onLine(uint64_t physAddr, bool isWrite) {
         const uint64_t line = physAddr >> kWordShift;
         counters_.record(line, isWrite);
 
@@ -140,7 +151,7 @@ class Probe {
                 if (cfg_.trackWords) s.hwtCM.access(line);
             } else {
                 s.hpt.access(page);
-                if (cfg_.trackWords && s.hpt.contains(page)) s.hwt.access(line);
+                if (cfg_.trackWords) s.hwt.access(line);
             }
         }
 
@@ -234,12 +245,13 @@ class Probe {
         for (size_t i = 0; i < results_.size(); ++i) {
             pages += results_[i].pages;
             acc += results_[i].accesses;
-            mu += results_[i].meanUniqueWords;
+            for (uint32_t w = 0; w <= kWordsPerPage; ++w)
+                mu += w * results_[i].uniqueHist[w];
         }
         f << "page_observations  " << pages << "\n";
         f << "dram_accesses      " << acc << "\n";
         f << "mean_unique_words  " << std::fixed << std::setprecision(3)
-          << (mu / results_.size()) << " / 64\n";
+          << (mu / pages) << " / 64\n";
         // Section name and "words,count" shape must match what the pintool
         // writes, because src/analysis/hotskew.py:load_summary() keys off this
         // exact header to build the Figure 4 CDF.

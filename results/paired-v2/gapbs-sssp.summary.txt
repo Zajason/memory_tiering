@@ -1,0 +1,112 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     10000000
+benchmark          gapbs-sssp
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             199
+epoch_len_dram_acc 0
+instructions       3772013776
+mem_refs_profiled  1989966106
+dram_accesses      72239460
+llc_miss_ratio     0.036302  (DRAM accesses per memory ref)
+page_observations  7308768   (page x epoch pairs with >=1 access)
+mean_unique_words  9.562 / 64
+top4_word_share    0.3179   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.5299
+  8         12.5%   0.6699
+ 16           25%   0.8253
+ 32           50%   0.9419
+ 48           75%   0.9548
+
+# P(page has at least 48 of 64 words accessed) = 0.0459
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,1825630
+2,1091010
+3,658376
+4,297669
+5,213040
+6,271255
+7,308577
+8,230790
+9,167573
+10,150507
+11,145149
+12,142268
+13,140263
+14,136067
+15,130141
+16,123391
+17,119710
+18,122025
+19,124082
+20,115560
+21,93877
+22,68958
+23,49455
+24,36822
+25,28352
+26,22681
+27,18209
+28,14614
+29,11745
+30,10044
+31,8630
+32,7702
+33,7111
+34,6694
+35,6345
+36,6147
+37,6140
+38,6004
+39,5931
+40,5816
+41,5802
+42,5594
+43,5578
+44,5399
+45,5441
+46,5553
+47,5387
+48,5362
+49,5525
+50,5410
+51,5484
+52,5458
+53,5425
+54,5493
+55,5434
+56,5548
+57,5766
+58,5575
+59,5336
+60,5109
+61,4406
+62,3775
+63,3303
+64,253245
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,1823870
+1,1748119
+2,1069957
+3,1135104
+4,1072231
+5,204392
+6,255087
+7,8

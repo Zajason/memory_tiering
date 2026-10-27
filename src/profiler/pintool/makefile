@@ -16,4 +16,4 @@ TOOL_ROOTS := hotskew
 include $(TOOLS_ROOT)/Config/makefile.default.rules
 
 # Our headers live next to the .cpp.
-$(OBJDIR)hotskew$(OBJ_SUFFIX): hotskew.cpp cache_model.hpp counter_table.hpp
+$(OBJDIR)hotskew$(OBJ_SUFFIX): hotskew.cpp cache_model.hpp cache_hierarchy.hpp paired_observer.hpp counter_table.hpp tracker.hpp

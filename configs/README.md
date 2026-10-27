@@ -18,7 +18,7 @@ of L3 ways:
 This matters more than it looks. CAT partitions the L3 **by way**, not by set, so the
 set count stays at 65536 in every case and only the associativity changes. Our cache
 model is way-associative, so setting `L3_ASSOC` to the number of granted ways
-reproduces M5's partitioning exactly rather than approximately.
+matches idealized capacity and associativity, not the physical LLC's complete behavior.
 
 It also explains a result that is otherwise surprising: Redis, the benchmark with the
 most extreme sparsity in M5's Figure 4 (86% of pages with ≤25% of words touched), was

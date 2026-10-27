@@ -14,6 +14,7 @@ If a figure or summary is missing the section is dropped rather than faked, so
 a half-finished campaign produces a smaller page, never a wrong one.
 """
 
+import csv
 import os
 import subprocess
 import sys
@@ -52,6 +53,64 @@ NICE = {
 
 def p(rel):
     return os.path.join(REPO, rel)
+
+
+def uniform_followup():
+    path = p('results/uniform-traffic10/scores.csv')
+    if not os.path.exists(path) or not os.path.exists(p('docs/assets/fig4_uniform_full.png')):
+        return ''
+    with open(path) as source:
+        scores = {(r['workload'], r['stream']): float(r['max_abs_error'])
+                  for r in csv.DictReader(source) if r['scope'] == 'pooled'}
+    rows = []
+    for name in ('bfs', 'cc', 'sssp', 'bc', 'pr', 'tc'):
+        values = [scores[name, stream] for stream in ('accesses', 'fills', 'traffic')]
+        graph = 'Google+ snapshot 1' if name in ('bc', 'sssp') else 'Synthetic kron-23'
+        rows.append(f'<tr><td>{NICE[name]}</td><td>{graph}</td>' +
+                    ''.join(f'<td>{value:.3f}</td>' for value in values) + '</tr>')
+    return '''<section><h2>Latest comparison: one window definition for all six workloads</h2>
+<p>Each window spans 10M modeled memory events (demand fills plus dirty writebacks).
+The access and miss counters observe the same execution interval. The final partial
+window is included; one thread and one trial are used throughout.</p>
+<figure><img src="assets/fig4_uniform_full.png" alt="M5 digitized reference, our accesses and our demand misses for six workloads">
+<figcaption>The bottom row excludes writebacks. Dataset reductions and the paper's
+collection protocol are still unmatched; visual agreement alone is not replication.</figcaption></figure>
+<p>Maximum absolute CDF error across all five published thresholds. Lower is closer;
+these are coverage errors, not miss rates or speedups.</p>
+<div class="tbl"><table><thead><tr><th>Workload</th><th>Input</th><th>Accesses</th>
+<th>Demand misses</th><th>Including writebacks</th></tr></thead><tbody>''' + ''.join(rows) + '''</tbody></table></div>
+<p><a href="assets/fig4_uniform_kron.png">All-synthetic input control</a> &middot;
+<a href="uniform-windows.md">Protocol and full results</a> &middot;
+<a href="m5-author-request.md">Missing details: author-request draft (not sent)</a></p>
+</section>'''
+
+
+def reproduction_followup():
+    path = p('results/matched-family/scores.csv')
+    if not os.path.exists(path) or not os.path.exists(p('docs/assets/reproduction_controls.png')):
+        return ''
+    with open(path) as source:
+        scores = {(r['graph'], r['clock'], r['workload']): float(r['max_abs_error'])
+                  for r in csv.DictReader(source)
+                  if r['scope'] == 'pooled' and r['stream'] == 'traffic'}
+    rows = []
+    for graph, label in (('kron', 'Synthetic kron-23'), ('gplus', 'Google+ snapshot 1')):
+        for clock, window in (('refs10', '10M raw references'), ('traffic10', '10M memory events')):
+            bc, sssp = (scores[graph, clock, name] for name in ('bc', 'sssp'))
+            rows.append(f'<tr><td>{label}</td><td>{window}</td><td>{bc:.3f}</td><td>{sssp:.3f}</td></tr>')
+    return '''<section><h2>Dataset and window controls</h2>
+<p>The artifact names a Google+ social graph, not the web-Google graph previously
+tested. We measured a published Google+ snapshot and retained both predeclared
+window definitions. This is a scaled input-family comparison, not M5's exact reduction.</p>
+<p>Maximum absolute CDF error over all five Figure 4 thresholds; lower is closer.
+Traffic includes modeled demand fills and dirty writebacks.</p>
+<div class="tbl"><table><thead><tr><th>Graph</th><th>Window</th><th>BC error</th>
+<th>SSSP error</th></tr></thead><tbody>''' + ''.join(rows) + '''</tbody></table></div>
+<figure><img src="assets/reproduction_controls.png" alt="All dataset and window controls, including whole-kernel coverage">
+<figcaption>One thread, one trial, cold cache model. Dataset size and topology both
+change; the paper's collection protocol is still unconfirmed.</figcaption></figure>
+<p><a href="reproduction-followup.md">Methods, provenance, findings and reproduction commands</a></p>
+</section>'''
 
 
 def maxerr(cdf, key):
@@ -132,8 +191,8 @@ def sim_campaign():
             continue
 
         def words(path):
-            v = H.load_summary(path).get("mean_unique_words")
-            return float(str(v).split()[0]) if v else None
+            hist = H.load_summary(path)['_unique_hist']
+            return float(sum(i*n for i,n in enumerate(hist))/hist.sum()) if hist.sum() else None
 
         row = {"k": k, "nice": NICE[k],
                "pin": maxerr(H.figure4_from_summary(pin_p), m5k),
@@ -363,7 +422,7 @@ def main():
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Reproducing M5 (ASPLOS 25) Figure 4 with a
 purpose-built Intel Pin tool, then showing the residual disagreement is dominated
-by the measurement window the paper never specifies.">
+under explicit local assumptions; see the October audit for corrections.">
 <style>
 :root {{ --bg:#fbfbfa; --fg:#1a1a1a; --mut:#666; --line:#e2e2df; --card:#fff;
         --ok:#1a7f4b; --mid:#b06f00; --bad:#b3261e; --acc:#2563a8; }}
@@ -440,14 +499,32 @@ footer {{ margin-top:60px; padding-top:22px; border-top:1px solid var(--line);
 <header>
   <h1>Cache-line hot skewness for CXL memory tiering</h1>
   <p class="sub">Reproducing M5 (ASPLOS&nbsp;’25) Figure&nbsp;4 with a purpose-built Intel&nbsp;Pin tool —
-  then finding that the headline disagreements are dominated by a parameter the paper never states.</p>
+  with local workload approximations, audited instrumentation and matched access/miss measurements.</p>
   <p class="meta">Advanced Computer Architecture · NTUA / CSLab ·
   {commits} commits · <code>{sha}</code> · built {date.today().isoformat()}</p>
 </header>
+{uniform_followup()}
+<section>
+<h2>Raw-reference-window control: accesses versus misses</h2>
+<p>Confirmed cache-path bugs were corrected. The new measurements use the same
+execution and 10M demand-reference windows for accesses, modeled demand misses,
+and misses plus writebacks. Whole-kernel coverage is shown separately.</p>
+<p><a href="audit-2026-10.md">Audit findings and limitations</a> &middot;
+<a href="methodology.md">Current methodology</a></p>
+{fig("assets/fig4_accesses_and_misses.png", "Figure 4-style bars: M5 reference, accesses, modeled misses, and total traffic.") if os.path.exists(p("docs/assets/fig4_accesses_and_misses.png")) else ""}
+{fig("assets/access_vs_misses_pooled.png", "Paired streams; same windows, each stream's touched-page population.") if os.path.exists(p("docs/assets/access_vs_misses_pooled.png")) else ""}
+{fig("assets/access_vs_misses_common.png", "Accesses and misses on the same miss-touched pages.") if os.path.exists(p("docs/assets/access_vs_misses_common.png")) else ""}
+{fig("assets/access_vs_misses_whole.png", "Whole timed-kernel coverage; inputs and thread counts still differ from M5.") if os.path.exists(p("docs/assets/access_vs_misses_whole.png")) else ""}
+<p><strong>The older results below are historical.</strong> Their cache model
+predates the fixes. The window-fit causal explanation, HWT-gating explanation and
+speedup claim are withdrawn. They must not be presented as validated replication.</p>
+</section>
+
+{reproduction_followup()}
 
 <div class="cards">
   <div class="card"><div class="big">{n_repro} / {len(rows)}</div>
-    <div class="lab">workloads reproduced (max error ≤ 0.05); {n_close} more within 0.10</div></div>
+    <div class="lab">historical curves within 0.05; {n_close} more within 0.10</div></div>
   <div class="card"><div class="big">5 vs 24.8M</div>
     <div class="lab">DRAM accesses Pin sees for 512 MiB moved by <code>read(2)</code> vs <code>memcpy</code></div></div>
   <div class="card"><div class="big">63.98 / 64</div>
@@ -478,7 +555,7 @@ nearly saturated and is the cheapest place to agree.</p>
 <p class="note"><strong>Two different targets, and they disagree about Memcached.</strong>
 The column above is the max gap against M5&rsquo;s bar chart, read off the figure at
 &plusmn;0.02. But the paper also states some values in <em>prose</em>, and those are
-exact. Memcached is the sharpest case: our <code>P(&le;16) = 0.766</code> against the
+rounded. Memcached is the sharpest case: our <code>P(&le;16) = 0.766</code> against the
 paper&rsquo;s written <strong>0.760</strong> &mdash; an error of <strong>0.006</strong>
 &mdash; while its max error across the whole digitised curve is 0.118. The single point
 the paper commits to in words lands almost exactly; the curve shape does not. Both are
@@ -487,12 +564,13 @@ reported because quoting only the flattering one would be dishonest.</p>
 <h2><span class="n">4</span>The kernel blind spot</h2>
 <p class="lede">Pin instruments user-space instructions. When the kernel moves data on
 the program's behalf, Pin sees nothing — and for these benchmarks that is most of the
-traffic.</p>
+traffic that Pin cannot directly observe.</p>
 <blockquote><p>512 MiB via <code>read(2)</code>: <strong>5</strong> DRAM accesses observed.<br>
 The same 512 MiB via <code>memcpy</code>: <strong>24,838,154</strong>.</p></blockquote>
 <p>Routing the graph load through user space moves BFS's P(≤48) from
 <strong>0.813 → 0.320</strong>, against M5's published <strong>0.345</strong>.
-That single effect accounts for 26.7 of the 28.6 words/page difference.</p>
+The comparison also changed the measured scope and added a copy, so it cannot
+attribute that change solely to kernel traffic.</p>
 
 <h2><span class="n">5</span>Full-system simulation</h2>
 <p class="lede">The natural test: run the same counters where the blind spot cannot
@@ -503,8 +581,8 @@ physical addresses, kernel traffic included, counting code unchanged.</p>
 <thead><tr><th>Workload</th><th style="text-align:right">Pin vs M5</th>
 <th style="text-align:right">gem5 vs M5</th><th style="text-align:right">Δ</th></tr></thead>
 <tbody>{simtab}</tbody></table></div>
-<p>Both moved <em>toward</em> M5 — the hypothesis is real. Neither reached agreement —
-it is not sufficient.</p>
+<p>These workloads moved toward M5, but cache behavior, addresses and scope also
+changed. This does not isolate kernel visibility or validate its causal contribution.</p>
 
 <h2><span class="n">6</span>The full sweep, and what it cost us</h2>
 <p class="lede">Extending the simulator to every GAPBS kernel produced the result that
@@ -518,20 +596,10 @@ is one systematic shift, not an accuracy gain.</p>
 <th style="text-align:right">Pin words</th><th style="text-align:right">gem5 ROI words</th>
 <th style="text-align:right">&Delta;</th></tr></thead>
 <tbody>{camp_rows}</tbody></table></div>
-<p class="note">First three columns are max error against M5. The plain gem5 column
-measures over a <em>wider</em> window than Pin (it includes the data load), so it changes
-two things at once. The <strong>ROI-gated</strong> column holds the window at exactly
-Pin&rsquo;s region, leaving kernel visibility as the only difference &mdash; that
-&Delta; is the clean measurement. <code>tc</code> and <code>pr</code> are 15&nbsp;h and
-13.5&nbsp;h runs killed by reboots, shown as &ndash; rather than reported from partial data.</p>
-
-<blockquote><p><strong>What the &Delta; column says.</strong> Kernel traffic inside the
-measured region is real and workload-dependent: <strong>+0.90</strong> words/page for BFS,
-which walks memory already resident, up to <strong>+12.35</strong> for betweenness, which
-allocates fresh arrays throughout its kernel. It is <em>not</em> a uniform correction. We
-deliberately do not convert these into percentages of the disagreement with M5 &mdash;
-that decomposition was attempted and withdrawn, because max-error is not monotonic in page
-density and SSSP disproves it.</p></blockquote>
+<p class="note">Historical simulator runs differ from Pin in cache behavior,
+physical indexing, kernel traffic and scope. The Pin column uses setup-inclusive
+userspace-load runs. ROI gating does not make these a controlled comparison of
+kernel visibility. Old mean-word summaries also used different window weighting.</p>
 
 {cxl_block}
 
@@ -570,35 +638,22 @@ further than the instrument does, and the paper never states which window it use
 
 <h2><span class="n">8</span>Beyond reproduction</h2>
 <p class="lede">M5 proposes bounded hardware trackers. Scored against exact counts,
-the accuracy-vs-area curve is almost flat — which is the useful finding, because it
-says the cheap tracker is the right one.</p>
+the historical accuracy curve is nearly flat for some runs. These software
+experiments do not establish hardware area, timing, or the best device design.</p>
 <div class="widget">
   <div class="ctl"><label>workload <select id="t-bench"></select></label></div>
   <div id="t-chart"></div>
   <div class="readout" id="t-read"></div>
 </div>
 
-<p class="lede">Tiering only pays if migration is cheap. Drag the migration cost and
-watch the break-even move — this is the same arithmetic as
-<code>latency_model.py</code>, over the measured access counts.</p>
-<div class="widget">
-  <div class="ctl">
-    <label>migration cost
-      <input type="range" id="l-cost" min="0" max="400" step="5" value="10"></label>
-  </div>
-  <div id="l-chart"></div>
-  <div class="readout" id="l-out"></div>
-  <p class="note">Memory <em>stall time</em> with no memory-level parallelism
-  modelled — an upper bound, not an application speedup. The curve is a linear
-  extrapolation from the measured migration counts, and it is <em>not</em>
-  currently cross-checked against the full model: <code>latency_model.py</code>
-  needs the per-page dumps, which were pruned from the tree. At 30&nbsp;µs it
-  gives 0.956× where <a href="claims.md">claims.md</a> records 0.835×. Treat the
-  break-even <em>region</em> as the result, not the exact crossing point.</p>
-</div>
+<p class="note"><strong>Latency result withdrawn.</strong> The historical placement
+model used next-window page membership during selection. Selection now uses only
+previous-window observations, with fixed capacity. No corrected application
+speedup has been measured; the old interactive extrapolation is disabled.</p>
 
 <p class="lede">Page size against word size, as a surface. Coarser tracking granularity
-wastes the most bandwidth exactly where pages are sparsest.</p>
+changes the fraction of address blocks counted as touched. This is an offline
+aggregation result, not measured migration bandwidth or actual huge-page behavior.</p>
 <div class="widget">
   <div class="ctl">
     <label>workload <select id="g-bench"></select></label>
@@ -619,7 +674,7 @@ wastes the most bandwidth exactly where pages are sparsest.</p>
 <li>Real <code>web-Google</code> is usable — <strong>no</strong>, 125× below M5's footprint</li>
 <li>One window fits all workloads — <strong>no</strong>, the best window varies 1×–8×</li>
 <li>A fixed <em>time</em> window explains the spread — <strong>no</strong> (Spearman 0.086)</li>
-<li>HWT compensates for a weak HPT — <strong>no</strong>, it is gated on HPT membership</li>
+<li>The claim that HWT inherits HPT membership mistakes is withdrawn: the old check did not filter the stream.</li>
 </ul>
 
 <h2><span class="n">10</span>Reproducing this</h2>

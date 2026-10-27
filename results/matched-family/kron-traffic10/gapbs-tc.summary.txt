@@ -1,0 +1,117 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-tc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             249
+epoch_len_dram_acc 10000000
+instructions       565416275504
+mem_refs_profiled  117137679884
+dram_accesses      2480414433
+llc_miss_ratio     0.021175  (DRAM accesses per memory ref)
+page_observations  29893305   (page x epoch pairs with >=1 access)
+mean_unique_words  26.494 / 64
+top4_word_share    0.1584   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.0507
+  8         12.5%   0.1238
+ 16           25%   0.2696
+ 32           50%   0.6354
+ 48           75%   0.9357
+
+# P(page has at least 48 of 64 words accessed) = 0.0687
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,236216
+2,317986
+3,411199
+4,551178
+5,332403
+6,380250
+7,481205
+8,990560
+9,734942
+10,453062
+11,462800
+12,477069
+13,456319
+14,469164
+15,525869
+16,779220
+17,968988
+18,1099831
+19,1096994
+20,980666
+21,706062
+22,588389
+23,567382
+24,636568
+25,640213
+26,578699
+27,497550
+28,462782
+29,457863
+30,481725
+31,547824
+32,622289
+33,669434
+34,684798
+35,780983
+36,857463
+37,849774
+38,794226
+39,757762
+40,694002
+41,586216
+42,500056
+43,465071
+44,429463
+45,354533
+46,245236
+47,177216
+48,131381
+49,103656
+50,81655
+51,70273
+52,71570
+53,64177
+54,71709
+55,64672
+56,68978
+57,68180
+58,58336
+59,57173
+60,53401
+61,46785
+62,44600
+63,34130
+64,963129
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,101247
+1,433690
+2,1053393
+3,2509717
+4,5462024
+5,7624986
+6,6750181
+7,4120698
+8,1693876
+9,134642
+10,7868
+11,964
+12,19

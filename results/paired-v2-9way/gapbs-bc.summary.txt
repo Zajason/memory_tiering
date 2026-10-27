@@ -1,0 +1,112 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     10000000
+benchmark          gapbs-bc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                36864 KB, 9-way (shared)
+count_writebacks   yes
+epochs             198
+epoch_len_dram_acc 0
+instructions       7552780927
+mem_refs_profiled  1978120878
+dram_accesses      177155370
+llc_miss_ratio     0.089557  (DRAM accesses per memory ref)
+page_observations  10064023   (page x epoch pairs with >=1 access)
+mean_unique_words  14.786 / 64
+top4_word_share    0.2863   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.3163
+  8         12.5%   0.4026
+ 16           25%   0.6074
+ 32           50%   0.9131
+ 48           75%   0.9661
+
+# P(page has at least 48 of 64 words accessed) = 0.0352
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,1123105
+2,929382
+3,582811
+4,548180
+5,307491
+6,215666
+7,176619
+8,168669
+9,178789
+10,221449
+11,227390
+12,222496
+13,252342
+14,292594
+15,323837
+16,342539
+17,345092
+18,333954
+19,312753
+20,287784
+21,260892
+22,235217
+23,211979
+24,190840
+25,172961
+26,153696
+27,134816
+28,115502
+29,98996
+30,86517
+31,74242
+32,61010
+33,50061
+34,44283
+35,42038
+36,41605
+37,41680
+38,41847
+39,41063
+40,39574
+41,36765
+42,33327
+43,29135
+44,25144
+45,21246
+46,17696
+47,14965
+48,12848
+49,11147
+50,10292
+51,9753
+52,9663
+53,10345
+54,11699
+55,13577
+56,16113
+57,17925
+58,18573
+59,17660
+60,14960
+61,11169
+62,7461
+63,6033
+64,154766
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,1070683
+1,1489454
+2,1253142
+3,1327265
+4,3636005
+5,1013741
+6,198278
+7,75455

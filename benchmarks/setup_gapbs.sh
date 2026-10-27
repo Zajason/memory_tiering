@@ -2,8 +2,8 @@
 # setup_gapbs.sh -- fetch, patch and build GAPBS, then generate the input graphs.
 #
 # GAPBS is six of the twelve benchmarks behind M5's Figures 4 and 10 (bc, bfs, cc,
-# pr, sssp, tc). M5 took its copy from Memtis' bench_dir; we use upstream, which is
-# the same code.
+# pr, sssp, tc). We use upstream GAPBS with ROI markers; equivalence to the exact
+# M5 build is not established. M5 also cites GraphBrew.
 #
 #   ./setup_gapbs.sh [scales...]     (default: 23 25)
 #
@@ -28,7 +28,7 @@ fi
 echo ">> installing ROI markers"
 cp "$REPO/src/profiler/roi/hotskew_roi.h" "$GAPBS_DIR/src/"
 if ! grep -q hotskew_roi "$GAPBS_DIR/src/benchmark.h"; then
-  git -C "$GAPBS_DIR" apply "$REPO/workloadsmarks/patches/gapbs-roi.patch"
+  git -C "$GAPBS_DIR" apply "$REPO/benchmarks/patches/gapbs-roi.patch"
   echo "   patch applied"
 else
   echo "   already patched"
@@ -51,9 +51,9 @@ echo "   all six kernels built with ROI markers"
 #
 # Stock GAPBS loads its CSR with file.read(), so the kernel performs the copy and
 # Pin sees none of it -- while M5's counters at the memory controller see all of it,
-# as ~269,000 pages with every one of their 64 words written. That single difference
-# accounts for most of the gap between a naive Pin reproduction and the paper's
-# Figure 4. See docs/methodology.md §3b.
+# as memory traffic. This variant adds a userspace copy and changes scope; its
+# historical agreement does not isolate kernel traffic or validate replication.
+# See docs/audit-2026-10.md.
 #
 # Both builds are kept so the two measurements can be compared rather than confused.
 # Select with GAPBS_VARIANT=stock (default) or GAPBS_VARIANT=userspace-load.
@@ -63,7 +63,7 @@ echo ">> building the userspace-load variant"
 rm -rf "$GAPBS_UL_DIR"
 cp -r "$BENCH_ROOT/gapbs" "$GAPBS_UL_DIR"
 rm -rf "$GAPBS_UL_DIR/graphs"   # graphs are shared, not duplicated
-( cd "$GAPBS_UL_DIR" && git apply "$REPO/workloadsmarks/patches/gapbs-userspace-load.patch" ) \
+( cd "$GAPBS_UL_DIR" && git apply "$REPO/benchmarks/patches/gapbs-userspace-load.patch" ) \
   || die "gapbs-userspace-load.patch did not apply"
 grep -q ReadUserspace "$GAPBS_UL_DIR/src/reader.h" || die "patch applied but ReadUserspace is missing"
 make -C "$GAPBS_UL_DIR" -j"$(nproc)" >/dev/null
@@ -75,7 +75,7 @@ echo "   built in $GAPBS_UL_DIR"
 mkdir -p "$GRAPH_DIR"
 for s in "${SCALES[@]}"; do
   # Kronecker graphs, GAPBS' own generator: 2^s vertices, average degree 16.
-  # This is the standard GAP input and matches what Memtis/M5 used.
+  # This is a synthetic local control, NOT M5's Twitter/Google+ input.
   if [[ ! -f "$GRAPH_DIR/kron-$s.sg" ]]; then
     echo ">> generating kron-$s.sg (unweighted; bc bfs cc pr tc)"
     "$GAPBS_DIR/converter" -g "$s" -b "$GRAPH_DIR/kron-$s.sg"

@@ -1,3 +1,9 @@
+> **October 2026 audit:** Historical results below predate confirmed cache-path
+> corrections. The window-fit causal explanation, HWT-gating explanation and
+> 1.505x speedup claim are withdrawn. See [the audit](audit-2026-10.md) and
+> [current methodology](methodology.md) for the corrected interpretation and paired
+> access/miss measurements. Historical numerical agreement is not proof of replication.
+
 # Reproducing and Evaluating Sub-Page Access Skew in CXL Tiered Memory Without CXL Hardware
 
 **Advanced Computer Architecture — NTUA / CSLab**
@@ -158,17 +164,16 @@ the DRAM stream. Geometry defaults to the Sapphire Rapids parameters of M5's tes
 Modelling CAT is unusually clean here. **CAT partitions the L3 by way, not by set**, so
 the set count is invariant and only associativity changes. Because our model is
 way-associative, setting associativity to the number of granted ways reproduces the
-partition *exactly* rather than approximately.
+partition's modeled capacity; it does not reproduce physical indexing or replacement.
 
 Deliberate simplifications: non-inclusive levels (matching Sapphire Rapids), no
 coherence between per-thread private caches, and no hardware prefetchers. The last
-biases *against* our own conclusion — prefetching would fetch neighbouring lines and
-make pages appear denser — which is the conservative direction.
+has no proven direction of bias: prefetching changes demand misses and replacement
+as well as adding traffic.
 
 ### 3.2 Virtual versus physical addresses
 
-Pin observes virtual addresses; PAC and WAC index physical ones. **For the Figure 4
-metric this is exact, not approximate.** The metric is the population count of which of
+Pin observes virtual addresses; PAC and WAC index physical ones. **Only within-page offsets are translation-invariant.** The metric is the population count of which of
 a page's 64 words were touched; the word index is `addr[11:6]`, and under 4 KB paging
 
 $$\mathrm{VA}[11{:}0] \equiv \mathrm{PA}[11{:}0]$$
@@ -771,8 +776,8 @@ pages are equally hot and the ranking is arbitrary. Staleness handles this corre
 
 1. **No memory-level parallelism.** The latency model charges every access its full
    latency. Real cores overlap misses, so a 2.2× latency ratio does not produce 2.2×
-   stall time. This is the largest single source of optimism in §6.4; the speedups are
-   upper bounds.
+   stall time. The old §6.4 estimates are withdrawn after finding future information
+   in selection. The model's ratios are not proven performance upper bounds.
 2. **Open-loop traces.** Traces were recorded without migration. Migration alters a
    page's latency, not its address, so the stream remains valid and placement quality is
    meaningful — but these are not runtime measurements, and the assumption fails for

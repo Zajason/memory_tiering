@@ -1,0 +1,1 @@
+m5 exit;mkdir -p /data;mount /dev/hdb /data;/data/run_cc.sh;m5 exit;

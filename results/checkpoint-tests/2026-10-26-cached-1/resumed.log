@@ -1,0 +1,49 @@
+Global frequency set at 1000000000000 ticks per second
+warn: No dot file generated. Please install pydot to generate the dot file and pdf.
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (16384 Mbytes) does not match the address range assigned (512 Mbytes)
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 23.1.0.0
+gem5 compiled Oct 25 2026 00:19:52
+gem5 started Oct 26 2026 19:16:43
+gem5 executing on zajason-MS-7D25, pid 40000
+command line: /home/zajason/dev/advarch/simcxl/build/X86/gem5.opt -d /home/zajason/dev/advarch/memory_tiering/results/checkpoint-tests/2026-10-26-cached-1/resumed /home/zajason/dev/advarch/memory_tiering/src/sim/simcxl/cxl_hotskew_test.py --duration-ticks 50000000000 --epoch-events 100000 --with-cache --read-percent 50
+
+info: Standard input is not a terminal, disabling listeners.
+src/sim/simulate.cc:199: info: Entering event queue @ 0.  Starting simulation...
+src/mem/mem_ctrl.cc:439: panic: panic condition !(pkt->isRead() || pkt->isWrite()) occurred: Should only see read and writes at memory controller
+Memory Usage: 790004 KBytes
+Program aborted at tick 68000
+--- BEGIN LIBC BACKTRACE ---
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(_ZN4gem515print_backtraceEv+0x2b) [0x60ff8bfe220b]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(_ZN4gem512abortHandlerEi+0x4c) [0x60ff8c00d47c]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x45cb0) [0x7699a8e45cb0]
+/usr/lib/x86_64-linux-gnu/libc.so.6(pthread_kill+0x11c) [0x7699a8ea61ac]
+/usr/lib/x86_64-linux-gnu/libc.so.6(gsignal+0x1e) [0x7699a8e45b7e]
+/usr/lib/x86_64-linux-gnu/libc.so.6(abort+0x27) [0x7699a8e288ec]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(+0xb08795) [0x60ff8b7f1795]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(_ZN4gem56memory7MemCtrl13recvTimingReqEPNS_6PacketE+0x1bdf) [0x60ff8b90dbaf]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(_ZN4gem59CXLBridge17BridgeRequestPort13trySendTimingEv+0x8a) [0x60ff8b8cceca]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(_ZN4gem510EventQueue10serviceOneEv+0xb5) [0x60ff8bffa135]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(_ZN4gem59doSimLoopEPNS_10EventQueueE+0x68) [0x60ff8c02c7d8]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(_ZN4gem58simulateEm+0x27b) [0x60ff8c02cecb]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(+0x153f910) [0x60ff8c228910]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(+0xaf3ea5) [0x60ff8b7dcea5]
+/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0(+0x18d105) [0x7699a9d8d105]
+/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0(PyObject_Call+0xab) [0x7699a9d271bb]
+/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0(_PyEval_EvalFrameDefault+0x681f) [0x7699a9e8725f]
+/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0(+0x2941a5) [0x7699a9e941a5]
+/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0(PyEval_EvalCode+0xd6) [0x7699a9e791c6]
+/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0(+0x27a819) [0x7699a9e7a819]
+/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0(PyObject_Vectorcall+0x5e) [0x7699a9d24cde]
+/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0(_PyEval_EvalFrameDefault+0x4fa0) [0x7699a9e859e0]
+/usr/lib/x86_64-linux-gnu/libpython3.14.so.1.0(+0x2940f7) [0x7699a9e940f7]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(+0x1325d90) [0x60ff8c00ed90]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(main+0x216) [0x60ff8b793d86]
+/usr/lib/x86_64-linux-gnu/libc.so.6(+0x2a601) [0x7699a8e2a601]
+/usr/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0x88) [0x7699a8e2a718]
+/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt(_start+0x25) [0x60ff8b7cbe35]
+--- END LIBC BACKTRACE ---
+For more info on how to address this issue, please visit https://www.gem5.org/documentation/general_docs/common-errors/ 
+

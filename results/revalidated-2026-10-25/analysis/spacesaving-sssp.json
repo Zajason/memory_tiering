@@ -1,0 +1,1115 @@
+{
+  "prefix": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/pin/spacesaving/gapbs-sssp",
+  "status": "validated",
+  "epochs": 2,
+  "page_observations": 202574,
+  "events": 18291741,
+  "saturated_words": false,
+  "tracker_word_scores_valid": true,
+  "tracker": [
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "50",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.112136",
+      "hpt_recall": "0.000000",
+      "hwt_access_ratio": "0.082324",
+      "hwt_recall": "0.000000",
+      "exact_pages": "113393",
+      "exact_words": "5814085"
+    },
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "128",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.281697",
+      "hpt_recall": "0.007812",
+      "hwt_access_ratio": "0.204197",
+      "hwt_recall": "0.000000",
+      "exact_pages": "113393",
+      "exact_words": "5814085"
+    },
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "512",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.100250",
+      "hpt_recall": "0.000000",
+      "hwt_access_ratio": "0.204197",
+      "hwt_recall": "0.000000",
+      "exact_pages": "113393",
+      "exact_words": "5814085"
+    },
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "2048",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.286909",
+      "hpt_recall": "0.000000",
+      "hwt_access_ratio": "0.199758",
+      "hwt_recall": "0.000000",
+      "exact_pages": "113393",
+      "exact_words": "5814085"
+    },
+    {
+      "epoch": "0",
+      "k": "128",
+      "n": "8192",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.275864",
+      "hpt_recall": "0.000000",
+      "hwt_access_ratio": "0.197740",
+      "hwt_recall": "0.000000",
+      "exact_pages": "113393",
+      "exact_words": "5814085"
+    },
+    {
+      "epoch": "1",
+      "k": "128",
+      "n": "50",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.105749",
+      "hpt_recall": "0.015625",
+      "hwt_access_ratio": "0.099629",
+      "hwt_recall": "0.007812",
+      "exact_pages": "89181",
+      "exact_words": "3320221"
+    },
+    {
+      "epoch": "1",
+      "k": "128",
+      "n": "128",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.229890",
+      "hpt_recall": "0.015625",
+      "hwt_access_ratio": "0.242075",
+      "hwt_recall": "0.007812",
+      "exact_pages": "89181",
+      "exact_words": "3320221"
+    },
+    {
+      "epoch": "1",
+      "k": "128",
+      "n": "512",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.219913",
+      "hpt_recall": "0.015625",
+      "hwt_access_ratio": "0.171676",
+      "hwt_recall": "0.000000",
+      "exact_pages": "89181",
+      "exact_words": "3320221"
+    },
+    {
+      "epoch": "1",
+      "k": "128",
+      "n": "2048",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.471476",
+      "hpt_recall": "0.085938",
+      "hwt_access_ratio": "0.117744",
+      "hwt_recall": "0.000000",
+      "exact_pages": "89181",
+      "exact_words": "3320221"
+    },
+    {
+      "epoch": "1",
+      "k": "128",
+      "n": "8192",
+      "algo": "spacesaving",
+      "hpt_access_ratio": "0.473183",
+      "hpt_recall": "0.078125",
+      "hwt_access_ratio": "0.118156",
+      "hwt_recall": "0.007812",
+      "exact_pages": "89181",
+      "exact_words": "3320221"
+    }
+  ],
+  "granularity": [
+    {
+      "page_bytes": 4096,
+      "word_bytes": 64,
+      "observations": 202574,
+      "mean_fraction": 0.7045500965079428,
+      "p_le_25pct": 0.13679445535952295
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 128,
+      "observations": 202574,
+      "mean_fraction": 0.7587534370156092,
+      "p_le_25pct": 0.10626240287499876
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 256,
+      "observations": 202574,
+      "mean_fraction": 0.8228712100269531,
+      "p_le_25pct": 0.07672258039037586
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 512,
+      "observations": 202574,
+      "mean_fraction": 0.8851586333882927,
+      "p_le_25pct": 0.05401976561651545
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 1024,
+      "observations": 202574,
+      "mean_fraction": 0.9342869766110162,
+      "p_le_25pct": 0.03750234482213907
+    },
+    {
+      "page_bytes": 4096,
+      "word_bytes": 2048,
+      "observations": 202574,
+      "mean_fraction": 0.9707613020427103,
+      "p_le_25pct": 0.0
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 64,
+      "observations": 103809,
+      "mean_fraction": 0.6874333210511613,
+      "p_le_25pct": 0.15062277837181748
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 128,
+      "observations": 103809,
+      "mean_fraction": 0.74031981210685,
+      "p_le_25pct": 0.11782215414848424
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 256,
+      "observations": 103809,
+      "mean_fraction": 0.8028798683158493,
+      "p_le_25pct": 0.08563804679748384
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 512,
+      "observations": 103809,
+      "mean_fraction": 0.863654042520398,
+      "p_le_25pct": 0.0617191187661956
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 1024,
+      "observations": 103809,
+      "mean_fraction": 0.9115888314115347,
+      "p_le_25pct": 0.04445664634087603
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 2048,
+      "observations": 103809,
+      "mean_fraction": 0.9471770270400447,
+      "p_le_25pct": 0.03157722355479775
+    },
+    {
+      "page_bytes": 8192,
+      "word_bytes": 4096,
+      "observations": 103809,
+      "mean_fraction": 0.975705381999634,
+      "p_le_25pct": 0.0
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 64,
+      "observations": 53080,
+      "mean_fraction": 0.672209548087792,
+      "p_le_25pct": 0.1665222305953278
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 128,
+      "observations": 53080,
+      "mean_fraction": 0.723924824557272,
+      "p_le_25pct": 0.13181989449886966
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 256,
+      "observations": 53080,
+      "mean_fraction": 0.785099437170309,
+      "p_le_25pct": 0.09613790504898266
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 512,
+      "observations": 53080,
+      "mean_fraction": 0.8445277175960814,
+      "p_le_25pct": 0.071646571213263
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 1024,
+      "observations": 53080,
+      "mean_fraction": 0.8914009513941221,
+      "p_le_25pct": 0.053183873398643555
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 2048,
+      "observations": 53080,
+      "mean_fraction": 0.9262010173323285,
+      "p_le_25pct": 0.039544084400904296
+    },
+    {
+      "page_bytes": 16384,
+      "word_bytes": 4096,
+      "observations": 53080,
+      "mean_fraction": 0.9540975885455916,
+      "p_le_25pct": 0.028315749811605125
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 64,
+      "observations": 13846,
+      "mean_fraction": 0.6442453201736964,
+      "p_le_25pct": 0.19752997255525062
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 128,
+      "observations": 13846,
+      "mean_fraction": 0.6938092172378304,
+      "p_le_25pct": 0.16481294236602628
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 256,
+      "observations": 13846,
+      "mean_fraction": 0.7524389376895855,
+      "p_le_25pct": 0.12335692618806876
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 512,
+      "observations": 13846,
+      "mean_fraction": 0.8093949741802686,
+      "p_le_25pct": 0.09302325581395349
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 1024,
+      "observations": 13846,
+      "mean_fraction": 0.8543182597862199,
+      "p_le_25pct": 0.07056189513216814
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 2048,
+      "observations": 13846,
+      "mean_fraction": 0.8876706268958544,
+      "p_le_25pct": 0.05604506716741297
+    },
+    {
+      "page_bytes": 65536,
+      "word_bytes": 4096,
+      "observations": 13846,
+      "mean_fraction": 0.9144066878520872,
+      "p_le_25pct": 0.04391159901776687
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 64,
+      "observations": 3565,
+      "mean_fraction": 0.6255414237815567,
+      "p_le_25pct": 0.21430575035063112
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 128,
+      "observations": 3565,
+      "mean_fraction": 0.6736663689954417,
+      "p_le_25pct": 0.17840112201963534
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 256,
+      "observations": 3565,
+      "mean_fraction": 0.730593936272791,
+      "p_le_25pct": 0.13800841514726506
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 512,
+      "observations": 3565,
+      "mean_fraction": 0.7858964104137447,
+      "p_le_25pct": 0.10575035063113604
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 1024,
+      "observations": 3565,
+      "mean_fraction": 0.829515471598878,
+      "p_le_25pct": 0.07769985974754558
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 2048,
+      "observations": 3565,
+      "mean_fraction": 0.8618995441795232,
+      "p_le_25pct": 0.05778401122019635
+    },
+    {
+      "page_bytes": 262144,
+      "word_bytes": 4096,
+      "observations": 3565,
+      "mean_fraction": 0.887859396914446,
+      "p_le_25pct": 0.04516129032258064
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 64,
+      "observations": 475,
+      "mean_fraction": 0.5868566252055921,
+      "p_le_25pct": 0.25263157894736843
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 128,
+      "observations": 475,
+      "mean_fraction": 0.6320054224917763,
+      "p_le_25pct": 0.22526315789473683
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 256,
+      "observations": 475,
+      "mean_fraction": 0.6854124691611843,
+      "p_le_25pct": 0.18736842105263157
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 512,
+      "observations": 475,
+      "mean_fraction": 0.737294921875,
+      "p_le_25pct": 0.16631578947368422
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 1024,
+      "observations": 475,
+      "mean_fraction": 0.7782164884868421,
+      "p_le_25pct": 0.12210526315789473
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 2048,
+      "observations": 475,
+      "mean_fraction": 0.8085978618421052,
+      "p_le_25pct": 0.10736842105263159
+    },
+    {
+      "page_bytes": 2097152,
+      "word_bytes": 4096,
+      "observations": 475,
+      "mean_fraction": 0.8329523026315789,
+      "p_le_25pct": 0.0968421052631579
+    }
+  ],
+  "turnover": [
+    {
+      "k": 128,
+      "transitions": 1,
+      "mean_retention": 0.0390625,
+      "traffic_weighted_coverage": 0.007455008544044007,
+      "traffic_weighted_oracle": 0.010806898092933679,
+      "lag_ratio": 0.6898379608963485
+    },
+    {
+      "k": 10000,
+      "transitions": 1,
+      "mean_retention": 0.3793,
+      "traffic_weighted_coverage": 0.29003510842897773,
+      "traffic_weighted_oracle": 0.4140253536621561,
+      "lag_ratio": 0.7005249940940714
+    },
+    {
+      "k": 128000,
+      "transitions": 1,
+      "mean_retention": 0.7697917860890884,
+      "traffic_weighted_coverage": 0.96464240742686,
+      "traffic_weighted_oracle": 1.0,
+      "lag_ratio": 0.96464240742686
+    }
+  ],
+  "placement_cost": [
+    {
+      "fast_fraction": 0.1,
+      "policy": "count-only",
+      "migration_ns": 0,
+      "capacity_pages": 11339,
+      "capture": 0.3099845979270216,
+      "mean_serial_cost_ns": 182.8018482487574,
+      "cost_ratio_vs_all_slow": 1.2034889258921673,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "count-only",
+      "migration_ns": 1000,
+      "capacity_pages": 11339,
+      "capture": 0.3099845979270216,
+      "mean_serial_cost_ns": 184.16935357725237,
+      "cost_ratio_vs_all_slow": 1.1945527077485125,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "count-only",
+      "migration_ns": 3000,
+      "capacity_pages": 11339,
+      "capture": 0.3099845979270216,
+      "mean_serial_cost_ns": 186.90436423424225,
+      "cost_ratio_vs_all_slow": 1.1770725681091099,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "count-only",
+      "migration_ns": 10000,
+      "capacity_pages": 11339,
+      "capture": 0.3099845979270216,
+      "mean_serial_cost_ns": 196.47690153370687,
+      "cost_ratio_vs_all_slow": 1.1197244983133938,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "count-only",
+      "migration_ns": 30000,
+      "capacity_pages": 11339,
+      "capture": 0.3099845979270216,
+      "mean_serial_cost_ns": 223.82700810360575,
+      "cost_ratio_vs_all_slow": 0.9829019378133568,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hpt-driven",
+      "migration_ns": 0,
+      "capacity_pages": 11339,
+      "capture": 0.19270512670378875,
+      "mean_serial_cost_ns": 196.87538479554536,
+      "cost_ratio_vs_all_slow": 1.1174581333693367,
+      "promotions": 4421,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hpt-driven",
+      "migration_ns": 1000,
+      "capacity_pages": 11339,
+      "capture": 0.19270512670378875,
+      "mean_serial_cost_ns": 197.40856594531837,
+      "cost_ratio_vs_all_slow": 1.11443998869299,
+      "promotions": 4421,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hpt-driven",
+      "migration_ns": 3000,
+      "capacity_pages": 11339,
+      "capture": 0.19270512670378875,
+      "mean_serial_cost_ns": 198.47492824486437,
+      "cost_ratio_vs_all_slow": 1.1084523468303236,
+      "promotions": 4421,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hpt-driven",
+      "migration_ns": 10000,
+      "capacity_pages": 11339,
+      "capture": 0.19270512670378875,
+      "mean_serial_cost_ns": 202.20719629327544,
+      "cost_ratio_vs_all_slow": 1.0879929301869078,
+      "promotions": 4421,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hpt-driven",
+      "migration_ns": 30000,
+      "capacity_pages": 11339,
+      "capture": 0.19270512670378875,
+      "mean_serial_cost_ns": 212.87081928873562,
+      "cost_ratio_vs_all_slow": 1.0334906434573095,
+      "promotions": 4421,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hwt-driven",
+      "migration_ns": 0,
+      "capacity_pages": 11339,
+      "capture": 0.19634887293271702,
+      "mean_serial_cost_ns": 196.43813524807396,
+      "cost_ratio_vs_all_slow": 1.119945471494986,
+      "promotions": 4595,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hwt-driven",
+      "migration_ns": 1000,
+      "capacity_pages": 11339,
+      "capture": 0.19634887293271702,
+      "mean_serial_cost_ns": 196.9923011343456,
+      "cost_ratio_vs_all_slow": 1.116794913979727,
+      "promotions": 4595,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hwt-driven",
+      "migration_ns": 3000,
+      "capacity_pages": 11339,
+      "capture": 0.19634887293271702,
+      "mean_serial_cost_ns": 198.1006329068889,
+      "cost_ratio_vs_all_slow": 1.1105466790881189,
+      "promotions": 4595,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hwt-driven",
+      "migration_ns": 10000,
+      "capacity_pages": 11339,
+      "capture": 0.19634887293271702,
+      "mean_serial_cost_ns": 201.9797941107905,
+      "cost_ratio_vs_all_slow": 1.0892178644331374,
+      "promotions": 4595,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "hwt-driven",
+      "migration_ns": 30000,
+      "capacity_pages": 11339,
+      "capture": 0.19634887293271702,
+      "mean_serial_cost_ns": 213.06311183622353,
+      "cost_ratio_vs_all_slow": 1.0325579031677181,
+      "promotions": 4595,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "oracle",
+      "migration_ns": 0,
+      "capacity_pages": 11339,
+      "capture": 0.45129219545087096,
+      "mean_serial_cost_ns": 165.84493654589548,
+      "cost_ratio_vs_all_slow": 1.326540348966987,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "oracle",
+      "migration_ns": 1000,
+      "capacity_pages": 11339,
+      "capture": 0.45129219545087096,
+      "mean_serial_cost_ns": 167.21244187439044,
+      "cost_ratio_vs_all_slow": 1.31569156896389,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "oracle",
+      "migration_ns": 3000,
+      "capacity_pages": 11339,
+      "capture": 0.45129219545087096,
+      "mean_serial_cost_ns": 169.94745253138032,
+      "cost_ratio_vs_all_slow": 1.2945177860749493,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "oracle",
+      "migration_ns": 10000,
+      "capacity_pages": 11339,
+      "capture": 0.45129219545087096,
+      "mean_serial_cost_ns": 179.51998983084493,
+      "cost_ratio_vs_all_slow": 1.2254902654979978,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.1,
+      "policy": "oracle",
+      "migration_ns": 30000,
+      "capacity_pages": 11339,
+      "capture": 0.45129219545087096,
+      "mean_serial_cost_ns": 206.87009640074382,
+      "cost_ratio_vs_all_slow": 1.063469316385976,
+      "promotions": 11339,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "count-only",
+      "migration_ns": 0,
+      "capacity_pages": 28348,
+      "capture": 0.47150375295128005,
+      "mean_serial_cost_ns": 163.4195496458464,
+      "cost_ratio_vs_all_slow": 1.3462281622778398,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "count-only",
+      "migration_ns": 1000,
+      "capacity_pages": 28348,
+      "capture": 0.47150375295128005,
+      "mean_serial_cost_ns": 166.8383732680507,
+      "cost_ratio_vs_all_slow": 1.3186414833147362,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "count-only",
+      "migration_ns": 3000,
+      "capacity_pages": 28348,
+      "capture": 0.47150375295128005,
+      "mean_serial_cost_ns": 173.67602051245933,
+      "cost_ratio_vs_all_slow": 1.2667263986752704,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "count-only",
+      "migration_ns": 10000,
+      "capacity_pages": 28348,
+      "capture": 0.47150375295128005,
+      "mean_serial_cost_ns": 197.6077858678895,
+      "cost_ratio_vs_all_slow": 1.1133164568074296,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "count-only",
+      "migration_ns": 30000,
+      "capacity_pages": 28348,
+      "capture": 0.47150375295128005,
+      "mean_serial_cost_ns": 265.98425831197574,
+      "cost_ratio_vs_all_slow": 0.8271166173374053,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hpt-driven",
+      "migration_ns": 0,
+      "capacity_pages": 28348,
+      "capture": 0.2540734207689314,
+      "mean_serial_cost_ns": 189.51118950772823,
+      "cost_ratio_vs_all_slow": 1.1608813208943973,
+      "promotions": 7234,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hpt-driven",
+      "migration_ns": 1000,
+      "capacity_pages": 28348,
+      "capture": 0.2540734207689314,
+      "mean_serial_cost_ns": 190.38362389756264,
+      "cost_ratio_vs_all_slow": 1.1555615735015774,
+      "promotions": 7234,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hpt-driven",
+      "migration_ns": 3000,
+      "capacity_pages": 28348,
+      "capture": 0.2540734207689314,
+      "mean_serial_cost_ns": 192.12849267723146,
+      "cost_ratio_vs_all_slow": 1.1450670170488018,
+      "promotions": 7234,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hpt-driven",
+      "migration_ns": 10000,
+      "capacity_pages": 28348,
+      "capture": 0.2540734207689314,
+      "mean_serial_cost_ns": 198.2355334060724,
+      "cost_ratio_vs_all_slow": 1.1097909452456465,
+      "promotions": 7234,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hpt-driven",
+      "migration_ns": 30000,
+      "capacity_pages": 28348,
+      "capture": 0.2540734207689314,
+      "mean_serial_cost_ns": 215.68422120276068,
+      "cost_ratio_vs_all_slow": 1.0200097103681134,
+      "promotions": 7234,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hwt-driven",
+      "migration_ns": 0,
+      "capacity_pages": 28348,
+      "capture": 0.25408282771977564,
+      "mean_serial_cost_ns": 189.51006067362692,
+      "cost_ratio_vs_all_slow": 1.1608882357907249,
+      "promotions": 7236,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hwt-driven",
+      "migration_ns": 1000,
+      "capacity_pages": 28348,
+      "capture": 0.25408282771977564,
+      "mean_serial_cost_ns": 190.38273626732914,
+      "cost_ratio_vs_all_slow": 1.1555669611297281,
+      "promotions": 7236,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hwt-driven",
+      "migration_ns": 3000,
+      "capacity_pages": 28348,
+      "capture": 0.25408282771977564,
+      "mean_serial_cost_ns": 192.12808745473356,
+      "cost_ratio_vs_all_slow": 1.145069432140333,
+      "promotions": 7236,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hwt-driven",
+      "migration_ns": 10000,
+      "capacity_pages": 28348,
+      "capture": 0.25408282771977564,
+      "mean_serial_cost_ns": 198.23681661064907,
+      "cost_ratio_vs_all_slow": 1.1097837614699761,
+      "promotions": 7236,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "hwt-driven",
+      "migration_ns": 30000,
+      "capacity_pages": 28348,
+      "capture": 0.25408282771977564,
+      "mean_serial_cost_ns": 215.6903284846934,
+      "cost_ratio_vs_all_slow": 1.0199808287445418,
+      "promotions": 7236,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "oracle",
+      "migration_ns": 0,
+      "capacity_pages": 28348,
+      "capture": 0.7439853705030102,
+      "mean_serial_cost_ns": 130.7217555396388,
+      "cost_ratio_vs_all_slow": 1.6829639342878115,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "oracle",
+      "migration_ns": 1000,
+      "capacity_pages": 28348,
+      "capture": 0.7439853705030102,
+      "mean_serial_cost_ns": 134.14057916184308,
+      "cost_ratio_vs_all_slow": 1.6400704497821343,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "oracle",
+      "migration_ns": 3000,
+      "capacity_pages": 28348,
+      "capture": 0.7439853705030102,
+      "mean_serial_cost_ns": 140.9782264062517,
+      "cost_ratio_vs_all_slow": 1.5605246682990193,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "oracle",
+      "migration_ns": 10000,
+      "capacity_pages": 28348,
+      "capture": 0.7439853705030102,
+      "mean_serial_cost_ns": 164.9099917616819,
+      "cost_ratio_vs_all_slow": 1.3340610696162722,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.25,
+      "policy": "oracle",
+      "migration_ns": 30000,
+      "capacity_pages": 28348,
+      "capture": 0.7439853705030102,
+      "mean_serial_cost_ns": 233.2864642057681,
+      "cost_ratio_vs_all_slow": 0.9430465704429001,
+      "promotions": 28348,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "count-only",
+      "migration_ns": 0,
+      "capacity_pages": 56696,
+      "capture": 0.5002735854870527,
+      "mean_serial_cost_ns": 159.96716974155368,
+      "cost_ratio_vs_all_slow": 1.375282192936442,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "count-only",
+      "migration_ns": 1000,
+      "capacity_pages": 56696,
+      "capture": 0.5002735854870527,
+      "mean_serial_cost_ns": 166.8048169859623,
+      "cost_ratio_vs_all_slow": 1.3189067556635035,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "count-only",
+      "migration_ns": 3000,
+      "capacity_pages": 56696,
+      "capture": 0.5002735854870527,
+      "mean_serial_cost_ns": 180.48011147477953,
+      "cost_ratio_vs_all_slow": 1.2189708782994795,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "count-only",
+      "migration_ns": 10000,
+      "capacity_pages": 56696,
+      "capture": 0.5002735854870527,
+      "mean_serial_cost_ns": 228.3436421856399,
+      "cost_ratio_vs_all_slow": 0.9634601510872957,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "count-only",
+      "migration_ns": 30000,
+      "capacity_pages": 56696,
+      "capture": 0.5002735854870527,
+      "mean_serial_cost_ns": 365.0965870738124,
+      "cost_ratio_vs_all_slow": 0.6025802699588702,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hpt-driven",
+      "migration_ns": 0,
+      "capacity_pages": 56696,
+      "capture": 0.38697180724771796,
+      "mean_serial_cost_ns": 173.56338313027385,
+      "cost_ratio_vs_all_slow": 1.2675484657663743,
+      "promotions": 12619,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hpt-driven",
+      "migration_ns": 1000,
+      "capacity_pages": 56696,
+      "capture": 0.38697180724771796,
+      "mean_serial_cost_ns": 175.08525893416112,
+      "cost_ratio_vs_all_slow": 1.2565306830469867,
+      "promotions": 12619,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hpt-driven",
+      "migration_ns": 3000,
+      "capacity_pages": 56696,
+      "capture": 0.38697180724771796,
+      "mean_serial_cost_ns": 178.12901054193566,
+      "cost_ratio_vs_all_slow": 1.2350599115252312,
+      "promotions": 12619,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hpt-driven",
+      "migration_ns": 10000,
+      "capacity_pages": 56696,
+      "capture": 0.38697180724771796,
+      "mean_serial_cost_ns": 188.7821411691465,
+      "cost_ratio_vs_all_slow": 1.1653644705877273,
+      "promotions": 12619,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hpt-driven",
+      "migration_ns": 30000,
+      "capacity_pages": 56696,
+      "capture": 0.38697180724771796,
+      "mean_serial_cost_ns": 219.2196572468918,
+      "cost_ratio_vs_all_slow": 1.0035596385967767,
+      "promotions": 12619,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hwt-driven",
+      "migration_ns": 0,
+      "capacity_pages": 56696,
+      "capture": 0.38851925066159204,
+      "mean_serial_cost_ns": 173.37768992060896,
+      "cost_ratio_vs_all_slow": 1.268906051872878,
+      "promotions": 12667,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hwt-driven",
+      "migration_ns": 1000,
+      "capacity_pages": 56696,
+      "capture": 0.38851925066159204,
+      "mean_serial_cost_ns": 174.90535461732344,
+      "cost_ratio_vs_all_slow": 1.2578231265780253,
+      "promotions": 12667,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hwt-driven",
+      "migration_ns": 3000,
+      "capacity_pages": 56696,
+      "capture": 0.38851925066159204,
+      "mean_serial_cost_ns": 177.96068401075237,
+      "cost_ratio_vs_all_slow": 1.2362281097251098,
+      "promotions": 12667,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hwt-driven",
+      "migration_ns": 10000,
+      "capacity_pages": 56696,
+      "capture": 0.38851925066159204,
+      "mean_serial_cost_ns": 188.65433688775374,
+      "cost_ratio_vs_all_slow": 1.1661539492245887,
+      "promotions": 12667,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "hwt-driven",
+      "migration_ns": 30000,
+      "capacity_pages": 56696,
+      "capture": 0.38851925066159204,
+      "mean_serial_cost_ns": 219.20763082204328,
+      "cost_ratio_vs_all_slow": 1.0036146970567825,
+      "promotions": 12667,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "oracle",
+      "migration_ns": 0,
+      "capacity_pages": 56696,
+      "capture": 0.9439234775905325,
+      "mean_serial_cost_ns": 106.7291826891361,
+      "cost_ratio_vs_all_slow": 2.0612919021480867,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "oracle",
+      "migration_ns": 1000,
+      "capacity_pages": 56696,
+      "capture": 0.9439234775905325,
+      "mean_serial_cost_ns": 113.56682993354471,
+      "cost_ratio_vs_all_slow": 1.937185357104149,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "oracle",
+      "migration_ns": 3000,
+      "capacity_pages": 56696,
+      "capture": 0.9439234775905325,
+      "mean_serial_cost_ns": 127.24212442236197,
+      "cost_ratio_vs_all_slow": 1.728987165207503,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "oracle",
+      "migration_ns": 10000,
+      "capacity_pages": 56696,
+      "capture": 0.9439234775905325,
+      "mean_serial_cost_ns": 175.1056551332223,
+      "cost_ratio_vs_all_slow": 1.2563843231254956,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    },
+    {
+      "fast_fraction": 0.5,
+      "policy": "oracle",
+      "migration_ns": 30000,
+      "capacity_pages": 56696,
+      "capture": 0.9439234775905325,
+      "mean_serial_cost_ns": 311.8586000213948,
+      "cost_ratio_vs_all_slow": 0.7054479176938109,
+      "promotions": 56696,
+      "evaluation_events": 8291741
+    }
+  ],
+  "assumptions": {
+    "fast_ns": 100,
+    "slow_ns": 220,
+    "meaning": "serial memory cost only, not application speedup; promotions charged, no demotion cost or feedback",
+    "capacity": "fixed from first-window footprint",
+    "granularity": "virtual aligned grouping, not OS huge pages"
+  }
+}

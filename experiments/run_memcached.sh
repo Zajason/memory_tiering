@@ -33,7 +33,7 @@ CFG_FILE="$REPO/configs/$CONFIG.env"
 [[ -f "$CFG_FILE" ]] || die "no such config: $CFG_FILE"
 # shellcheck source=/dev/null
 source "$CFG_FILE"
-OUTDIR="$REPO/results/$CONFIG"; mkdir -p "$OUTDIR"
+OUTDIR="$RESULTS_ROOT/$CONFIG"; mkdir -p "$OUTDIR"
 OUT="$OUTDIR/memcached"
 
 if [[ "${NO_CACHE:-0}" == 1 ]]; then
@@ -61,7 +61,7 @@ echo "   slab budget ${SLAB_MB} MB for $(( RECORDS / 1000 ))k records of 1000 B"
 "$PIN" -t "$TOOL" "${CACHE_ARGS[@]}" -epoch "$EPOCH_M" -dump_pages "$DUMP_PAGES" \
        -tag "memcached" -o "$OUT" \
        -roi_begin hotskew_roi_begin -roi_end hotskew_roi_end \
-       -- "$SERVER" -p "$PORT" -m "$SLAB_MB" -t 1 -u "$(id -un)" \
+       -- "$SERVER" -l 127.0.0.1 -p "$PORT" -m "$SLAB_MB" -t 1 -u "$(id -un)" \
        > "$OUT.server.log" 2>&1 &
 SERVER_PID=$!
 

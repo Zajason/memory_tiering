@@ -1,5 +1,18 @@
 # Running the probe inside a CXL simulator
 
+**October audit:** `0003-probe-request-boundaries.patch` supplements the first two
+integration patches. It snapshots MemCtrl request fields before response handling,
+passes packet size to count every overlapping line, and restricts bridge counting
+to read/write requests wholly in the configured CXL range. It passes `git apply
+--check` against the local patched checkout. Copy the updated probe header before
+building. On 25 October the patch and current headers were installed and rebuilt.
+A drained synthetic run matched bridge and controller exactly: 30,321 line requests,
+474 pages and identical touched-line histograms. Fresh full-system runs are queued
+in the [revalidation campaign](../../../docs/revalidation-2026-10-25.md);
+synthetic validation is not evidence that those workloads have completed.
+Historical results used the earlier hooks. Header tests cover split requests,
+weighted summary means and counter reset.
+
 `src/sim/hotskew_probe.hpp` was written to be hooked into a simulator by one call per
 memory request. This directory is that hook, actually applied and actually run.
 

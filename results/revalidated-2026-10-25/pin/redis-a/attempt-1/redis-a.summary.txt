@@ -1,0 +1,118 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          redis-a
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                4096 KB, 1-way (shared)
+count_writebacks   yes
+epochs             19
+epoch_len_dram_acc 10000000
+instructions       158263177483
+mem_refs_profiled  37850142180
+dram_accesses      182831306
+llc_miss_ratio     0.004830  (DRAM accesses per memory ref)
+page_observations  8540975   (page x epoch pairs with >=1 access)
+mean_unique_words  9.196 / 64
+top4_word_share    0.4644   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.4857
+  8         12.5%   0.6708
+ 16           25%   0.7980
+ 32           50%   0.9543
+ 48           75%   0.9863
+
+# P(page has at least 48 of 64 words accessed) = 0.0147
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,618576
+2,1640236
+3,1296846
+4,592748
+5,636775
+6,416077
+7,275741
+8,252317
+9,190166
+10,184350
+11,141690
+12,131409
+13,117171
+14,110173
+15,106435
+16,105035
+17,139171
+18,420699
+19,83548
+20,121507
+21,98209
+22,60313
+23,58291
+24,48642
+25,43634
+26,41273
+27,39270
+28,38347
+29,38432
+30,36774
+31,34021
+32,32776
+33,30900
+34,29939
+35,31664
+36,29322
+37,20500
+38,19107
+39,15811
+40,13887
+41,12564
+42,11235
+43,10926
+44,10232
+45,9648
+46,9453
+47,9846
+48,7957
+49,7941
+50,7128
+51,6803
+52,6559
+53,6221
+54,5451
+55,5314
+56,5018
+57,4984
+58,4953
+59,4857
+60,5088
+61,5261
+62,5855
+63,6883
+64,29016
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,333603
+1,1569071
+2,2114620
+3,1638407
+4,1598039
+5,786225
+6,362021
+7,96349
+8,24574
+9,10373
+10,4576
+11,2009
+12,1089
+13,19

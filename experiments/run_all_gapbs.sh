@@ -13,7 +13,7 @@
 # tc is superlinear in edge count and uses a smaller graph; the deviation is recorded
 # in the results rather than hidden.
 
-set -uo pipefail
+set -euo pipefail
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 

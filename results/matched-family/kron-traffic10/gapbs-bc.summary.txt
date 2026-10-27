@@ -1,0 +1,115 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-bc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             17
+epoch_len_dram_acc 10000000
+instructions       7552780815
+mem_refs_profiled  1978120882
+dram_accesses      166874274
+llc_miss_ratio     0.084360  (DRAM accesses per memory ref)
+page_observations  2375982   (page x epoch pairs with >=1 access)
+mean_unique_words  27.178 / 64
+top4_word_share    0.1644   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1838
+  8         12.5%   0.2850
+ 16           25%   0.4627
+ 32           50%   0.6374
+ 48           75%   0.7170
+
+# P(page has at least 48 of 64 words accessed) = 0.2885
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,148865
+2,112321
+3,84715
+4,90817
+5,64402
+6,57318
+7,57410
+8,61249
+9,64797
+10,73229
+11,67336
+12,51874
+13,45431
+14,42687
+15,40022
+16,36868
+17,34873
+18,33017
+19,31812
+20,30266
+21,28992
+22,27156
+23,25391
+24,24504
+25,23987
+26,23219
+27,22314
+28,21686
+29,21638
+30,22816
+31,23164
+32,20262
+33,16782
+34,14815
+35,13753
+36,12932
+37,11982
+38,11582
+39,11150
+40,10829
+41,10531
+42,10343
+43,9948
+44,9857
+45,9763
+46,10501
+47,11395
+48,12934
+49,15049
+50,18461
+51,22084
+52,25900
+53,30094
+54,35201
+55,38528
+56,42297
+57,44234
+58,43654
+59,39048
+60,31929
+61,24726
+62,22807
+63,32220
+64,206215
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,142811
+1,184166
+2,233976
+3,401406
+4,436579
+5,362899
+6,179818
+7,155111
+8,279123
+9,52
+10,41

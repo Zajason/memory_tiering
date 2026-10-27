@@ -1,0 +1,116 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          memcached
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                4096 KB, 1-way (shared)
+count_writebacks   yes
+epochs             17
+epoch_len_dram_acc 10000000
+instructions       59773395474
+mem_refs_profiled  15078897171
+dram_accesses      162128396
+llc_miss_ratio     0.010752  (DRAM accesses per memory ref)
+page_observations  6282623   (page x epoch pairs with >=1 access)
+mean_unique_words  8.671 / 64
+top4_word_share    0.4193   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.4003
+  8         12.5%   0.7189
+ 16           25%   0.7818
+ 32           50%   0.9766
+ 48           75%   0.9985
+
+# P(page has at least 48 of 64 words accessed) = 0.0016
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,645578
+2,1102868
+3,325307
+4,441412
+5,201855
+6,932566
+7,260622
+8,606095
+9,64458
+10,45958
+11,46693
+12,46923
+13,48155
+14,50456
+15,47986
+16,44940
+17,151867
+18,219280
+19,216020
+20,182142
+21,127003
+22,96966
+23,62701
+24,45491
+25,14272
+26,15887
+27,17646
+28,17994
+29,16529
+30,15789
+31,12413
+32,11643
+33,11892
+34,13139
+35,21273
+36,24518
+37,21491
+38,13184
+39,9165
+40,4410
+41,2608
+42,2370
+43,2732
+44,3475
+45,3545
+46,2375
+47,647
+48,595
+49,593
+50,579
+51,566
+52,873
+53,1005
+54,829
+55,531
+56,233
+57,244
+58,218
+59,213
+60,1394
+61,2007
+62,10
+63,15
+64,379
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,172956
+1,1056192
+2,980294
+3,2010783
+4,479331
+5,818593
+6,573644
+7,181077
+8,9511
+9,180
+10,53
+11,9

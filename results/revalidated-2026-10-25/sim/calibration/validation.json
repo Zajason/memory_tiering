@@ -1,0 +1,10 @@
+{
+  "status": "validated",
+  "accepted_line_requests": 30321,
+  "page_observations": 474,
+  "checks": [
+    "linear event/unique-line identity",
+    "bridge/controller count equality after drain",
+    "matching histograms"
+  ]
+}

@@ -1,0 +1,2 @@
+epoch,pages,accesses,mean_unique_words,p_le_4,p_le_8,p_le_16,p_le_32,p_le_48
+0,710,27519,38.619718,0.232394,0.250704,0.288732,0.378873,0.509859

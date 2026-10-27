@@ -138,6 +138,7 @@ ap.add_argument("--switch-at-roi", action="store_true",
 ap.add_argument("--max-exits", type=int, default=4,
                 help="stop on this m5_exit; 4 = boot + roi_begin + roi_end + script end")
 ap.add_argument("--outfile", default=None)
+ap.add_argument("--llc-ways", type=int, choices=[9, 10], default=10)
 args = ap.parse_args()
 
 # Matches configs/spr-20t.env -- M5's GAPBS CAT partition.
@@ -145,7 +146,7 @@ cache_hierarchy = PrivateL1PrivateL2SharedL3CacheHierarchy(
     l1d_size="48kB", l1d_assoc=12,
     l1i_size="32kB", l1i_assoc=8,
     l2_size="2MB",   l2_assoc=16,
-    l3_size="36MB",  l3_assoc=9,
+    l3_size=f"{4 * args.llc_ways}MB", l3_assoc=args.llc_ways,
 )
 
 # 3 GB is the ceiling X86Board allows (I/O hole at 0xC0000000). Measured peak

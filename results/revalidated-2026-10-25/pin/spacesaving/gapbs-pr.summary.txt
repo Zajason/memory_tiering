@@ -1,0 +1,124 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-pr
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             24
+epoch_len_dram_acc 10000000
+instructions       13651392281
+mem_refs_profiled  5287528124
+dram_accesses      239685775
+llc_miss_ratio     0.045330  (DRAM accesses per memory ref)
+page_observations  2713505   (page x epoch pairs with >=1 access)
+mean_unique_words  62.914 / 64
+top4_word_share    0.0877   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 8: bounded top-K trackers vs the exact counts
+# tracker=Space-Saving  K=128  epochs=24
+# storage assumes a 36-bit tag (48-bit PA, 4 KB pages) + 32-bit counter
+# N, hpt_access_ratio, hpt_recall, hwt_access_ratio, hwt_recall, KB
+50,0.1255,0.0026,0.0733,0.0000,0
+128,0.3224,0.0055,0.1931,0.0003,1
+512,0.1340,0.0000,0.1943,0.0003,4
+2048,0.1341,0.0000,0.1855,0.0007,17
+8192,0.1906,0.0000,0.1985,0.0000,68
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.0002
+  8         12.5%   0.0004
+ 16           25%   0.0005
+ 32           50%   0.0006
+ 48           75%   0.0313
+
+# P(page has at least 48 of 64 words accessed) = 0.9764
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,368
+2,116
+3,112
+4,81
+5,102
+6,86
+7,81
+8,72
+9,58
+10,49
+11,30
+12,35
+13,26
+14,21
+15,18
+16,18
+17,15
+18,11
+19,14
+20,18
+21,7
+22,12
+23,28
+24,18
+25,24
+26,41
+27,34
+28,44
+29,30
+30,48
+31,35
+32,48
+33,55
+34,53
+35,62
+36,78
+37,139
+38,267
+39,483
+40,1007
+41,1722
+42,3021
+43,4674
+44,7563
+45,11016
+46,14350
+47,17858
+48,20834
+49,21697
+50,21626
+51,19320
+52,15788
+53,11643
+54,7648
+55,4303
+56,2312
+57,1007
+58,425
+59,179
+60,117
+61,113
+62,95
+63,95
+64,2522255
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,312
+1,228
+2,389
+3,325
+4,388
+5,1191
+6,2433694
+7,78706
+8,198155
+9,117

@@ -12,7 +12,7 @@
 #
 # PIN_ROOT must point at an Intel Pin installation.
 
-PIN_ROOT    ?= $(HOME)/pin
+PIN_ROOT    ?= $(HOME)/dev/advarch/pin
 VENV        ?= ./.venv
 PY          := $(VENV)/bin/python
 GRAPH_SCALE ?= 23
@@ -83,6 +83,22 @@ check: $(PY)
 reproduce: validate benchmarks profile analyse check
 	@echo
 	@echo "Everything regenerated and checked against docs/claims.md."
+
+# Explicit sequential recursion also preserves the order under make -j.
+.NOTPARALLEL: reproduce
+
+.PHONY: audit-test paired
+audit-test: $(PY)
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror src/profiler/validate/audit_test.cpp -o /tmp/memory-tiering-audit-test
+	/tmp/memory-tiering-audit-test
+	$(PY) src/analysis/test_audit.py
+	$(PY) src/analysis/test_uniform.py
+	$(PY) src/analysis/test_extensions.py
+	$(MAKE) -C src/sim test
+
+paired: build
+	$(PY) experiments/run_paired.py
+	$(PY) src/analysis/plot_paired.py
 
 # ------------------------------------------------------------ determinism
 # ASLR made tracker runs non-deterministic and a single sample per point was read

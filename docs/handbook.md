@@ -1,4 +1,100 @@
+> **October 2026 audit:** Historical results below predate confirmed cache-path
+> corrections. The window-fit causal explanation, HWT-gating explanation and
+> 1.505x speedup claim are withdrawn. See [the audit](audit-2026-10.md) and
+> [current methodology](methodology.md) for the corrected interpretation and paired
+> access/miss measurements. Historical numerical agreement is not proof of replication.
+
 # Handbook
+
+## Start with the audited measurement
+
+### Are the extensions still usable?
+
+Checkpoint/resume development is tracked in [checkpointing.md](checkpointing.md).
+The process-snapshot feasibility test does not yet make the long campaign
+restartable mid-run; do not treat an interrupted summary as a checkpoint.
+
+The methods can still be useful, but results obtained before a counting fix need
+new measurements. The [fresh revalidation report](revalidation-2026-10-25.md)
+shows what has actually passed, what is running, and new graphs as they become
+available. It does not mix old and new numbers.
+
+For each completed raw-data run, we check that its per-page records reconstruct
+the summary exactly. Then we recompute granularity (how the tracking-unit size
+changes apparent density), turnover (whether yesterday's hot set predicts the
+next window), and placement (choosing pages using only the previous window).
+One-window runs cannot answer the last two questions. The latency calculation
+is still an assumed serial-memory cost, not measured program speedup.
+
+Two independent user services run the Pin and simulator queues:
+`systemctl --user status memory-tiering-revalidate-pin memory-tiering-revalidate-sim`.
+They continue without this chat open, but not while Linux is shut down or suspended.
+After a restart, run `.venv/bin/python experiments/revalidation_campaign.py pin`
+and, separately, the same command with `sim`. Completed jobs are preserved;
+interrupted workloads restart from the beginning, not from a simulator checkpoint.
+
+For current experiments, read [methodology.md](methodology.md) and the
+[audit report](audit-2026-10.md) before the historical chapters below. The newer
+profiler counts accesses and modeled misses together, propagates dirty evictions
+correctly, and serializes its measurement state. The old discussion of lock-free
+private accesses describes the previous implementation.
+
+Think of the new experiment as three notebooks watching the same program: one
+records every demand reference, one records cache fills, and one records fills
+plus dirty writebacks. In the initial experiment, every 10 million demand line
+references all three close their current window together. In the latest campaign,
+the same boundary is instead triggered by 10 million modeled memory events.
+A bitmask says which of a page's 64 lines each
+notebook saw. We then count how many pages have at most 4, 8, 16, 32 or 48 bits set.
+
+The denominator matters. One plot includes the pages each notebook saw; another
+compares both notebooks on exactly the same pages. A whole-kernel plot unions the
+bits without resetting. None of these is automatically the paper's measurement:
+its graph inputs, thread count and exact collection procedure still need matching.
+
+Commands and complete/failed status live in the new run manifests. The benchmark
+must finish successfully before its curve appears in the new plots. An old summary
+file alone is not a completion certificate, and partial data is not a checkpoint.
+
+### Latest follow-up: which Google graph?
+
+The artifact uses **Google+ social connections**, not the Google web-link graph
+we previously tried. We obtained the original Google+ archive, selected its
+published first temporal snapshot and reran BC and SSSP. This is closer to the
+intended input family, but not the authors' exact resized files.
+
+We also compared two stopwatches for each window: one advances for every raw
+reference; the other only advances when the model sends a memory event. Both
+access and miss notebooks still close together. A memory-event window generally
+covers more program execution, giving more lines a chance to be touched.
+
+With 10M memory events per window, the five-point maximum errors improve from
+0.572 to 0.303 (BC) and 0.646 to 0.339 (SSSP). With 10M raw references, this
+improvement does not hold consistently. **Closer under one declared protocol
+does not prove we reproduced the paper's protocol.** The graph size also changes.
+
+Read [the follow-up](reproduction-followup.md) for every comparison, source hashes,
+reproduction commands and the exact files/settings still needed from M5's authors.
+
+### Latest complete six-workload campaign
+
+We have now applied the memory-event clock to **all six** kernels. PageRank's
+maximum traffic error over the five reference thresholds falls to 0.011. TC
+improves from 0.530 to 0.416; BFS and CC get worse, to 0.591 and 0.505.
+Google+ BC/SSSP remain at 0.303/0.339. So this explains some discrepancies,
+but does not reproduce five of the six curves.
+
+Why do accesses and misses now look so similar? We count **which lines appeared**,
+not how often. Repeated hits do not add bits. A longer interval gives a line more
+chances to miss at least once. For BFS the entire kernel produces fewer than 10M
+memory events, so we have one whole-kernel window: every first touch must miss
+our initially empty cache. The coverage masks therefore match, although BFS has
+168.8M accesses and only 7.9M fills. Equal bars do not mean the cache does nothing.
+
+See [the uniform-window report](uniform-windows.md) for both full figures, negative
+results, per-stream scores and the old baseline's missing input-hash caveat.
+The [author-request draft](m5-author-request.md) lists the exact inputs and
+measurement details we still need. It has not been sent.
 
 Everything in this repository: what it is, how it works, what it found, and where to
 put your hands to change it.
@@ -247,15 +343,14 @@ what falls out the bottom is the DRAM stream.
 
 **Deliberate simplifications**, all in the header's comment block: non-inclusive by
 default (matches Sapphire Rapids), no coherence between per-thread L1/L2, no
-prefetchers. The prefetcher omission biases *against* our own conclusion — prefetch
-would pull in neighbouring lines and make pages look denser — which is the safe
-direction.
+prefetchers. Prefetching can add traffic or displace demand misses and change
+replacement; its omission gives no general direction of bias.
 
 **The CAT trick.** M5 partitions the L3 with Intel CAT. CAT partitions **by way**, so
 the set count is unchanged and only associativity moves. Because the model is
 way-associative, setting `L3_ASSOC` to the number of granted ways reproduces their
-partition *exactly*, not approximately. That is a rare piece of luck and it is why
-`configs/spr-*.env` can claim fidelity.
+capacity and associativity. These configurations remain approximations because
+physical indexing, slice hashing, replacement and coherence are not reproduced.
 
 ### 3.2 `counter_table.hpp` — PAC and WAC
 
@@ -359,7 +454,7 @@ to be the polling cadence, and the effective window is not recoverable from the 
 
 **Two kinds of window, and it matters.** A window measured in DRAM accesses normalises
 away cache size (a smaller cache emits more accesses, so a fixed count spans less
-execution — the effects cancel exactly). A window measured in *instructions* is the
+execution — there is no exact cancellation law). A window measured in *instructions* is the
 time-proportional one. Hence both `-epoch`
 and `-epoch_ins`.
 
@@ -389,10 +484,11 @@ the first test was confounded.**
 In gem5 the request path sees kernel traffic and the blind spot does not exist. The
 first comparison measured the simulator over a *wider* window than Pin (it included
 the data load), so it changed two things at once and could not attribute either.
-Re-running with `--switch-at-roi` holds the window at exactly Pin's ROI, leaving
-kernel visibility as the only difference:
+The earlier claim that `--switch-at-roi` isolated kernel visibility is withdrawn.
+The comparison also changed cache behavior, address space and setup coverage.
+The following historical differences are not a decomposition of kernel traffic:
 
-| workload | extra words/page the kernel accounts for |
+| workload | historical difference (not attributable to kernel traffic alone) |
 |---|---|
 | bc | **+12.35** |
 | cc | **+7.50** |
@@ -677,11 +773,11 @@ are the ones a reader will probe:
 1. Why the epoch makes the question well-posed (§4.1) — and why every cache size gave
    an identical answer.
 2. Why `read(2)` traffic is invisible to Pin, and how that was isolated (§4.2).
-3. Why `VA[11:0] ≡ PA[11:0]` makes virtual addresses *exact* here (§4.3).
+3. Why `VA[11:0] ≡ PA[11:0]` preserves offsets, but not the modeled miss stream.
 4. Why Space-Saving's required size depends on the cold tail (§7.4).
 5. Why access count is a sufficient statistic for page-granular placement (§7.5).
-6. Why the migration-cost crossover at ~10 µs is the most actionable number here (§7.7).
+6. Why historical migration-cost crossover numbers are withdrawn (October audit).
 7. Why tracker results move with ASLR while Figure 4 does not (§4.4) — and why that
    means a curve built from one sample per point can show structure that is noise.
-8. Why HWT cannot rescue a weak HPT: it is gated on HPT membership, so the word signal
-   is downstream of the page signal rather than independent (§7.5).
+8. Why HPT and HWT are independent trackers, and their output-list filtering must
+   not be confused with input gating (October audit).

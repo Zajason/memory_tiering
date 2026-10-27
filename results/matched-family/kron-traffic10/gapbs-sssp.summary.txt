@@ -1,0 +1,115 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-sssp
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             8
+epoch_len_dram_acc 10000000
+instructions       3772013785
+mem_refs_profiled  1989966097
+dram_accesses      72240607
+llc_miss_ratio     0.036302  (DRAM accesses per memory ref)
+page_observations  1728759   (page x epoch pairs with >=1 access)
+mean_unique_words  25.361 / 64
+top4_word_share    0.1518   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.2402
+  8         12.5%   0.3637
+ 16           25%   0.4961
+ 32           50%   0.6701
+ 48           75%   0.7561
+
+# P(page has at least 48 of 64 words accessed) = 0.2481
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,129021
+2,117761
+3,99553
+4,68829
+5,54111
+6,54944
+7,57013
+8,47473
+9,37970
+10,33512
+11,30653
+12,27851
+13,26832
+14,25517
+15,23838
+16,22829
+17,22765
+18,25221
+19,28453
+20,29262
+21,26813
+22,22934
+23,19115
+24,16821
+25,15531
+26,15424
+27,14687
+28,14121
+29,13339
+30,12537
+31,12244
+32,11478
+33,11109
+34,10902
+35,10573
+36,10027
+37,9935
+38,9620
+39,9505
+40,9426
+41,9143
+42,9120
+43,9064
+44,8749
+45,8452
+46,8137
+47,7601
+48,7308
+49,7230
+50,7006
+51,7112
+52,7353
+53,8106
+54,9153
+55,10575
+56,12322
+57,13804
+58,14711
+59,14731
+60,14114
+61,13029
+62,11884
+63,9821
+64,260685
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,117448
+1,197438
+2,222376
+3,242268
+4,339275
+5,264400
+6,252536
+7,32251
+8,52421
+9,8307
+10,39

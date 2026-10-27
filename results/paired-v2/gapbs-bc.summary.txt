@@ -1,0 +1,112 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     10000000
+benchmark          gapbs-bc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             198
+epoch_len_dram_acc 0
+instructions       7552780796
+mem_refs_profiled  1978120878
+dram_accesses      166874299
+llc_miss_ratio     0.084360  (DRAM accesses per memory ref)
+page_observations  10087593   (page x epoch pairs with >=1 access)
+mean_unique_words  14.254 / 64
+top4_word_share    0.2869   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.3168
+  8         12.5%   0.4051
+ 16           25%   0.6388
+ 32           50%   0.9186
+ 48           75%   0.9662
+
+# P(page has at least 48 of 64 words accessed) = 0.0349
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,1124544
+2,931924
+3,587813
+4,551495
+5,310212
+6,219443
+7,182629
+8,178674
+9,195028
+10,245137
+11,259874
+12,263259
+13,299043
+14,341842
+15,370422
+16,382631
+17,374167
+18,350952
+19,317333
+20,279536
+21,241127
+22,207161
+23,177626
+24,154512
+25,137072
+26,119575
+27,103942
+28,89855
+29,78870
+30,71325
+31,63861
+32,55492
+33,48175
+34,44476
+35,42650
+36,41985
+37,40693
+38,38990
+39,36749
+40,33728
+41,29973
+42,26344
+43,22725
+44,19636
+45,16760
+46,14137
+47,12584
+48,10957
+49,10120
+50,9656
+51,9347
+52,9535
+53,10040
+54,11485
+55,13625
+56,16186
+57,18091
+58,18890
+59,18112
+60,15475
+61,11844
+62,8518
+63,7149
+64,152582
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,1082376
+1,1500291
+2,1265396
+3,1655132
+4,3476044
+5,848915
+6,191562
+7,67877

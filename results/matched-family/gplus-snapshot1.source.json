@@ -1,0 +1,17 @@
+{
+  "source_url": "https://people.duke.edu/~zg70/gplus.html",
+  "archive_sha256": "24a3a97523f18dfedf912400d5022fbef6ce89627a5e53a4fc37368e65e358d5",
+  "member": "direct_social_structure.txt",
+  "nested_member": "gplus/gplus/imc12/direct_social_structure.zip",
+  "snapshot": 1,
+  "rule": "TimeID < 1",
+  "output_sha256": "7cd7306aa065239d385ad4fded18074d968e40f7236901145235d5462468b96a",
+  "directed": true,
+  "relabelled": false,
+  "weights": "none; TimeID removed, never treated as distance",
+  "m5_exact_input": false,
+  "elapsed_s": 337.8834445476532,
+  "input_edges": 462994069,
+  "selected_edges": 47130325,
+  "max_node_id": 4693128
+}

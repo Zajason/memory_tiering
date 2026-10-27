@@ -10,7 +10,7 @@
 #
 # Results land in results/<config>/<benchmark>.{summary.txt,epochs.csv,pages.bin}
 
-set -uo pipefail
+set -euo pipefail
 HERE="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$HERE/env.sh"
 

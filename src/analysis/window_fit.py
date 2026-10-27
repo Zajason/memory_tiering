@@ -1,24 +1,11 @@
 #!/usr/bin/env python3
-"""window_fit.py -- at what measurement window do we reproduce M5's Figure 4?
+"""window_fit.py -- exploratory sensitivity of page coverage to merged windows.
 
     python3 src/analysis/window_fit.py [--config spr-20t-ul]
 
-Why
----
-Every remaining disagreement with M5 points at the same parameter. Word coverage per
-page is monotonically non-decreasing in the window (§3.3 of the report), the whole-run
-bound sits far below M5's value, and the 10M-access bound sits far above it -- so for
-each workload *some* window reproduces the paper. The question is which, and whether
-one window works for all of them.
-
-That distinction is the whole point:
-
-  * if a SINGLE window reproduces every workload, the only real deviation left is a
-    parameter M5 did not publish, and we have measured it;
-  * if each workload needs its own window, the window is not the explanation and
-    something workload-specific is still wrong.
-
-The second outcome is the one that would matter, so this is a test that can fail.
+Fitting to the reference does not identify its observation window or prove a
+reproduction. Other configuration differences remain. The changing population of
+touched pages and the final partial window can make the pooled CDF non-monotonic.
 
 How
 ---
@@ -48,17 +35,20 @@ import hotskew as H  # noqa: E402
 
 def cdf_at_merge(recs: np.ndarray, m: int, ns=H.FIG4_N) -> dict[int, float] | None:
     """P(page has <= N unique words) when m consecutive epochs are merged."""
+    if m < 1:
+        raise ValueError("merge factor must be positive")
+    if recs.size == 0:
+        return None
     ep = recs["epoch"].astype(np.int64)
     grp = ep // m
     # Fold (group, page) -> OR of masks. Sorting by the pair makes the fold a
     # segmented reduction, which numpy can do without a Python loop per page.
-    key = (grp.astype(np.uint64) << np.uint64(40)) ^ recs["page"].astype(np.uint64)
-    order = np.argsort(key, kind="stable")
-    k, masks = key[order], recs["mask"][order]
+    order = np.lexsort((recs["page"], grp))
+    groups, pages, masks = grp[order], recs["page"][order], recs["mask"][order]
     # boundaries of runs of equal key
-    newgrp = np.empty(k.shape, dtype=bool)
+    newgrp = np.empty(pages.shape, dtype=bool)
     newgrp[0] = True
-    newgrp[1:] = k[1:] != k[:-1]
+    newgrp[1:] = (groups[1:] != groups[:-1]) | (pages[1:] != pages[:-1])
     idx = np.cumsum(newgrp) - 1
     n_out = idx[-1] + 1
     merged = np.zeros(n_out, dtype=np.uint64)
@@ -69,6 +59,15 @@ def cdf_at_merge(recs: np.ndarray, m: int, ns=H.FIG4_N) -> dict[int, float] | No
     return {n: float((uw <= n).mean()) for n in ns}
 
 
+def error_for(bench, cdf, target="prose"):
+    if target == "prose":
+        if bench in H.M5_TEXT_P16:
+            return abs(cdf[16] - H.M5_TEXT_P16[bench])
+        if bench in H.M5_TEXT_P47:
+            return abs(cdf[47] - H.M5_TEXT_P47[bench])
+    return float(np.mean([abs(cdf[n] - H.M5_FIGURE4[bench][n]) for n in H.FIG4_N]))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -77,8 +76,8 @@ def main() -> int:
     ap.add_argument("--epoch-m", type=float, default=10.0,
                     help="millions of DRAM accesses per base epoch in the input")
     ap.add_argument("--target", choices=["prose", "digitised"], default="prose",
-                    help="prose = |P(<=16) - the paper's stated value|, exact for 8 "
-                         "benchmarks; digitised = mean over all five N vs bar readings")
+                    help="prose = one rounded P(<=16) or P(<=47) value; "
+                         "digitised = mean over all five N vs bar readings")
     args = ap.parse_args()
 
     d = os.path.join(args.results, args.config)
@@ -86,7 +85,7 @@ def main() -> int:
         print(f"no results under {d}", file=sys.stderr)
         return 1
 
-    print(f"\nWindow that reproduces M5's Figure 4   (config: {args.config})")
+    print(f"\nExploratory window fit, NOT reproduction   (config: {args.config})")
     print("error = |P(<=16) - the paper's stated value| where the prose gives one"
           if args.target == "prose" else
           "error = mean |ours - M5| over N in {4,8,16,32,48}")
@@ -96,14 +95,7 @@ def main() -> int:
     print("-" * 66)
 
     def err_for(bench, c):
-        """Score one CDF. Prefers the paper's prose value, which is exact."""
-        if args.target == "prose":
-            if bench in H.M5_TEXT_P16:
-                return abs(c[16] - H.M5_TEXT_P16[bench])
-            if bench in H.M5_TEXT_P47:
-                return abs(c[48] - H.M5_TEXT_P47[bench])
-        m5 = H.M5_FIGURE4[bench]
-        return float(np.mean([abs(c[n] - m5[n]) for n in H.FIG4_N]))
+        return error_for(bench, c, args.target)
 
     fits = []
     loaded = []
@@ -116,7 +108,7 @@ def main() -> int:
         path = os.path.join(d, name)
         if os.path.getsize(path) == 0:
             continue
-        recs = H.load_pages(path).records
+        recs = H.load_pages(path, require_complete=True).records
         if recs.size == 0:
             continue
         n_ep = int(recs["epoch"].max()) + 1
@@ -129,11 +121,10 @@ def main() -> int:
         # reported "best window varies 1x-8x": with 22 epochs it only sampled
         # m = 1, 2, 4, 8, 16, so a best at m = 11 was invisible.
         for m in range(1, max(n_ep, 1) + 1):
-            c = cdf_at_merge(recs, m)
+            c = cdf_at_merge(recs, m, ns=(*H.FIG4_N, 47))
             if c is None:
                 continue
-            # Prefer the paper's prose value at N=16: it is exact, where the
-            # digitised bars are +/-0.02.
+            # The prose percentages are rounded and refer to only one CDF point.
             err = err_for(bench, c)
             if m == 1:
                 base_err = err
@@ -143,7 +134,7 @@ def main() -> int:
             continue
         m, err, c = best
         win = f"{m * args.epoch_m:.0f}M acc"
-        v = "reproduced" if err <= 0.05 else "close" if err <= 0.12 else "still off"
+        v = "fitted error only"
         print(f"{bench.replace('gapbs-',''):<10}{n_ep:>6}{m:>8}{win:>12}{err:>8.3f}"
               f"{base_err:>9.3f}   {v}")
         fits.append((bench, m, err))
@@ -151,17 +142,14 @@ def main() -> int:
     if fits:
         ms = [m for _, m, _ in fits]
         print(f"\nPer-workload optima: m in {sorted(set(ms))}")
-        print("Those differ, but that is NOT the hypothesis. The question is whether")
-        print("ONE window -- a single unpublished parameter, not a per-workload fudge --")
-        print("brings every workload into agreement. A compromise window can do that")
-        print("even when each workload's own optimum lies elsewhere.\n")
+        print("Different optima do not identify the original experiment's windows.\n")
 
         # Global fit: minimise the WORST error across workloads over a single m.
         best_g = None
-        for m in range(1, max(ms) + 1):
+        for m in range(1, max(int(r['epoch'].max()) + 1 for _, r in loaded) + 1):
             row = {}
             for bench, recs in loaded:
-                c = cdf_at_merge(recs, m)
+                c = cdf_at_merge(recs, m, ns=(*H.FIG4_N, 47))
                 if c is None:
                     break
                 row[bench] = err_for(bench, c)
@@ -174,18 +162,17 @@ def main() -> int:
             m, worst, row = best_g
             base = {}
             for bench, recs in loaded:
-                c = cdf_at_merge(recs, 1)
+                c = cdf_at_merge(recs, 1, ns=(*H.FIG4_N, 47))
                 if c is not None:
                     base[bench] = err_for(bench, c)
             print(f"Best SINGLE window: m={m}  ({m * args.epoch_m:.0f}M accesses)")
             print(f"  worst-case error {worst:.3f}   "
                   f"(at m=1 it is {max(base.values()):.3f})")
             for b, v in sorted(row.items(), key=lambda x: -x[1]):
-                tag = ("reproduced" if v <= 0.05 else "close" if v <= 0.10 else "off")
+                tag = "fitted error"
                 print(f"    {b.replace('gapbs-', ''):<6} {v:.3f}  {tag}")
             print("\nThis is a ONE-PARAMETER FIT, not a reproduction: the window was")
-            print("chosen to minimise error against M5. What it establishes is that a")
-            print("single parameter the paper never states accounts for the gap.")
+            print("chosen to minimise error against M5. It shows sensitivity, not causation.")
 
     return 0
 

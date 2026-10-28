@@ -36,7 +36,7 @@ All cases below were declared before collecting their new measurements. No windo
 | dataset-bc | complete |
 | dataset-sssp | complete |
 | trials200-pool-bfs | complete |
-| trials200-pool-cc | running |
+| trials200-pool-cc | complete |
 
 ## Completed comparisons
 
@@ -66,6 +66,8 @@ All cases below were declared before collecting their new measurements. No windo
 | threads20 | cc | whole | 0.579 | 0.579 | 0.579 | 0.505 |
 | trials200-pool | bfs | pooled | 0.596 | 0.596 | 0.596 | 0.591 |
 | trials200-pool | bfs | whole | 0.241 | 0.241 | 0.241 | 0.591 |
+| trials200-pool | cc | pooled | 0.580 | 0.580 | 0.580 | 0.505 |
+| trials200-pool | cc | whole | 0.579 | 0.579 | 0.579 | 0.505 |
 | trials3-close | bfs | pooled | 0.562 | 0.562 | 0.562 | 0.591 |
 | trials3-close | bfs | whole | 0.584 | 0.584 | 0.584 | 0.591 |
 | trials3-close | cc | pooled | 0.492 | 0.492 | 0.492 | 0.505 |
@@ -81,7 +83,7 @@ Errors are maximum absolute differences from the digitized reference over N=4,8,
 
 ## Interpretation of completed input controls
 
-On the declared Twitter reduction, pooled demand-fill error changes from 59.1 to 55.6 percentage points for BFS and 50.5 to 49.2 for CC. These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. The input campaign is complete; repetition and stage 2 controls remain separate pending tests.
+On the declared Twitter reduction, pooled demand-fill error changes from 59.1 to 55.6 percentage points for BFS and 50.5 to 49.2 for CC. These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. The input campaign is complete; repetition results are listed separately above and stage 2 progress is reported in [the second campaign](pin-fidelity-stage2.md).
 
 The completed Twitter PageRank run has pooled demand-fill error 1.53 percentage points, versus 1.08 on the prior Kronecker baseline. It remains close at the five reference points, but the new input does not improve agreement. Numerical similarity does not establish the original collection protocol.
 

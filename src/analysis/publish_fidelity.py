@@ -119,7 +119,7 @@ def main():
           f"{100*baseline['cc','fills']:.1f} to {100*dataset_scores['cc']:.1f} for CC. "
           'These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. '
           'Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. '
-          + ('The input campaign is complete; repetition and stage 2 controls remain separate pending tests.'
+          + ('The input campaign is complete; repetition results are listed separately above and stage 2 progress is reported in [the second campaign](pin-fidelity-stage2.md).'
            if state.get('status')=='complete' else
            'The remaining input and repetition controls must finish before assessing the campaign as a whole.')]
     if ('pr','fills') in dataset:

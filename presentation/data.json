@@ -71,13 +71,23 @@
       "workload": "bfs",
       "scope": "whole",
       "error_pp": 24.143854553362022
+    },
+    {
+      "workload": "cc",
+      "scope": "pooled",
+      "error_pp": 57.99589799413714
+    },
+    {
+      "workload": "cc",
+      "scope": "whole",
+      "error_pp": 57.94381358780336
     }
   ],
   "stage2": {
-    "status": "waiting for declared repetition controls",
-    "completed": 0,
+    "status": "running",
+    "completed": 3,
     "total": 21,
-    "current": null
+    "current": "process-sssp"
   },
   "simulator": {
     "bfs": "complete",

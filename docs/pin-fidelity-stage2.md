@@ -10,10 +10,31 @@ Full observed process versus timed-kernel collection; real-input 20-thread contr
 
 ## Progress
 
-Campaign: waiting for declared repetition controls
+Campaign: running
 
 | Job | State |
 |---|---|
+| process-bfs | complete |
+| process-cc | complete |
+| process-bc | complete |
+| process-sssp | running |
+| threads20-bfs | queued |
+| threads20-cc | queued |
+| threads20-bc | queued |
+| threads20-sssp | queued |
+| ways9-bfs | queued |
+| ways9-cc | queued |
+| ways9-bc | queued |
+| ways9-sssp | queued |
+| prepare-tc-footprint | queued |
+| footprint-tc | queued |
+| footprint20-tc | queued |
+| process-pr | queued |
+| process-tc | queued |
+| threads20-pr | queued |
+| threads20-tc | queued |
+| ways9-pr | queued |
+| ways9-tc | queued |
 
 ## All completed scores
 
@@ -151,6 +172,38 @@ Campaign: waiting for declared repetition controls
 | phase1/trials200-pool-bfs | bfs | whole | accesses | 24.14 | 1 | 10 | timed kernel |
 | phase1/trials200-pool-bfs | bfs | whole | fills | 24.14 | 1 | 10 | timed kernel |
 | phase1/trials200-pool-bfs | bfs | whole | traffic | 24.14 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-cc | cc | pooled | accesses | 57.99 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-cc | cc | pooled | fills | 58.00 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-cc | cc | pooled | traffic | 57.99 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-cc | cc | whole | accesses | 57.94 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-cc | cc | whole | fills | 57.94 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-cc | cc | whole | traffic | 57.94 | 1 | 10 | timed kernel |
+| process-bfs | bfs | pooled | accesses | 50.68 | 1 | 10 | full observed process |
+| process-bfs | bfs | pooled | fills | 50.70 | 1 | 10 | full observed process |
+| process-bfs | bfs | pooled | traffic | 50.54 | 1 | 10 | full observed process |
+| process-bfs | bfs | whole | accesses | 57.00 | 1 | 10 | full observed process |
+| process-bfs | bfs | whole | fills | 57.00 | 1 | 10 | full observed process |
+| process-bfs | bfs | whole | traffic | 57.00 | 1 | 10 | full observed process |
+| process-cc | cc | pooled | accesses | 44.74 | 1 | 10 | full observed process |
+| process-cc | cc | pooled | fills | 44.78 | 1 | 10 | full observed process |
+| process-cc | cc | pooled | traffic | 44.33 | 1 | 10 | full observed process |
+| process-cc | cc | whole | accesses | 50.06 | 1 | 10 | full observed process |
+| process-cc | cc | whole | fills | 50.06 | 1 | 10 | full observed process |
+| process-cc | cc | whole | traffic | 50.06 | 1 | 10 | full observed process |
+| process-bc | bc | pooled | accesses | 76.51 | 1 | 10 | full observed process |
+| process-bc | bc | pooled | fills | 76.56 | 1 | 10 | full observed process |
+| process-bc | bc | pooled | traffic | 76.21 | 1 | 10 | full observed process |
+| process-bc | bc | whole | accesses | 14.12 | 1 | 10 | full observed process |
+| process-bc | bc | whole | fills | 14.12 | 1 | 10 | full observed process |
+| process-bc | bc | whole | traffic | 14.12 | 1 | 10 | full observed process |
+
+## Completed process-scope controls
+
+BFS: pooled demand-fill error changes from 55.56 to 50.70 percentage points when observed user-space setup is included.
+CC: pooled demand-fill error changes from 49.22 to 44.78 percentage points when observed user-space setup is included.
+BC: pooled demand-fill error changes from 77.58 to 76.56 percentage points when observed user-space setup is included.
+
+These are scope controls, not a recovered M5 collection procedure. Kernel copies remain invisible. The common-protocol primary figure is not replaced.
 
 ## Exploratory closest pooled cases
 

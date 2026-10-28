@@ -131,3 +131,27 @@ phase1/trials200-pool-bfs,bfs,pooled,traffic,0.5956364797553113,1,200,0,False,ti
 phase1/trials200-pool-bfs,bfs,whole,accesses,0.2414385455336202,1,200,0,False,timed kernel,10,3451da64f063be5aadd2f20f4e9e3c68f100991bae99b35094184044f6aa9a17,37507609391
 phase1/trials200-pool-bfs,bfs,whole,fills,0.2414385455336202,1,200,0,False,timed kernel,10,3451da64f063be5aadd2f20f4e9e3c68f100991bae99b35094184044f6aa9a17,1868440007
 phase1/trials200-pool-bfs,bfs,whole,traffic,0.2414385455336202,1,200,0,False,timed kernel,10,3451da64f063be5aadd2f20f4e9e3c68f100991bae99b35094184044f6aa9a17,2193067266
+phase1/trials200-pool-cc,cc,pooled,accesses,0.5799205222296864,1,200,0,False,timed kernel,10,3451da64f063be5aadd2f20f4e9e3c68f100991bae99b35094184044f6aa9a17,51593702296
+phase1/trials200-pool-cc,cc,pooled,fills,0.5799589799413714,1,200,0,False,timed kernel,10,3451da64f063be5aadd2f20f4e9e3c68f100991bae99b35094184044f6aa9a17,2143781587
+phase1/trials200-pool-cc,cc,pooled,traffic,0.5799283113666813,1,200,0,False,timed kernel,10,3451da64f063be5aadd2f20f4e9e3c68f100991bae99b35094184044f6aa9a17,2572350691
+phase1/trials200-pool-cc,cc,whole,accesses,0.5794381358780336,1,200,0,False,timed kernel,10,3451da64f063be5aadd2f20f4e9e3c68f100991bae99b35094184044f6aa9a17,51593702296
+phase1/trials200-pool-cc,cc,whole,fills,0.5794381358780336,1,200,0,False,timed kernel,10,3451da64f063be5aadd2f20f4e9e3c68f100991bae99b35094184044f6aa9a17,2143781587
+phase1/trials200-pool-cc,cc,whole,traffic,0.5794381358780336,1,200,0,False,timed kernel,10,3451da64f063be5aadd2f20f4e9e3c68f100991bae99b35094184044f6aa9a17,2572350691
+process-bfs,bfs,pooled,accesses,0.5067740166836455,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,996367374
+process-bfs,bfs,pooled,fills,0.5070402164155483,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,70128439
+process-bfs,bfs,pooled,traffic,0.5054197404406922,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,89622882
+process-bfs,bfs,whole,accesses,0.5700258696371774,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,996367374
+process-bfs,bfs,whole,fills,0.5700258696371774,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,70128439
+process-bfs,bfs,whole,traffic,0.5700258696371774,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,89622882
+process-cc,cc,pooled,accesses,0.4474015363468713,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,1156118468
+process-cc,cc,pooled,fills,0.4478129517894256,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,78302865
+process-cc,cc,pooled,traffic,0.4433047927887177,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,90787805
+process-cc,cc,whole,accesses,0.5006264129598542,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,1156118468
+process-cc,cc,whole,fills,0.5006264129598542,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,78302865
+process-cc,cc,whole,traffic,0.5006264129598542,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,90787805
+process-bc,bc,pooled,accesses,0.765099932740715,1,1,1,False,full observed process,10,cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51,4843400149
+process-bc,bc,pooled,fills,0.7655877452442835,1,1,1,False,full observed process,10,cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51,473720478
+process-bc,bc,pooled,traffic,0.7621109116718544,1,1,1,False,full observed process,10,cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51,610167078
+process-bc,bc,whole,accesses,0.14122487682109813,1,1,1,False,full observed process,10,cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51,4843400149
+process-bc,bc,whole,fills,0.14122487682109813,1,1,1,False,full observed process,10,cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51,473720478
+process-bc,bc,whole,traffic,0.14122487682109813,1,1,1,False,full observed process,10,cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51,610167078

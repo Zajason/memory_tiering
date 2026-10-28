@@ -37,7 +37,14 @@ baseline. Repetition alone therefore does not close the pooled gap. Across the
 entire run, the discrepancy falls to 24.1 points: more trials touch more distinct
 lines in the union, while each pooled observation still covers only 10M memory
 events. These are different questions, not interchangeable estimates. CC's
-matching repetition control remains in progress.
+matching repetition control is complete too: pooled fill error is 58.0 points
+versus 50.5 previously, so it does not improve agreement either.
+
+Full-process BFS and CC on the real inputs are now validated. Including observed
+user-space setup changes pooled fill error from 55.6 to 50.7 points for BFS,
+and from 49.2 to 44.8 for CC. Access errors change similarly, to 50.7 and 44.7
+points. This identifies a modest collection-scope effect; it neither recovers
+invisible kernel traffic nor establishes that M5 used full-process collection.
 
 The [second Pin campaign](pin-stage2-protocol.md) tests full observed process
 scope, twenty-thread real-input runs, nine LLC ways and an RSS-selected TC graph.

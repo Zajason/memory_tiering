@@ -106,6 +106,19 @@ def main():
       '|---|---|---|---|---:|---:|---:|---|']
     for r in records:
         lines.append(f"| {r['case']} | {r['workload']} | {r['scope']} | {r['stream']} | {100*r['max_abs_error']:.2f} | {r['threads']} | {r['llc_ways']} | {r['collection']} |")
+    process_rows=[r for r in records if r['case'].startswith('process-')
+                  and r['scope']=='pooled' and r['stream']=='fills']
+    if process_rows:
+        lines+=['','## Completed process-scope controls','']
+        for r in process_rows:
+            before=next(b for b in records if b['case']=='declared-real-input'
+                        and b['workload']==r['workload'] and b['scope']=='pooled'
+                        and b['stream']=='fills')
+            lines.append(f"{r['workload'].upper()}: pooled demand-fill error changes from "
+                         f"{100*before['max_abs_error']:.2f} to {100*r['max_abs_error']:.2f} "
+                         'percentage points when observed user-space setup is included.')
+        lines+=['','These are scope controls, not a recovered M5 collection procedure. '
+                'Kernel copies remain invisible. The common-protocol primary figure is not replaced.']
     lines+=['','## Exploratory closest pooled cases','',
       '![Exploratory closest pooled controls](../results/fidelity-stage2-2026-10-28/exploratory-closest.png)','',
       '![M5, closest access and closest miss controls](../results/fidelity-stage2-2026-10-28/exploratory-closest-full.png)','',

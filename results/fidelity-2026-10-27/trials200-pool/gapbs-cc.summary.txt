@@ -1,0 +1,114 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-cc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             258
+epoch_len_dram_acc 10000000
+instructions       185475028090
+mem_refs_profiled  51593702296
+dram_accesses      2572350691
+llc_miss_ratio     0.049858  (DRAM accesses per memory ref)
+page_observations  50483038   (page x epoch pairs with >=1 access)
+mean_unique_words  19.015 / 64
+top4_word_share    0.1541   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1294
+  8         12.5%   0.2829
+ 16           25%   0.6251
+ 32           50%   0.8699
+ 48           75%   0.8745
+
+# P(page has at least 48 of 64 words accessed) = 0.1255
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,1487828
+2,1617641
+3,1661590
+4,1765996
+5,1851390
+6,1893326
+7,1969191
+8,2036210
+9,2115020
+10,2216647
+11,2245867
+12,2256268
+13,2263653
+14,2203364
+15,2053138
+16,1920816
+17,1812653
+18,1581455
+19,1419724
+20,1285668
+21,1131683
+22,1002272
+23,843886
+24,720321
+25,601212
+26,507600
+27,410149
+28,324513
+29,256928
+30,198825
+31,155467
+32,106323
+33,79239
+34,53141
+35,36949
+36,24108
+37,12673
+38,7671
+39,6357
+40,3581
+41,1489
+42,1290
+43,1418
+44,618
+45,406
+46,422
+47,600
+48,393
+49,831
+50,678
+51,888
+52,766
+53,1351
+54,1648
+55,2498
+56,2489
+57,2739
+58,3938
+59,4645
+60,6348
+61,9656
+62,21493
+63,57534
+64,6218557
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,704167
+1,2390097
+2,5329496
+3,12216235
+4,15934871
+5,7445571
+6,638683
+7,3735696
+8,739640
+9,1348582

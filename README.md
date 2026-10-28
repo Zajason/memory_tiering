@@ -42,7 +42,14 @@ The six-workload input campaign is complete. The 200-trial, one-thread BFS
 control has passed validation: pooled access/fill error is 59.6 percentage points
 versus 59.1 previously, so repetition alone does not improve this metric. Its
 whole-run error is 24.1 points; this remains a separate scope, not a replacement
-for the pooled result. The matching CC control is running.
+for the pooled result. The matching CC control is complete: pooled fill error
+is 58.0 points versus 50.5 previously, also no improvement.
+
+The first full-process controls are validated. Including observed user-space
+setup reduces pooled access/fill errors to 50.7/50.7 points for BFS and
+44.7/44.8 for CC, versus 55.5/55.6 and 49.2/49.2 on the same real inputs with
+kernel-only collection. These are modest scope effects, not close replication;
+Pin still cannot observe kernel copies. The primary figure remains unchanged.
 
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically

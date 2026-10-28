@@ -71,6 +71,12 @@ trials200-pool,bfs,pooled,traffic,1,200,0,False,synthetic Kronecker,0.5956364797
 trials200-pool,bfs,whole,accesses,1,200,0,False,synthetic Kronecker,0.2414385455336202,0.15723194731364842,37507609391
 trials200-pool,bfs,whole,fills,1,200,0,False,synthetic Kronecker,0.2414385455336202,0.15723194731364842,1868440007
 trials200-pool,bfs,whole,traffic,1,200,0,False,synthetic Kronecker,0.2414385455336202,0.15723194731364842,2193067266
+trials200-pool,cc,pooled,accesses,1,200,0,False,synthetic Kronecker,0.5799205222296864,0.6251231777971009,51593702296
+trials200-pool,cc,pooled,fills,1,200,0,False,synthetic Kronecker,0.5799589799413714,0.6251247873956752,2143781587
+trials200-pool,cc,pooled,traffic,1,200,0,False,synthetic Kronecker,0.5799283113666813,0.6251197679505738,2572350691
+trials200-pool,cc,whole,accesses,1,200,0,False,synthetic Kronecker,0.5794381358780336,0.6148781456548971,51593702296
+trials200-pool,cc,whole,fills,1,200,0,False,synthetic Kronecker,0.5794381358780336,0.6148781456548971,2143781587
+trials200-pool,cc,whole,traffic,1,200,0,False,synthetic Kronecker,0.5794381358780336,0.6148781456548971,2572350691
 trials3-close,bfs,pooled,accesses,1,3,1,False,synthetic Kronecker,0.5619827558940557,0.6251541911527488,533157561
 trials3-close,bfs,pooled,fills,1,3,1,False,synthetic Kronecker,0.561852032386511,0.6249295738983458,27010783
 trials3-close,bfs,pooled,traffic,1,3,1,False,synthetic Kronecker,0.5618388167938327,0.6249072555065313,31759490

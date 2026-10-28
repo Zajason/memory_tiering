@@ -61,6 +61,18 @@
       "error_pp": 34.87290697321488
     }
   ],
+  "repetition": [
+    {
+      "workload": "bfs",
+      "scope": "pooled",
+      "error_pp": 59.57226182942007
+    },
+    {
+      "workload": "bfs",
+      "scope": "whole",
+      "error_pp": 24.143854553362022
+    }
+  ],
   "stage2": {
     "status": "waiting for declared repetition controls",
     "completed": 0,

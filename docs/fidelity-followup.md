@@ -35,8 +35,8 @@ All cases below were declared before collecting their new measurements. No windo
 | dataset-tc | complete |
 | dataset-bc | complete |
 | dataset-sssp | complete |
-| trials200-pool-bfs | running |
-| trials200-pool-cc | queued after input campaign |
+| trials200-pool-bfs | complete |
+| trials200-pool-cc | running |
 
 ## Completed comparisons
 
@@ -64,6 +64,8 @@ All cases below were declared before collecting their new measurements. No windo
 | threads20 | bfs | whole | 0.590 | 0.590 | 0.590 | 0.591 |
 | threads20 | cc | pooled | 0.494 | 0.494 | 0.494 | 0.505 |
 | threads20 | cc | whole | 0.579 | 0.579 | 0.579 | 0.505 |
+| trials200-pool | bfs | pooled | 0.596 | 0.596 | 0.596 | 0.591 |
+| trials200-pool | bfs | whole | 0.241 | 0.241 | 0.241 | 0.591 |
 | trials3-close | bfs | pooled | 0.562 | 0.562 | 0.562 | 0.591 |
 | trials3-close | bfs | whole | 0.584 | 0.584 | 0.584 | 0.591 |
 | trials3-close | cc | pooled | 0.492 | 0.492 | 0.492 | 0.505 |

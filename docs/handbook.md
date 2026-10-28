@@ -31,6 +31,14 @@ worsen pooled demand-fill errors to 77.6/79.6 percentage points. Their whole-ROI
 errors are 14.1/10.9 points, but choosing the better-looking scope after collection
 would not establish M5's protocol. Both views remain published.
 
+The 200-trial, one-thread BFS control is also complete. Its pooled access and
+fill discrepancies are 59.6 percentage points, versus 59.1 on the one-trial
+baseline. Repetition alone therefore does not close the pooled gap. Across the
+entire run, the discrepancy falls to 24.1 points: more trials touch more distinct
+lines in the union, while each pooled observation still covers only 10M memory
+events. These are different questions, not interchangeable estimates. CC's
+matching repetition control remains in progress.
+
 The [second Pin campaign](pin-stage2-protocol.md) tests full observed process
 scope, twenty-thread real-input runs, nine LLC ways and an RSS-selected TC graph.
 Its [live results report](pin-fidelity-stage2.md) retains all outcomes and labels

@@ -38,7 +38,11 @@ unavailable, so these are input-family and execution controls.
 The first validated Twitter BFS/CC results improve pooled demand-fill agreement
 only slightly: maximum five-point errors are 55.6/49.2 percentage points, versus
 59.1/50.5 on the prior baseline. Input family alone has not closed the gap.
-The repetition controls continue. The six-workload input campaign is complete.
+The six-workload input campaign is complete. The 200-trial, one-thread BFS
+control has passed validation: pooled access/fill error is 59.6 percentage points
+versus 59.1 previously, so repetition alone does not improve this metric. Its
+whole-run error is 24.1 points; this remains a separate scope, not a replacement
+for the pooled result. The matching CC control is running.
 
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically

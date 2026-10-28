@@ -145,6 +145,12 @@ Campaign: waiting for declared repetition controls
 | phase1/pr-artifact-convergence-pr | pr | whole | accesses | 1.99 | 1 | 10 | timed kernel |
 | phase1/pr-artifact-convergence-pr | pr | whole | fills | 1.99 | 1 | 10 | timed kernel |
 | phase1/pr-artifact-convergence-pr | pr | whole | traffic | 1.99 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-bfs | bfs | pooled | accesses | 59.57 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-bfs | bfs | pooled | fills | 59.57 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-bfs | bfs | pooled | traffic | 59.56 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-bfs | bfs | whole | accesses | 24.14 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-bfs | bfs | whole | fills | 24.14 | 1 | 10 | timed kernel |
+| phase1/trials200-pool-bfs | bfs | whole | traffic | 24.14 | 1 | 10 | timed kernel |
 
 ## Exploratory closest pooled cases
 

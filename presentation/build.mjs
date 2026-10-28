@@ -78,6 +78,8 @@ if(data.stage2.completed>0){
 }else{
  const label=data.stage2.status.startsWith('waiting')?'αναμονή ολοκλήρωσης των repetition controls':data.stage2.status;
  body(s,'Full process έναντι timed-kernel ROI.\nReal inputs μαζί με 20 software threads.\n9 LLC ways αντί για 10.\nTC footprint: επιλογή μόνο με native RSS.\n\nΟλοκληρωμένοι έλεγχοι: '+data.stage2.completed+' / '+data.stage2.total+'\nΚατάσταση: '+label,170,28);
+ const bfs=(data.repetition||[]).find(r=>r.workload==='bfs'&&r.scope==='pooled');
+ if(bfs)caption(s,'BFS, 200 trials: pooled σφάλμα '+bfs.error_pp.toFixed(1)+' μ.μ. αντί 59,1. Η επανάληψη μόνη της δεν βελτιώνει τη συμφωνία.');
 }
 s=slide('Το ίδιο γράφημα στο SimCXL',
  '70 δευτερόλεπτα. Η probe μετρά physical accepted requests στο CXL bridge. Τα bridge/controller clocks είναι ανεξάρτητα και δεν αθροίζονται. Το overview συγκρίνει διαφορετικά setups και όχι identical traces. Οι μη ολοκληρωμένες εκτελέσεις είναι pending, όχι μηδενικές μπάρες.', 'docs/simulator-figure4.md');

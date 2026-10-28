@@ -17,7 +17,13 @@ def main():
     stage=ROOT/'results/fidelity-stage2-2026-10-28/campaign.json'
     state=json.loads(stage.read_text()) if stage.exists() else {'jobs':{},'status':'not started'}
     sim=json.loads((ROOT/'results/revalidated-2026-10-25/sim-status.json').read_text())
-    data=dict(scores=records,stage2=dict(status=state['status'],
+    repetition=[]
+    with (ROOT/'results/fidelity-stage2-2026-10-28/scores.csv').open() as f:
+        for r in csv.DictReader(f):
+            if r['case'].startswith('phase1/trials200-pool-') and r['stream']=='fills':
+                repetition.append(dict(workload=r['workload'],scope=r['scope'],
+                                       error_pp=100*float(r['max_abs_error'])))
+    data=dict(scores=records,repetition=repetition,stage2=dict(status=state['status'],
         completed=sum(j['status']=='complete' for j in state['jobs'].values()),
         total=len(state['jobs']) or 21,current=state.get('current')),
         simulator={k:v['status'] for k,v in sim['jobs'].items()},

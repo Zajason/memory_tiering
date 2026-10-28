@@ -16,3 +16,6 @@ docs/index.html linguist-generated
 # would still read as "this is a JavaScript project" next to the C++ that
 # matters. Vendored, not generated: it is source, just not the point.
 docs/app.js linguist-vendored
+
+# Slide authoring is supporting material, not the systems implementation.
+presentation/** linguist-vendored

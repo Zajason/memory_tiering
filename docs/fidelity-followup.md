@@ -33,19 +33,23 @@ All cases below were declared before collecting their new measurements. No windo
 | dataset-cc | complete |
 | dataset-pr | complete |
 | dataset-tc | complete |
-| dataset-bc | running |
-| dataset-sssp | queued |
-| trials200-pool-bfs | queued after input campaign |
+| dataset-bc | complete |
+| dataset-sssp | complete |
+| trials200-pool-bfs | running |
 | trials200-pool-cc | queued after input campaign |
 
 ## Completed comparisons
 
 | Case | Workload | Scope | Access error | Fill error | Traffic error | Baseline pooled fill error |
 |---|---|---|---:|---:|---:|---:|
+| dataset | bc | pooled | 0.775 | 0.776 | 0.772 | 0.307 |
+| dataset | bc | whole | 0.141 | 0.141 | 0.141 | 0.307 |
 | dataset | bfs | pooled | 0.555 | 0.556 | 0.555 | 0.591 |
 | dataset | bfs | whole | 0.584 | 0.584 | 0.584 | 0.591 |
 | dataset | cc | pooled | 0.492 | 0.492 | 0.489 | 0.505 |
 | dataset | cc | whole | 0.526 | 0.526 | 0.526 | 0.505 |
+| dataset | sssp | pooled | 0.796 | 0.796 | 0.796 | 0.340 |
+| dataset | sssp | whole | 0.109 | 0.109 | 0.109 | 0.340 |
 | dataset | tc | pooled | 0.337 | 0.349 | 0.349 | 0.416 |
 | dataset | tc | whole | 0.229 | 0.229 | 0.229 | 0.416 |
 | dataset/attempt-1 | pr | pooled | 0.015 | 0.015 | 0.015 | 0.011 |
@@ -75,11 +79,15 @@ Errors are maximum absolute differences from the digitized reference over N=4,8,
 
 ## Interpretation of completed input controls
 
-On the declared Twitter reduction, pooled demand-fill error changes from 59.1 to 55.6 percentage points for BFS and 50.5 to 49.2 for CC. These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. The remaining input and repetition controls must finish before assessing the campaign as a whole.
+On the declared Twitter reduction, pooled demand-fill error changes from 59.1 to 55.6 percentage points for BFS and 50.5 to 49.2 for CC. These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. The input campaign is complete; repetition and stage 2 controls remain separate pending tests.
 
 The completed Twitter PageRank run has pooled demand-fill error 1.53 percentage points, versus 1.08 on the prior Kronecker baseline. It remains close at the five reference points, but the new input does not improve agreement. Numerical similarity does not establish the original collection protocol.
 
 The completed Twitter TC run has pooled demand-fill error 34.87 percentage points, versus 41.61 on the prior Kronecker baseline. Agreement improves but remains poor. Its native footprint is about 0.71 GiB, versus the 5.0 GB TC footprint reported in M5 Table 3; this is not a size-matched reproduction. Whole-ROI results are also reported above and are not substituted for the declared pooled comparison.
+
+The larger Google+ inputs worsen pooled demand-fill errors to 77.58 pp (BC) and 79.65 pp (SSSP). Their whole-ROI errors are much smaller, but this does not identify the original collection scope. Both scopes remain reported; no favorable scope replaces a predeclared result. The [second Pin campaign](pin-stage2-protocol.md) tests the remaining explicit controls.
+
+![M5, accesses and demand misses on documented real-input controls](assets/fig4_fidelity_full.png)
 
 ## Native footprint checks
 

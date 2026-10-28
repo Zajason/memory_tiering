@@ -37,8 +37,8 @@ unavailable, so these are input-family and execution controls.
 
 The first validated Twitter BFS/CC results improve pooled demand-fill agreement
 only slightly: maximum five-point errors are 55.6/49.2 percentage points, versus
-59.1/50.5 on the prior baseline. Input family alone has not closed the gap; the
-remaining dataset and repetition controls are still pending.
+59.1/50.5 on the prior baseline. Input family alone has not closed the gap.
+The repetition controls continue. The six-workload input campaign is complete.
 
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically
@@ -47,6 +47,13 @@ close, but this input change does not improve agreement.
 Twitter TC is complete: pooled demand-fill error improves from 41.6 to 34.9
 percentage points, still substantial. Its measured native footprint is about
 0.71 GiB, not the paper's reported 5.0 GB, so the reduction is not size-matched.
+
+Larger Google+ BC/SSSP inputs worsen pooled fill discrepancies to 77.6/79.6
+percentage points, versus 30.7/34.0 previously. Whole-ROI values differ strongly;
+they are not substituted for the pooled metric. The [declared second Pin campaign](docs/pin-stage2-protocol.md)
+tests process scope, joint real-input/20-thread execution, nine LLC ways and a
+native-RSS-selected TC input. Both accesses and misses are retained, with
+[all outcomes and exploratory closest cases](docs/pin-fidelity-stage2.md).
 
 Bounded full-system checkpoint/restore validation has passed: all three probe
 outputs and the completion tick match an uninterrupted run. Managed snapshots

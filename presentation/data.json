@@ -1,0 +1,81 @@
+{
+  "scores": [
+    {
+      "kind": "baseline",
+      "workload": "bfs",
+      "error_pp": 59.140753660812074
+    },
+    {
+      "kind": "baseline",
+      "workload": "cc",
+      "error_pp": 50.47153557899382
+    },
+    {
+      "kind": "baseline",
+      "workload": "sssp",
+      "error_pp": 33.99893694344045
+    },
+    {
+      "kind": "baseline",
+      "workload": "bc",
+      "error_pp": 30.748821445507545
+    },
+    {
+      "kind": "baseline",
+      "workload": "pr",
+      "error_pp": 1.0804929054342038
+    },
+    {
+      "kind": "baseline",
+      "workload": "tc",
+      "error_pp": 41.6051804498987
+    },
+    {
+      "kind": "real-input",
+      "workload": "pr",
+      "error_pp": 1.5302066000929173
+    },
+    {
+      "kind": "real-input",
+      "workload": "bc",
+      "error_pp": 77.58499857958918
+    },
+    {
+      "kind": "real-input",
+      "workload": "bfs",
+      "error_pp": 55.562870848585135
+    },
+    {
+      "kind": "real-input",
+      "workload": "cc",
+      "error_pp": 49.218974527963255
+    },
+    {
+      "kind": "real-input",
+      "workload": "sssp",
+      "error_pp": 79.64891675210396
+    },
+    {
+      "kind": "real-input",
+      "workload": "tc",
+      "error_pp": 34.87290697321488
+    }
+  ],
+  "stage2": {
+    "status": "waiting for declared repetition controls",
+    "completed": 0,
+    "total": 21,
+    "current": null
+  },
+  "simulator": {
+    "bfs": "complete",
+    "cc": "complete",
+    "bc": "complete",
+    "sssp": "complete",
+    "pr": "running"
+  },
+  "sources": [
+    "results/fidelity-2026-10-27/scores.csv",
+    "results/revalidated-2026-10-25/sim-comparison/sources.json"
+  ]
+}

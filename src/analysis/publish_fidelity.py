@@ -119,7 +119,9 @@ def main():
           f"{100*baseline['cc','fills']:.1f} to {100*dataset_scores['cc']:.1f} for CC. "
           'These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. '
           'Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. '
-          'The remaining input and repetition controls must finish before assessing the campaign as a whole.']
+          + ('The input campaign is complete; repetition and stage 2 controls remain separate pending tests.'
+           if state.get('status')=='complete' else
+           'The remaining input and repetition controls must finish before assessing the campaign as a whole.')]
     if ('pr','fills') in dataset:
         error=max(abs(dataset['pr','fills'][n]-H.M5_FIGURE4['gapbs-pr'][n]) for n in H.FIG4_N)
         lines+=['',f'The completed Twitter PageRank run has pooled demand-fill error {100*error:.2f} percentage points, '
@@ -133,6 +135,14 @@ def main():
                 'Agreement improves but remains poor. Its native footprint is about 0.71 GiB, '
                 'versus the 5.0 GB TC footprint reported in M5 Table 3; this is not a size-matched reproduction. '
                 'Whole-ROI results are also reported above and are not substituted for the declared pooled comparison.']
+    if all((name,'fills') in dataset for name in ['bc','sssp']):
+        errors={name:max(abs(dataset[name,'fills'][n]-H.M5_FIGURE4['gapbs-'+name][n])
+                        for n in H.FIG4_N)*100 for name in ['bc','sssp']}
+        lines+=['',f"The larger Google+ inputs worsen pooled demand-fill errors to {errors['bc']:.2f} pp (BC) "
+                f"and {errors['sssp']:.2f} pp (SSSP). "
+                'Their whole-ROI errors are much smaller, but this does not identify the original collection scope. '
+                'Both scopes remain reported; no favorable scope replaces a predeclared result. '
+                'The [second Pin campaign](pin-stage2-protocol.md) tests the remaining explicit controls.']
     if all((name,'fills') in dataset for name in names):
         lines+=['','![M5, accesses and demand misses on documented real-input controls](assets/fig4_fidelity_full.png)']
     if (OUT/'inputs.json').exists():

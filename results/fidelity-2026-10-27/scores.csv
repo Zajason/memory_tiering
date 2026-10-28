@@ -5,6 +5,12 @@ dataset/attempt-1,pr,pooled,traffic,1,1,1,False,Twitter WWW2010 induced hash red
 dataset/attempt-1,pr,whole,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.019986733066505044,1.1172154522069194e-05,41163811854
 dataset/attempt-1,pr,whole,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.019986733066505044,1.1172154522069194e-05,6977141767
 dataset/attempt-1,pr,whole,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.019986733066505044,1.1172154522069194e-05,7035699666
+dataset,bc,pooled,accesses,1,1,1,False,Google+ IMC12 published snapshot 4,0.7753419020430763,0.695472686577023,4726899404
+dataset,bc,pooled,fills,1,1,1,False,Google+ IMC12 published snapshot 4,0.7758499857958918,0.6957322752763897,459251669
+dataset,bc,pooled,traffic,1,1,1,False,Google+ IMC12 published snapshot 4,0.7723623702620378,0.6912552944417695,588488439
+dataset,bc,whole,accesses,1,1,1,False,Google+ IMC12 published snapshot 4,0.1408218994055867,0.00044226281581036736,4726899404
+dataset,bc,whole,fills,1,1,1,False,Google+ IMC12 published snapshot 4,0.1408218994055867,0.00044226281581036736,459251669
+dataset,bc,whole,traffic,1,1,1,False,Google+ IMC12 published snapshot 4,0.1408218994055867,0.00044226281581036736,588488439
 dataset,bfs,pooled,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5554316706082916,0.6799574638777233,933165082
 dataset,bfs,pooled,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5556287084858513,0.6800920122348694,62304636
 dataset,bfs,pooled,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5547356284082847,0.6793705037320743,77891095
@@ -17,6 +23,12 @@ dataset,cc,pooled,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.4
 dataset,cc,whole,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5259644280608522,0.41166332965326247,1092915244
 dataset,cc,whole,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5259644280608522,0.41166332965326247,70481855
 dataset,cc,whole,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5259644280608522,0.41166332965326247,79059256
+dataset,sssp,pooled,accesses,1,1,1,False,Google+ IMC12 published snapshot 2,0.7959328496547234,0.7544031698035327,2968391080
+dataset,sssp,pooled,fills,1,1,1,False,Google+ IMC12 published snapshot 2,0.7964891675210396,0.7545516413002734,149420797
+dataset,sssp,pooled,traffic,1,1,1,False,Google+ IMC12 published snapshot 2,0.7958826426058543,0.7540712709103382,176158437
+dataset,sssp,whole,accesses,1,1,1,False,Google+ IMC12 published snapshot 2,0.1093974500084357,0.00011247599842533602,2968391080
+dataset,sssp,whole,fills,1,1,1,False,Google+ IMC12 published snapshot 2,0.1093974500084357,0.00011247599842533602,149420797
+dataset,sssp,whole,traffic,1,1,1,False,Google+ IMC12 published snapshot 2,0.1093974500084357,0.00011247599842533602,176158437
 dataset,tc,pooled,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.3366716068269828,0.19748652203448624,183895617817
 dataset,tc,pooled,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.3487290697321488,0.2023503728243482,170178838
 dataset,tc,pooled,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.3487290697321488,0.2023503728243482,170178869

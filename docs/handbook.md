@@ -26,6 +26,17 @@ from 41.6 to 34.9 percentage points. This remains poor agreement. Its native
 footprint is only about 0.71 GiB versus M5's reported 5.0 GB; using the same source
 graph family has not recovered the authors' reduction or working set.
 
+The full first input campaign is now complete. Larger Google+ BC/SSSP inputs
+worsen pooled demand-fill errors to 77.6/79.6 percentage points. Their whole-ROI
+errors are 14.1/10.9 points, but choosing the better-looking scope after collection
+would not establish M5's protocol. Both views remain published.
+
+The [second Pin campaign](pin-stage2-protocol.md) tests full observed process
+scope, twenty-thread real-input runs, nine LLC ways and an RSS-selected TC graph.
+Its [live results report](pin-fidelity-stage2.md) retains all outcomes and labels
+reference-selected closest cases as exploratory. Accesses and misses are measured
+together. Pin still cannot see kernel copies during setup.
+
 There is now also a [simulator version of the Figure 4 comparison](simulator-figure4.md).
 It uses completed CXL-bridge measurements, not the Pin cache filter. BFS/CC are
 closer to the reference in these runs, while BC/SSSP are farther away. That does

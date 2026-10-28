@@ -34,6 +34,8 @@ def main():
     ap.add_argument("--graph-family", default="synthetic Kronecker")
     ap.add_argument("--llc-ways", type=int, default=10)
     ap.add_argument("--warm-setup", action="store_true")
+    ap.add_argument('--scope', choices=['kernel','process'], default='kernel',
+                    help='Timed-kernel ROI (default), or full observed process including setup')
     ap.add_argument("--max-epochs", type=int, default=0)
     ap.add_argument("--dump-pages", action="store_true")
     ap.add_argument("--gzip-pages", action="store_true", help="Stream raw records into gzip without a large intermediate file")
@@ -49,6 +51,8 @@ def main():
         ap.error("epoch-refs must be positive and epoch-traffic nonnegative")
     if args.threads <= 0 or args.trials <= 0:
         ap.error('threads and trials must be positive')
+    if args.scope=='process' and args.warm_setup:
+        ap.error('process scope includes setup; warm-setup requires kernel scope')
     if args.pr_iterations is not None and args.pr_iterations <= 0:
         ap.error('PageRank iteration limit must be positive')
     if args.pr_tolerance is not None and args.pr_tolerance <= 0:
@@ -82,6 +86,9 @@ def main():
                "-roi_begin", "hotskew_roi_begin", "-roi_end", "hotskew_roi_end",
                "-roi_epoch", str(args.roi_epoch),
                "-tag", f"gapbs-{name}", "-o", str(prefix), "--", str(binary), "-f", str(graph), "-n", str(args.trials)]
+        if args.scope=='process':
+            # Pin rejects empty argv entries; absent ROI knobs retain their defaults.
+            at=cmd.index('-roi_begin');del cmd[at:at+4]
         if name=='pr':
             if args.pr_iterations is not None:cmd+=['-i',str(args.pr_iterations)]
             if args.pr_tolerance is not None:cmd+=['-t',str(args.pr_tolerance)]
@@ -98,7 +105,8 @@ def main():
                         window="modeled memory events" if args.epoch_traffic else "line-operand references",
                         epoch_refs=0 if args.epoch_traffic else args.epoch_refs*1000000,
                         epoch_traffic=args.epoch_traffic*1000000,
-                        roi="timed kernel", warm_setup=args.warm_setup, trials=args.trials,
+                        roi="timed kernel" if args.scope=='kernel' else 'full observed process',
+                        scope=args.scope, warm_setup=args.warm_setup, trials=args.trials,
                         roi_epoch=args.roi_epoch,
                         multicore_model='per-thread private caches; shared serialized LLC; no coherence',
                         status="running", started=time.time())

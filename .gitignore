@@ -67,3 +67,5 @@ results/**/config.ini
 results/**/config.json
 results/**/*.lock
 dmtcp_restart_script*.sh
+pinos.log.*
+/presentation/latest.json

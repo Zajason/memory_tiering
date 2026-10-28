@@ -88,6 +88,10 @@ reproduce: validate benchmarks profile analyse check
 .NOTPARALLEL: reproduce
 
 .PHONY: audit-test paired
+.PHONY: scope-test
+scope-test: $(PY)
+	$(PY) experiments/test_paired_scope.py
+
 audit-test: $(PY)
 	g++ -std=c++17 -O2 -Wall -Wextra -Werror src/profiler/validate/audit_test.cpp -o /tmp/memory-tiering-audit-test
 	/tmp/memory-tiering-audit-test

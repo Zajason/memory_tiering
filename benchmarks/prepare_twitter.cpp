@@ -59,9 +59,13 @@ uint64_t mix(uint64_t x) {
 }
 
 int main(int argc,char** argv) try {
-    if(argc!=4 && argc!=6)throw std::runtime_error("usage: prepare_twitter SOURCE_DIR MAIN.el TC.el [EXPECTED_NODES EXPECTED_EDGES]");
-    uint64_t expected_nodes=argc==6?std::stoull(argv[4]):41652230;
-    uint64_t expected_edges=argc==6?std::stoull(argv[5]):1468365182ULL;
+    if(argc!=4 && argc!=6 && argc!=8)throw std::runtime_error("usage: prepare_twitter SOURCE_DIR MAIN.el TC.el [EXPECTED_NODES EXPECTED_EDGES [TC_NUMERATOR TC_DENOMINATOR]]");
+    uint64_t expected_nodes=argc>=6?std::stoull(argv[4]):41652230;
+    uint64_t expected_edges=argc>=6?std::stoull(argv[5]):1468365182ULL;
+    uint64_t tc_numerator=argc==8?std::stoull(argv[6]):1;
+    uint64_t tc_denominator=argc==8?std::stoull(argv[7]):4;
+    if(!tc_numerator || tc_numerator>tc_denominator || tc_denominator>65536)
+        throw std::runtime_error("invalid TC vertex-selection fraction");
     constexpr uint32_t limit=1u<<27, missing=UINT32_MAX;
     std::vector<uint8_t> seen(limit/8,0);
     uint32_t max_id=0;
@@ -80,7 +84,7 @@ int main(int argc,char** argv) try {
     for(uint32_t u=0;u<=max_id;++u) if(seen[u/8]&(1u<<(u%8))) {
         ++nodes;uint32_t bucket=mix(u)%4;
         if(bucket<3)main_map[u]=main_nodes++;
-        if(bucket<1)tc_map[u]=tc_nodes++;
+        if(mix(u)%tc_denominator<tc_numerator)tc_map[u]=tc_nodes++;
     }
     if(nodes!=expected_nodes || edges!=expected_edges)
         throw std::runtime_error("published Twitter node/edge totals do not match");
@@ -107,6 +111,7 @@ int main(int argc,char** argv) try {
     std::cout<<"{\"source_nodes\":"<<nodes<<",\"source_edges\":"<<edges
              <<",\"main_nodes\":"<<main_nodes<<",\"main_edges\":"<<main_edges
              <<",\"tc_nodes\":"<<tc_nodes<<",\"tc_edges\":"<<tc_edges
+             <<",\"tc_numerator\":"<<tc_numerator<<",\"tc_denominator\":"<<tc_denominator
              <<",\"vertex_count_self_loop_sentinel\":true}\n";
     return 0;
 } catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}

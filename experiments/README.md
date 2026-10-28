@@ -10,6 +10,7 @@ The exact authors' inputs and Figure 4 collection procedure remain unresolved.
 |---|---|
 | `run_paired.py` | Paired access/fill/traffic measurements with manifests and explicit thread/trial/window controls |
 | `run_fidelity_campaign.py` | Predeclared input and execution controls; updates the fidelity report after each completion |
+| `run_pin_fidelity_stage2.py` | Paired process-scope, real-input/thread, nine-way and native-RSS-selected TC controls |
 | `revalidation_campaign.py` | Corrected tracker/extension runs and full-system simulator queue |
 | `run_extension_workload.py` | Redis A/C, Memcached and Liblinear with compressed raw records |
 | `test_process_checkpoint.py` | Kill/restore versus uninterrupted synthetic or bounded full-system run |
@@ -38,6 +39,13 @@ Twenty-thread runs have per-thread private caches and a serialized shared LLC;
 the Pin model does not simulate coherence. Three-trial controls assess scope and
 repetition, while the artifact's performance commands use many more trials.
 Do not silently treat performance-script settings as Figure 4's collection scope.
+
+Stage 2 is declared in [its protocol](../docs/pin-stage2-protocol.md), runs as
+`memory-tiering-pin-fidelity-stage2`, and waits for the repetition controls.
+`run_paired.py --scope process` removes ROI gating without changing the
+instrument; `--scope kernel` remains the default. The process mode still cannot
+observe kernel execution. `test_paired_scope.py` exercises both modes on a tiny
+actual Pin run. Native footprint preparation waits for 26 GiB available RAM.
 
 ## Simulator pause and resume
 

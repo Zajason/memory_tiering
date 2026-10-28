@@ -37,6 +37,11 @@ class TwitterPreparationTest(unittest.TestCase):
                                     capture_output=True)
             self.assertNotEqual(rejected.returncode,0)
             self.assertFalse((root/'bad.el').exists())
+            full=root/'full-tc.el'
+            subprocess.run([str(binary),str(root),str(root/'full-main.el'),str(full),'10','11','1','1'],
+                           check=True,capture_output=True)
+            self.assertEqual(set(full.read_text().splitlines()),
+                             {f'{u} {v}' for u,v in edges}|{'9 9'})
             payload='1 0\n6 0\n9 0\n'
             for i in range(4):
                 with gzip.open(root/f'twitter_rv.net.{i:02d}.gz','wt') as f:

@@ -16,7 +16,8 @@ I found the benchmark commands in the public artifact, but the dataset download
 location in `testing_scripts/README.md` appears to be blank. Could you share:
 
 1. The reduced graph inputs (`twitter_reduced_6G.sg`,
-   `direct_social_structure.wel`, and `direct_social_structure_3-5G.wel`), or the
+   `twitter_reduced_690M_u.sg`, `direct_social_structure.wel`, and
+   `direct_social_structure_3-5G.wel`), or the
    preprocessing commands, including vertex ordering and SSSP edge weights?
 2. The Figure 4 measurement procedure: when WAC collection starts/stops, how
    often counters reset or regions rotate, and how multiple samples are combined?
@@ -35,6 +36,13 @@ Thank you for your time,
 Iason Zakynthinos
 
 ## Search record (2026-10-18)
+
+On 28 October, the paper, all three archived Zenodo versions and the first
+author's slides/speaker notes were checked again. Downloads matched published
+checksums. These checks did not recover the Figure 4 collection procedure or
+the exact reduced inputs. The confirmed settings, search scope and remaining
+test ideas are recorded in [the parameter evidence ledger](m5-parameter-evidence.md).
+This request remains unsent.
 
 Rechecked on 27 October: the official main revision is still
 `d3d90d9308a4abd3af70e99c81d4ed8d445320cf`, with no release assets and a blank

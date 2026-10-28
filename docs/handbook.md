@@ -48,6 +48,9 @@ invisible kernel traffic nor establishes that M5 used full-process collection.
 Full-process SSSP similarly changes pooled fill error only from 79.6 to 78.1
 points. Combining the real Twitter input with 20 software threads gives BFS
 56.0 points versus 55.6 with one thread: this control does not improve agreement.
+The same 20-thread control for CC gives 49.27 points versus 49.22 with one thread.
+This difference is tiny relative to the digitized reference's uncertainty; the
+proper conclusion is no meaningful change, not evidence for a thread-count effect.
 
 The [second Pin campaign](pin-stage2-protocol.md) tests full observed process
 scope, twenty-thread real-input runs, nine LLC ways and an RSS-selected TC graph.

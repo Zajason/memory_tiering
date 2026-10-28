@@ -1,0 +1,113 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-cc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             8
+epoch_len_dram_acc 10000000
+instructions       3883817150
+mem_refs_profiled  1094346297
+dram_accesses      78985463
+llc_miss_ratio     0.072176  (DRAM accesses per memory ref)
+page_observations  2380033   (page x epoch pairs with >=1 access)
+mean_unique_words  24.181 / 64
+top4_word_share    0.1587   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1026
+  8         12.5%   0.2069
+ 16           25%   0.4171
+ 32           50%   0.7511
+ 48           75%   0.8737
+
+# P(page has at least 48 of 64 words accessed) = 0.1277
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,61882
+2,61095
+3,60565
+4,60562
+5,61129
+6,61693
+7,62556
+8,62923
+9,63322
+10,63301
+11,63776
+12,63338
+13,62538
+14,62453
+15,61243
+16,60288
+17,58775
+18,58414
+19,56381
+20,55213
+21,54071
+22,52767
+23,51327
+24,49793
+25,49230
+26,48445
+27,46946
+28,46174
+29,44904
+30,42714
+31,40594
+32,39300
+33,37185
+34,34552
+35,32033
+36,29596
+37,26841
+38,23851
+39,21218
+40,18201
+41,15621
+42,13047
+43,10694
+44,8769
+45,7059
+46,5506
+47,4272
+48,3316
+49,2655
+50,2027
+51,1692
+52,1401
+53,1168
+54,1182
+55,1114
+56,1227
+57,1343
+58,1398
+59,1663
+60,1873
+61,2318
+62,2881
+63,3856
+64,272762
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,60157
+1,120687
+2,246016
+3,501180
+4,804230
+5,333896
+6,176518
+7,118521
+8,18828

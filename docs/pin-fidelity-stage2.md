@@ -19,8 +19,8 @@ Campaign: running
 | process-bc | complete |
 | process-sssp | complete |
 | threads20-bfs | complete |
-| threads20-cc | running |
-| threads20-bc | queued |
+| threads20-cc | complete |
+| threads20-bc | running |
 | threads20-sssp | queued |
 | ways9-bfs | queued |
 | ways9-cc | queued |
@@ -208,6 +208,12 @@ Campaign: running
 | threads20-bfs | bfs | whole | accesses | 58.36 | 20 | 10 | timed kernel |
 | threads20-bfs | bfs | whole | fills | 58.36 | 20 | 10 | timed kernel |
 | threads20-bfs | bfs | whole | traffic | 58.36 | 20 | 10 | timed kernel |
+| threads20-cc | cc | pooled | accesses | 49.25 | 20 | 10 | timed kernel |
+| threads20-cc | cc | pooled | fills | 49.27 | 20 | 10 | timed kernel |
+| threads20-cc | cc | pooled | traffic | 48.87 | 20 | 10 | timed kernel |
+| threads20-cc | cc | whole | accesses | 52.60 | 20 | 10 | timed kernel |
+| threads20-cc | cc | whole | fills | 52.60 | 20 | 10 | timed kernel |
+| threads20-cc | cc | whole | traffic | 52.60 | 20 | 10 | timed kernel |
 
 ## Completed process-scope controls
 

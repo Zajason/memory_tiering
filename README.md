@@ -54,6 +54,9 @@ Pin still cannot observe kernel copies. The primary figure remains unchanged.
 Full-process SSSP changes pooled fill error only from 79.6 to 78.1 points.
 The joint real-input/20-thread BFS control reaches 56.0 points versus 55.6
 with one thread, so this execution change does not improve agreement.
+The matching 20-thread CC control is essentially unchanged: 49.27 versus 49.22
+points of pooled fill error, far below the reference digitization uncertainty
+as a difference between scores. It does not close the gap.
 
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically

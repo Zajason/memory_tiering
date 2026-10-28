@@ -253,7 +253,7 @@
       "elapsed_s": 5823.869360208511
     },
     "dataset-tc": {
-      "status": "running",
+      "status": "complete",
       "started": 1793199452.1292772,
       "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
       "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
@@ -269,10 +269,28 @@
         "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash25",
         "--graph-family",
         "Twitter WWW2010 induced hash reduction"
-      ]
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset-tc-1793199453.run.log",
+      "elapsed_s": 12214.052329778671
     },
     "dataset-bc": {
-      "status": "queued"
+      "status": "running",
+      "started": 1793211666.9724183,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "bc",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/gplus-snapshot4",
+        "--graph-family",
+        "Google+ IMC12 published snapshot 4"
+      ]
     },
     "dataset-sssp": {
       "status": "queued"
@@ -281,5 +299,5 @@
   "status": "running",
   "pid": 14537,
   "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
-  "current": "dataset-tc"
+  "current": "dataset-bc"
 }

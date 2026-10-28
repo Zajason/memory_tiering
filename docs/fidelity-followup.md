@@ -32,8 +32,8 @@ All cases below were declared before collecting their new measurements. No windo
 | dataset-bfs | complete |
 | dataset-cc | complete |
 | dataset-pr | complete |
-| dataset-tc | running |
-| dataset-bc | queued |
+| dataset-tc | complete |
+| dataset-bc | running |
 | dataset-sssp | queued |
 | trials200-pool-bfs | queued after input campaign |
 | trials200-pool-cc | queued after input campaign |
@@ -46,6 +46,8 @@ All cases below were declared before collecting their new measurements. No windo
 | dataset | bfs | whole | 0.584 | 0.584 | 0.584 | 0.591 |
 | dataset | cc | pooled | 0.492 | 0.492 | 0.489 | 0.505 |
 | dataset | cc | whole | 0.526 | 0.526 | 0.526 | 0.505 |
+| dataset | tc | pooled | 0.337 | 0.349 | 0.349 | 0.416 |
+| dataset | tc | whole | 0.229 | 0.229 | 0.229 | 0.416 |
 | dataset/attempt-1 | pr | pooled | 0.015 | 0.015 | 0.015 | 0.011 |
 | dataset/attempt-1 | pr | whole | 0.020 | 0.020 | 0.020 | 0.011 |
 | pr-artifact-convergence | pr | pooled | 0.020 | 0.011 | 0.011 | 0.011 |
@@ -76,6 +78,8 @@ Errors are maximum absolute differences from the digitized reference over N=4,8,
 On the declared Twitter reduction, pooled demand-fill error changes from 59.1 to 55.6 percentage points for BFS and 50.5 to 49.2 for CC. These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. The remaining input and repetition controls must finish before assessing the campaign as a whole.
 
 The completed Twitter PageRank run has pooled demand-fill error 1.53 percentage points, versus 1.08 on the prior Kronecker baseline. It remains close at the five reference points, but the new input does not improve agreement. Numerical similarity does not establish the original collection protocol.
+
+The completed Twitter TC run has pooled demand-fill error 34.87 percentage points, versus 41.61 on the prior Kronecker baseline. Agreement improves but remains poor. Its native footprint is about 0.71 GiB, versus the 5.0 GB TC footprint reported in M5 Table 3; this is not a size-matched reproduction. Whole-ROI results are also reported above and are not substituted for the declared pooled comparison.
 
 ## Native footprint checks
 

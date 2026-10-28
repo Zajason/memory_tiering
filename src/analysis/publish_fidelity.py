@@ -126,6 +126,13 @@ def main():
                 f"versus {100*baseline['pr','fills']:.2f} on the prior Kronecker baseline. "
                 'It remains close at the five reference points, but the new input does not improve agreement. '
                 'Numerical similarity does not establish the original collection protocol.']
+    if ('tc','fills') in dataset:
+        error=max(abs(dataset['tc','fills'][n]-H.M5_FIGURE4['gapbs-tc'][n]) for n in H.FIG4_N)
+        lines+=['',f'The completed Twitter TC run has pooled demand-fill error {100*error:.2f} percentage points, '
+                f"versus {100*baseline['tc','fills']:.2f} on the prior Kronecker baseline. "
+                'Agreement improves but remains poor. Its native footprint is about 0.71 GiB, '
+                'versus the 5.0 GB TC footprint reported in M5 Table 3; this is not a size-matched reproduction. '
+                'Whole-ROI results are also reported above and are not substituted for the declared pooled comparison.']
     if all((name,'fills') in dataset for name in names):
         lines+=['','![M5, accesses and demand misses on documented real-input controls](assets/fig4_fidelity_full.png)']
     if (OUT/'inputs.json').exists():

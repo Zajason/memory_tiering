@@ -44,6 +44,10 @@ Twitter PageRank has also completed and passed validation: its pooled demand-fil
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically
 close, but this input change does not improve agreement.
 
+Twitter TC is complete: pooled demand-fill error improves from 41.6 to 34.9
+percentage points, still substantial. Its measured native footprint is about
+0.71 GiB, not the paper's reported 5.0 GB, so the reduction is not size-matched.
+
 Bounded full-system checkpoint/restore validation has passed: all three probe
 outputs and the completion tick match an uninterrupted run. Managed snapshots
 are now eligible for the remaining simulator queue, after the dataset campaign.

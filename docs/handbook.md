@@ -21,6 +21,11 @@ Twitter PageRank has now completed too. Its pooled demand-fill discrepancy is
 1.53 percentage points, slightly above the prior Kronecker value of 1.08. This
 is close numerically, not an improvement or proof of identical methodology.
 
+Twitter TC is also complete and validated: pooled demand-fill discrepancy falls
+from 41.6 to 34.9 percentage points. This remains poor agreement. Its native
+footprint is only about 0.71 GiB versus M5's reported 5.0 GB; using the same source
+graph family has not recovered the authors' reduction or working set.
+
 There is now also a [simulator version of the Figure 4 comparison](simulator-figure4.md).
 It uses completed CXL-bridge measurements, not the Pin cache filter. BFS/CC are
 closer to the reference in these runs, while BC/SSSP are farther away. That does

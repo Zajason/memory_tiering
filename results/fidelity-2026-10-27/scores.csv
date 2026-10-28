@@ -17,6 +17,12 @@ dataset,cc,pooled,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.4
 dataset,cc,whole,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5259644280608522,0.41166332965326247,1092915244
 dataset,cc,whole,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5259644280608522,0.41166332965326247,70481855
 dataset,cc,whole,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.5259644280608522,0.41166332965326247,79059256
+dataset,tc,pooled,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.3366716068269828,0.19748652203448624,183895617817
+dataset,tc,pooled,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.3487290697321488,0.2023503728243482,170178838
+dataset,tc,pooled,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.3487290697321488,0.2023503728243482,170178869
+dataset,tc,whole,accesses,1,1,1,False,Twitter WWW2010 induced hash reduction,0.22882649941953526,0.0363254174881331,183895617817
+dataset,tc,whole,fills,1,1,1,False,Twitter WWW2010 induced hash reduction,0.22882649941953526,0.0363254174881331,170178838
+dataset,tc,whole,traffic,1,1,1,False,Twitter WWW2010 induced hash reduction,0.22882649941953526,0.0363254174881331,170178869
 pr-artifact-convergence,pr,pooled,accesses,1,1,1,False,synthetic Kronecker,0.019866050177677244,0.00010479820809824463,5287528124
 pr-artifact-convergence,pr,pooled,fills,1,1,1,False,synthetic Kronecker,0.010806405128471957,7.601781769082225e-05,230153698
 pr-artifact-convergence,pr,pooled,traffic,1,1,1,False,synthetic Kronecker,0.011287152065037536,0.0004702396527007455,239684549

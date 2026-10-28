@@ -17,6 +17,10 @@ their largest CDF differences are 55.6 and 49.2 percentage points across the
 five thresholds. The new inputs help only slightly. This is evidence against
 input family alone explaining the gap, not a reason to tune inputs to the plot.
 
+Twitter PageRank has now completed too. Its pooled demand-fill discrepancy is
+1.53 percentage points, slightly above the prior Kronecker value of 1.08. This
+is close numerically, not an improvement or proof of identical methodology.
+
 There is now also a [simulator version of the Figure 4 comparison](simulator-figure4.md).
 It uses completed CXL-bridge measurements, not the Pin cache filter. BFS/CC are
 closer to the reference in these runs, while BC/SSSP are farther away. That does

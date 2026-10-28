@@ -231,10 +231,10 @@
       "elapsed_s": 83.35314440727234
     },
     "dataset-pr": {
-      "status": "running",
-      "started": 1793134140.1233292,
+      "status": "complete",
+      "started": 1793193624.5859256,
       "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
-      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset/attempt-1",
       "command": [
         "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
         "experiments/run_paired.py",
@@ -242,15 +242,34 @@
         "--epoch-traffic",
         "10",
         "--out",
-        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset/attempt-1",
         "--graph-prefix",
         "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75",
         "--graph-family",
         "Twitter WWW2010 induced hash reduction"
-      ]
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset-pr-1793193625.run.log",
+      "error": "signal 15",
+      "elapsed_s": 5823.869360208511
     },
     "dataset-tc": {
-      "status": "queued"
+      "status": "running",
+      "started": 1793199452.1292772,
+      "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "experiments/run_paired.py",
+        "tc",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-2026-10-27/dataset",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash25",
+        "--graph-family",
+        "Twitter WWW2010 induced hash reduction"
+      ]
     },
     "dataset-bc": {
       "status": "queued"
@@ -260,7 +279,7 @@
     }
   },
   "status": "running",
-  "pid": 50869,
+  "pid": 14537,
   "tool_sha256": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
-  "current": "dataset-pr"
+  "current": "dataset-tc"
 }

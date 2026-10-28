@@ -120,6 +120,12 @@ def main():
           'These are small improvements, not close numerical reproduction. Changing input family and size alone has not resolved the discrepancy. '
           'Whole-ROI and window-pooled results remain separate; neither is selected after observing agreement. '
           'The remaining input and repetition controls must finish before assessing the campaign as a whole.']
+    if ('pr','fills') in dataset:
+        error=max(abs(dataset['pr','fills'][n]-H.M5_FIGURE4['gapbs-pr'][n]) for n in H.FIG4_N)
+        lines+=['',f'The completed Twitter PageRank run has pooled demand-fill error {100*error:.2f} percentage points, '
+                f"versus {100*baseline['pr','fills']:.2f} on the prior Kronecker baseline. "
+                'It remains close at the five reference points, but the new input does not improve agreement. '
+                'Numerical similarity does not establish the original collection protocol.']
     if all((name,'fills') in dataset for name in names):
         lines+=['','![M5, accesses and demand misses on documented real-input controls](assets/fig4_fidelity_full.png)']
     if (OUT/'inputs.json').exists():

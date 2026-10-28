@@ -40,6 +40,10 @@ only slightly: maximum five-point errors are 55.6/49.2 percentage points, versus
 59.1/50.5 on the prior baseline. Input family alone has not closed the gap; the
 remaining dataset and repetition controls are still pending.
 
+Twitter PageRank has also completed and passed validation: its pooled demand-fill
+error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically
+close, but this input change does not improve agreement.
+
 Bounded full-system checkpoint/restore validation has passed: all three probe
 outputs and the completion tick match an uninterrupted run. Managed snapshots
 are now eligible for the remaining simulator queue, after the dataset campaign.

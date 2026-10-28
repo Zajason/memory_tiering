@@ -1,0 +1,114 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-pr
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             704
+epoch_len_dram_acc 10000000
+instructions       105809947535
+mem_refs_profiled  41163811854
+dram_accesses      7035699666
+llc_miss_ratio     0.170920  (DRAM accesses per memory ref)
+page_observations  41232069   (page x epoch pairs with >=1 access)
+mean_unique_words  62.621 / 64
+top4_word_share    0.1208   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.0003
+  8         12.5%   0.0004
+ 16           25%   0.0005
+ 32           50%   0.0008
+ 48           75%   0.0053
+
+# P(page has at least 48 of 64 words accessed) = 0.9955
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,5601
+2,3151
+3,1611
+4,1327
+5,1201
+6,1281
+7,838
+8,780
+9,643
+10,631
+11,590
+12,539
+13,479
+14,501
+15,499
+16,473
+17,450
+18,439
+19,399
+20,420
+21,427
+22,415
+23,434
+24,431
+25,549
+26,653
+27,781
+28,939
+29,1100
+30,1387
+31,1644
+32,2001
+33,2520
+34,3070
+35,3683
+36,3962
+37,4812
+38,5440
+39,6432
+40,7437
+41,8892
+42,10508
+43,12775
+44,15171
+45,18358
+46,22228
+47,26729
+48,32578
+49,39275
+50,48437
+51,60807
+52,79080
+53,105734
+54,148072
+55,215982
+56,324485
+57,497322
+58,779029
+59,1208285
+60,1837366
+61,2678488
+62,3627333
+63,4452368
+64,24912797
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,4180
+1,3996
+2,4893
+3,5627
+4,6383
+5,19588
+6,19506952
+7,9897845
+8,11781002
+9,1603

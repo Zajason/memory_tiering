@@ -14,8 +14,15 @@ from plot_paired import cdf
 ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'results/fidelity-2026-10-27'
 
+def selected_dataset_output(directory, name, state):
+    selected=state['jobs'].get('dataset-'+name,{})
+    return (selected.get('status')=='complete' and
+            directory==Path(selected.get('output',str(OUT/'dataset'))))
+
 def main():
     OUT.mkdir(parents=True,exist_ok=True)
+    statefile=OUT/'campaign.json'
+    state=json.loads(statefile.read_text()) if statefile.exists() else {'jobs':{}}
     with (ROOT/'results/uniform-traffic10/scores.csv').open() as f:
         baseline={(r['workload'],r['stream']):float(r['max_abs_error']) for r in csv.DictReader(f) if r['scope']=='pooled'}
     base_curves={name:{} for name in ['bfs','cc','pr','tc','bc','sssp']}
@@ -38,7 +45,8 @@ def main():
                     max_abs_error=max(abs(values[n]-ref[n]) for n in H.FIG4_N),
                     p16=float(values[16]),events=events[stream]))
                 if scope=='pooled' and stream=='fills':curves.append((name,case,values))
-                if case=='dataset' and scope=='pooled':dataset[name,stream]=values
+                if selected_dataset_output(file.parent,name,state) and scope=='pooled':
+                    dataset[name,stream]=values
     if rows:
         with (OUT/'scores.csv').open('w') as f:
             writer=csv.DictWriter(f,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
@@ -73,8 +81,6 @@ def main():
         fig.text(.5,.015,'Twitter induced reductions; Google+ snapshots 4 (BC), 2 (SSSP). Authors exact inputs/schedule unresolved.',ha='center',fontsize=9)
         fig.tight_layout(rect=(0,.06,1,.92))
         fig.savefig(ROOT/'docs/assets/fig4_fidelity_full.png',dpi=180);plt.close(fig)
-    statefile=OUT/'campaign.json'
-    state=json.loads(statefile.read_text()) if statefile.exists() else {'jobs':{}}
     lines=['# M5 fidelity follow-up: 27 October 2026','',
       'All cases below were declared before collecting their new measurements. '
       'No window or graph reduction is selected by its agreement with the paper.','',

@@ -45,6 +45,12 @@ outputs and the completion tick match an uninterrupted run. Managed snapshots
 are now eligible for the remaining simulator queue, after the dataset campaign.
 An actual reboot restore remains untested; see [checkpointing](docs/checkpointing.md).
 
+The [simulator Figure 4 comparison](docs/simulator-figure4.md) now plots completed
+CXL-bridge measurements alongside M5 and the Pin baseline. BFS/CC discrepancies
+are 11.6/16.8 percentage points; BC/SSSP are 41.1/54.7. Simulation is not uniformly
+closer. Inputs and request streams differ, so these are not controlled Pin-versus-
+hardware or kernel-visibility measurements. Pending runs are explicitly marked.
+
 ### Corrected extension campaign
 
 The [25 October revalidation report](docs/revalidation-2026-10-25.md) tracks fresh

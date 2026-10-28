@@ -93,4 +93,8 @@ Placement uses previous-window candidates and fixed first-window capacity. The i
 
 `experiments/revalidation_campaign.py` runs the two lanes. Per-job manifests retain commands and hashes. `src/analysis/revalidate_extensions.py` processes complete raw records one epoch at a time; compressed files avoid multi-gigabyte intermediates. `results/revalidated-2026-10-25/analysis/` holds machine-readable granularity, turnover, placement and cost sensitivity results.
 
-Shutdown stops running work. Re-running a lane preserves completed jobs; a partially completed benchmark must restart. This runner does not implement a mid-instruction Pin or gem5 checkpoint.
+Shutdown stops running work. Re-running a lane preserves completed jobs; a partially completed benchmark must restart. Pin has no mid-run checkpoint. The simulator lane can use the separately validated process-snapshot supervisor; see [checkpointing](checkpointing.md). Old interrupted jobs without snapshots restart.
+
+## Simulator Figure 4 comparison
+
+The [validated simulator comparison](simulator-figure4.md) reports each port separately and excludes interrupted runs. Its three-row figure contrasts digitized M5, the Pin baseline and accepted CXL bridge requests; the streams and inputs are not identical.

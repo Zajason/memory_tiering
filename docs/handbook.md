@@ -17,6 +17,13 @@ their largest CDF differences are 55.6 and 49.2 percentage points across the
 five thresholds. The new inputs help only slightly. This is evidence against
 input family alone explaining the gap, not a reason to tune inputs to the plot.
 
+There is now also a [simulator version of the Figure 4 comparison](simulator-figure4.md).
+It uses completed CXL-bridge measurements, not the Pin cache filter. BFS/CC are
+closer to the reference in these runs, while BC/SSSP are farther away. That does
+not isolate the effect of observing kernel traffic: the simulator changes inputs,
+CPU, OS, caches and placement too. Bridge and downstream controller must never be
+added together; they observe overlapping traffic.
+
 ## Start with the audited measurement
 
 ### Are the extensions still usable?

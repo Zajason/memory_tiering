@@ -3,7 +3,7 @@
 PDFs are gitignored. Fetch them here:
 
 ```bash
-cd study/papers
+cd papers
 curl -L -o memstrata-osdi24.pdf https://www.usenix.org/system/files/osdi24-zhong-yuhong.pdf
 curl -L -o m5-asplos25.pdf       https://jiyuan.is/papers/asplos25-m5.pdf
 curl -L -o neomem-micro24.pdf    https://arxiv.org/pdf/2403.18702
@@ -48,15 +48,16 @@ Reusable without the hardware, and used here:
 - **The machine configuration** — `setup/core_pqos/set_*_llc.sh` contains the Intel
   CAT way masks per workload class, which pin down exactly how much LLC each
   benchmark had. Decoded in `configs/README.md`.
-- **The sampling cadence** — `m5_manager -s 10` in the Figure 8 runs means the PAC
-  counters were dumped every 10 ms, which is what fixes the measurement window.
+- **A manager cadence** — `m5_manager -s 10` appears in Figure 8 runs. It does
+  not establish Figure 4's WAC reset interval or region collection schedule.
 
 Not published with the artifact, and the main open gap in the reproduction:
 
 - **The datasets.** `setup/env.sh` points `GAPBS_PATH` and `LIBLINEAR_PATH` at a
   Memtis `bench_dir` on the authors' machine. `testing_scripts/README.md` says only
-  that they were "reduced to < 8GB", and `testing_scripts/20_threads/bench_cmds/` —
-  which would contain the exact command lines — is empty in the public repo.
+  that they were reduced below 8 GB. Benchmark performance commands are public;
+  the exact reduced graph files and a Figure 4 collection procedure were not
+  recovered. See [the current search record](../docs/m5-author-request.md).
 
 ## Also worth having
 

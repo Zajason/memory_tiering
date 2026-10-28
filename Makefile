@@ -94,6 +94,7 @@ audit-test: $(PY)
 	$(PY) src/analysis/test_audit.py
 	$(PY) src/analysis/test_uniform.py
 	$(PY) src/analysis/test_extensions.py
+	$(PY) src/analysis/test_simulator_comparison.py
 	$(PY) -m unittest discover -s benchmarks -p 'test_prepare*.py'
 	$(MAKE) -C src/sim test
 

@@ -155,3 +155,15 @@ process-bc,bc,pooled,traffic,0.7621109116718544,1,1,1,False,full observed proces
 process-bc,bc,whole,accesses,0.14122487682109813,1,1,1,False,full observed process,10,cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51,4843400149
 process-bc,bc,whole,fills,0.14122487682109813,1,1,1,False,full observed process,10,cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51,473720478
 process-bc,bc,whole,traffic,0.14122487682109813,1,1,1,False,full observed process,10,cb30720564365aff47fc204d9a0c022d1eee618f697b8f455cedee2a41954e51,610167078
+process-sssp,sssp,pooled,accesses,0.7801586420784581,1,1,1,False,full observed process,10,4ea071cf5a26a0c94df516323ba1d3afc470fc5ecfd87114e2bcaa58112b2224,3037486506
+process-sssp,sssp,pooled,fills,0.7805455459532274,1,1,1,False,full observed process,10,4ea071cf5a26a0c94df516323ba1d3afc470fc5ecfd87114e2bcaa58112b2224,158004725
+process-sssp,sssp,pooled,traffic,0.7789809567310626,1,1,1,False,full observed process,10,4ea071cf5a26a0c94df516323ba1d3afc470fc5ecfd87114e2bcaa58112b2224,189032263
+process-sssp,sssp,whole,accesses,0.10915043452202577,1,1,1,False,full observed process,10,4ea071cf5a26a0c94df516323ba1d3afc470fc5ecfd87114e2bcaa58112b2224,3037486506
+process-sssp,sssp,whole,fills,0.10915043452202577,1,1,1,False,full observed process,10,4ea071cf5a26a0c94df516323ba1d3afc470fc5ecfd87114e2bcaa58112b2224,158004725
+process-sssp,sssp,whole,traffic,0.10915043452202577,1,1,1,False,full observed process,10,4ea071cf5a26a0c94df516323ba1d3afc470fc5ecfd87114e2bcaa58112b2224,189032263
+threads20-bfs,bfs,pooled,accesses,0.5596087863843565,20,1,1,False,timed kernel,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,933216154
+threads20-bfs,bfs,pooled,fills,0.5601960817222966,20,1,1,False,timed kernel,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,61076427
+threads20-bfs,bfs,pooled,traffic,0.5591525212156839,20,1,1,False,timed kernel,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,76082501
+threads20-bfs,bfs,whole,accesses,0.5835793673723901,20,1,1,False,timed kernel,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,933216154
+threads20-bfs,bfs,whole,fills,0.5835793673723901,20,1,1,False,timed kernel,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,61076427
+threads20-bfs,bfs,whole,traffic,0.5835793673723901,20,1,1,False,timed kernel,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,76082501

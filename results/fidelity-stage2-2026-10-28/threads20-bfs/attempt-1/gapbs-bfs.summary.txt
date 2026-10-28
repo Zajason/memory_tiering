@@ -1,0 +1,114 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-bfs
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             8
+epoch_len_dram_acc 10000000
+instructions       3082554184
+mem_refs_profiled  933216154
+dram_accesses      76082501
+llc_miss_ratio     0.081527  (DRAM accesses per memory ref)
+page_observations  2507461   (page x epoch pairs with >=1 access)
+mean_unique_words  17.434 / 64
+top4_word_share    0.1662   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.4109
+  8         12.5%   0.5311
+ 16           25%   0.6887
+ 32           50%   0.8192
+ 48           75%   0.8325
+
+# P(page has at least 48 of 64 words accessed) = 0.1682
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,434424
+2,282312
+3,183585
+4,129988
+5,98260
+6,77430
+7,66455
+8,59314
+9,55435
+10,52943
+11,50852
+12,49808
+13,49326
+14,47985
+15,45695
+16,43106
+17,39998
+18,37131
+19,34504
+20,31531
+21,28819
+22,26086
+23,23085
+24,20468
+25,17891
+26,15667
+27,13126
+28,10994
+29,9116
+30,7522
+31,6168
+32,4969
+33,3989
+34,3444
+35,2919
+36,2411
+37,2122
+38,1922
+39,1746
+40,1673
+41,1628
+42,1531
+43,1611
+44,1570
+45,1616
+46,1737
+47,1783
+48,1869
+49,1964
+50,2135
+51,2270
+52,2478
+53,2879
+54,3221
+55,3790
+56,4594
+57,5679
+58,6683
+59,8254
+60,10526
+61,13065
+62,16791
+63,20869
+64,314699
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,412639
+1,464717
+2,383396
+3,418207
+4,367054
+5,47093
+6,224452
+7,123853
+8,66040
+9,10

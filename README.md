@@ -51,6 +51,10 @@ setup reduces pooled access/fill errors to 50.7/50.7 points for BFS and
 kernel-only collection. These are modest scope effects, not close replication;
 Pin still cannot observe kernel copies. The primary figure remains unchanged.
 
+Full-process SSSP changes pooled fill error only from 79.6 to 78.1 points.
+The joint real-input/20-thread BFS control reaches 56.0 points versus 55.6
+with one thread, so this execution change does not improve agreement.
+
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically
 close, but this input change does not improve agreement.

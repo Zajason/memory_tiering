@@ -17,9 +17,9 @@ Campaign: running
 | process-bfs | complete |
 | process-cc | complete |
 | process-bc | complete |
-| process-sssp | running |
-| threads20-bfs | queued |
-| threads20-cc | queued |
+| process-sssp | complete |
+| threads20-bfs | complete |
+| threads20-cc | running |
 | threads20-bc | queued |
 | threads20-sssp | queued |
 | ways9-bfs | queued |
@@ -196,12 +196,25 @@ Campaign: running
 | process-bc | bc | whole | accesses | 14.12 | 1 | 10 | full observed process |
 | process-bc | bc | whole | fills | 14.12 | 1 | 10 | full observed process |
 | process-bc | bc | whole | traffic | 14.12 | 1 | 10 | full observed process |
+| process-sssp | sssp | pooled | accesses | 78.02 | 1 | 10 | full observed process |
+| process-sssp | sssp | pooled | fills | 78.05 | 1 | 10 | full observed process |
+| process-sssp | sssp | pooled | traffic | 77.90 | 1 | 10 | full observed process |
+| process-sssp | sssp | whole | accesses | 10.92 | 1 | 10 | full observed process |
+| process-sssp | sssp | whole | fills | 10.92 | 1 | 10 | full observed process |
+| process-sssp | sssp | whole | traffic | 10.92 | 1 | 10 | full observed process |
+| threads20-bfs | bfs | pooled | accesses | 55.96 | 20 | 10 | timed kernel |
+| threads20-bfs | bfs | pooled | fills | 56.02 | 20 | 10 | timed kernel |
+| threads20-bfs | bfs | pooled | traffic | 55.92 | 20 | 10 | timed kernel |
+| threads20-bfs | bfs | whole | accesses | 58.36 | 20 | 10 | timed kernel |
+| threads20-bfs | bfs | whole | fills | 58.36 | 20 | 10 | timed kernel |
+| threads20-bfs | bfs | whole | traffic | 58.36 | 20 | 10 | timed kernel |
 
 ## Completed process-scope controls
 
 BFS: pooled demand-fill error changes from 55.56 to 50.70 percentage points when observed user-space setup is included.
 CC: pooled demand-fill error changes from 49.22 to 44.78 percentage points when observed user-space setup is included.
 BC: pooled demand-fill error changes from 77.58 to 76.56 percentage points when observed user-space setup is included.
+SSSP: pooled demand-fill error changes from 79.65 to 78.05 percentage points when observed user-space setup is included.
 
 These are scope controls, not a recovered M5 collection procedure. Kernel copies remain invisible. The common-protocol primary figure is not replaced.
 

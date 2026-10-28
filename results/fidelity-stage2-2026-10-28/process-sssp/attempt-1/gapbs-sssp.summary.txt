@@ -1,0 +1,115 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          
+roi_end            
+epoch_len_refs     0
+benchmark          gapbs-sssp
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             19
+epoch_len_dram_acc 10000000
+instructions       5338541889
+mem_refs_profiled  3037486506
+dram_accesses      189032263
+llc_miss_ratio     0.062233  (DRAM accesses per memory ref)
+page_observations  5720709   (page x epoch pairs with >=1 access)
+mean_unique_words  15.676 / 64
+top4_word_share    0.1827   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.3074
+  8         12.5%   0.5262
+ 16           25%   0.7397
+ 32           50%   0.8490
+ 48           75%   0.8890
+
+# P(page has at least 48 of 64 words accessed) = 0.1123
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,380039
+2,515779
+3,452875
+4,409579
+5,366403
+6,328913
+7,294618
+8,261890
+9,232287
+10,204197
+11,179536
+12,157016
+13,136633
+14,119532
+15,102965
+16,89166
+17,77321
+18,67280
+19,58983
+20,51258
+21,45746
+22,40518
+23,36898
+24,33775
+25,31476
+26,29211
+27,27363
+28,26585
+29,25874
+30,24912
+31,24448
+32,23697
+33,23077
+34,22179
+35,21101
+36,19832
+37,18240
+38,17123
+39,15373
+40,14355
+41,12813
+42,11755
+43,10660
+44,9560
+45,8952
+46,8320
+47,7929
+48,7512
+49,7070
+50,6801
+51,6621
+52,6354
+53,6402
+54,6423
+55,6312
+56,6285
+57,6630
+58,6936
+59,7813
+60,9109
+61,11330
+62,16345
+63,31664
+64,493060
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,374032
+1,946729
+2,1367844
+3,1376716
+4,652030
+5,338277
+6,242467
+7,195846
+8,218866
+9,7515
+10,387

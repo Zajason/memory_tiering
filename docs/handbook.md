@@ -52,6 +52,10 @@ The same 20-thread control for CC gives 49.27 points versus 49.22 with one threa
 This difference is tiny relative to the digitized reference's uncertainty; the
 proper conclusion is no meaningful change, not evidence for a thread-count effect.
 BC's matching control gives 77.66 versus 77.58 points, also essentially unchanged.
+Twenty-thread SSSP gives 80.20 versus 79.65 points. Thus none of the four
+real-input thread controls closes the pooled gap. Nine LLC ways instead of ten
+gives BFS 54.89 versus 55.56 points and CC 49.23 versus 49.22. These are small
+changes, not evidence that the artifact's nine-way mask explains the mismatch.
 
 The [second Pin campaign](pin-stage2-protocol.md) tests full observed process
 scope, twenty-thread real-input runs, nine LLC ways and an RSS-selected TC graph.

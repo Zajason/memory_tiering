@@ -58,6 +58,9 @@ The matching 20-thread CC control is essentially unchanged: 49.27 versus 49.22
 points of pooled fill error, far below the reference digitization uncertainty
 as a difference between scores. It does not close the gap.
 Twenty-thread BC is also essentially unchanged: 77.66 versus 77.58 points.
+Twenty-thread SSSP gives 80.20 versus 79.65 points, not an improvement.
+The nine-way LLC controls give 54.89 points for BFS (ten-way: 55.56) and
+49.23 for CC (49.22). These small changes do not resolve the discrepancy.
 
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically

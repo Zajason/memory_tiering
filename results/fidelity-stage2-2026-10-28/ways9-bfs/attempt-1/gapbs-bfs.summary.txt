@@ -1,0 +1,113 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-bfs
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                36864 KB, 9-way (shared)
+count_writebacks   yes
+epochs             8
+epoch_len_dram_acc 10000000
+instructions       3082331042
+mem_refs_profiled  933165082
+dram_accesses      79043400
+llc_miss_ratio     0.084705  (DRAM accesses per memory ref)
+page_observations  2282677   (page x epoch pairs with >=1 access)
+mean_unique_words  18.490 / 64
+top4_word_share    0.1644   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.3701
+  8         12.5%   0.4951
+ 16           25%   0.6678
+ 32           50%   0.8080
+ 48           75%   0.8213
+
+# P(page has at least 48 of 64 words accessed) = 0.1793
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,332008
+2,237884
+3,159083
+4,115842
+5,90028
+6,73048
+7,64184
+8,58114
+9,54965
+10,52714
+11,50858
+12,49860
+13,49409
+14,47959
+15,45656
+16,42847
+17,39786
+18,36845
+19,34102
+20,31031
+21,28364
+22,25472
+23,22544
+24,19922
+25,17374
+26,15067
+27,12600
+28,10564
+29,8700
+30,7146
+31,5812
+32,4666
+33,3773
+34,3218
+35,2646
+36,2267
+37,2018
+38,1806
+39,1651
+40,1582
+41,1545
+42,1444
+43,1438
+44,1362
+45,1361
+46,1411
+47,1381
+48,1390
+49,1369
+50,1400
+51,1573
+52,1677
+53,2029
+54,2485
+55,3247
+56,4523
+57,6158
+58,8650
+59,11650
+60,14977
+61,17728
+62,19348
+63,19874
+64,291242
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,181850
+1,449111
+2,396750
+3,442670
+4,358891
+5,50230
+6,177124
+7,157545
+8,68506

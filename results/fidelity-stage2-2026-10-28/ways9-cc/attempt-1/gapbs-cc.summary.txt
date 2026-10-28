@@ -1,0 +1,113 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-cc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                36864 KB, 9-way (shared)
+count_writebacks   yes
+epochs             8
+epoch_len_dram_acc 10000000
+instructions       3882105848
+mem_refs_profiled  1092915244
+dram_accesses      79713810
+llc_miss_ratio     0.072937  (DRAM accesses per memory ref)
+page_observations  2378100   (page x epoch pairs with >=1 access)
+mean_unique_words  24.154 / 64
+top4_word_share    0.1594   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.1026
+  8         12.5%   0.2072
+ 16           25%   0.4175
+ 32           50%   0.7510
+ 48           75%   0.8743
+
+# P(page has at least 48 of 64 words accessed) = 0.1270
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,61978
+2,61155
+3,60501
+4,60452
+5,61219
+6,61836
+7,62683
+8,63012
+9,63444
+10,63337
+11,63769
+12,63282
+13,62464
+14,62379
+15,61196
+16,60259
+17,58768
+18,58382
+19,56421
+20,55253
+21,54141
+22,52843
+23,51239
+24,49720
+25,49110
+26,48253
+27,46726
+28,45817
+29,44552
+30,42407
+31,40225
+32,39091
+33,37139
+34,34465
+35,32004
+36,29782
+37,27001
+38,23965
+39,21416
+40,18497
+41,15917
+42,13239
+43,10839
+44,8990
+45,7043
+46,5511
+47,4244
+48,3320
+49,2627
+50,2026
+51,1731
+52,1345
+53,1265
+54,1181
+55,1189
+56,1293
+57,1349
+58,1495
+59,1667
+60,1909
+61,2367
+62,2897
+63,3787
+64,270686
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,59951
+1,120648
+2,246302
+3,500902
+4,804183
+5,332344
+6,173466
+7,117642
+8,22662

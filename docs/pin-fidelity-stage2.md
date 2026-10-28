@@ -21,10 +21,10 @@ Campaign: running
 | threads20-bfs | complete |
 | threads20-cc | complete |
 | threads20-bc | complete |
-| threads20-sssp | running |
-| ways9-bfs | queued |
-| ways9-cc | queued |
-| ways9-bc | queued |
+| threads20-sssp | complete |
+| ways9-bfs | complete |
+| ways9-cc | complete |
+| ways9-bc | running |
 | ways9-sssp | queued |
 | prepare-tc-footprint | queued |
 | footprint-tc | queued |
@@ -220,6 +220,24 @@ Campaign: running
 | threads20-bc | bc | whole | accesses | 14.07 | 20 | 10 | timed kernel |
 | threads20-bc | bc | whole | fills | 14.07 | 20 | 10 | timed kernel |
 | threads20-bc | bc | whole | traffic | 14.07 | 20 | 10 | timed kernel |
+| threads20-sssp | sssp | pooled | accesses | 80.15 | 20 | 10 | timed kernel |
+| threads20-sssp | sssp | pooled | fills | 80.20 | 20 | 10 | timed kernel |
+| threads20-sssp | sssp | pooled | traffic | 80.11 | 20 | 10 | timed kernel |
+| threads20-sssp | sssp | whole | accesses | 10.48 | 20 | 10 | timed kernel |
+| threads20-sssp | sssp | whole | fills | 10.48 | 20 | 10 | timed kernel |
+| threads20-sssp | sssp | whole | traffic | 10.48 | 20 | 10 | timed kernel |
+| ways9-bfs | bfs | pooled | accesses | 54.87 | 1 | 9 | timed kernel |
+| ways9-bfs | bfs | pooled | fills | 54.89 | 1 | 9 | timed kernel |
+| ways9-bfs | bfs | pooled | traffic | 54.80 | 1 | 9 | timed kernel |
+| ways9-bfs | bfs | whole | accesses | 58.38 | 1 | 9 | timed kernel |
+| ways9-bfs | bfs | whole | fills | 58.38 | 1 | 9 | timed kernel |
+| ways9-bfs | bfs | whole | traffic | 58.38 | 1 | 9 | timed kernel |
+| ways9-cc | cc | pooled | accesses | 49.22 | 1 | 9 | timed kernel |
+| ways9-cc | cc | pooled | fills | 49.23 | 1 | 9 | timed kernel |
+| ways9-cc | cc | pooled | traffic | 48.93 | 1 | 9 | timed kernel |
+| ways9-cc | cc | whole | accesses | 52.60 | 1 | 9 | timed kernel |
+| ways9-cc | cc | whole | fills | 52.60 | 1 | 9 | timed kernel |
+| ways9-cc | cc | whole | traffic | 52.60 | 1 | 9 | timed kernel |
 
 ## Completed process-scope controls
 

@@ -85,9 +85,9 @@
   ],
   "stage2": {
     "status": "running",
-    "completed": 7,
+    "completed": 10,
     "total": 21,
-    "current": "threads20-sssp"
+    "current": "ways9-bc"
   },
   "simulator": {
     "bfs": "complete",

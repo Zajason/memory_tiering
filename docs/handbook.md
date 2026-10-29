@@ -56,6 +56,11 @@ Twenty-thread SSSP gives 80.20 versus 79.65 points. Thus none of the four
 real-input thread controls closes the pooled gap. Nine LLC ways instead of ten
 gives BFS 54.89 versus 55.56 points and CC 49.23 versus 49.22. These are small
 changes, not evidence that the artifact's nine-way mask explains the mismatch.
+Nine-way BC and SSSP are also validated: pooled fill errors are 77.70 and 79.97
+points versus 77.58 and 79.65 with ten ways. No large LLC-way effect appears in
+these four controls. The next TC input preparation waits for 26 GiB available
+host RAM; simulator PageRank currently occupies about 10 GiB. Waiting here does
+not mean the campaign failed or that any new TC result exists.
 
 The [second Pin campaign](pin-stage2-protocol.md) tests full observed process
 scope, twenty-thread real-input runs, nine LLC ways and an RSS-selected TC graph.

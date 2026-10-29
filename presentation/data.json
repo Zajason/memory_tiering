@@ -85,9 +85,9 @@
   ],
   "stage2": {
     "status": "running",
-    "completed": 10,
+    "completed": 12,
     "total": 21,
-    "current": "ways9-bc"
+    "current": "prepare-tc-footprint"
   },
   "simulator": {
     "bfs": "complete",

@@ -74,7 +74,7 @@ s=slide('Τι δοκιμάζεται τώρα;',
  '60 δευτερόλεπτα. Δεν επιλέγουμε πρωτόκολλο ανά workload αφού δούμε τη reference. Η δεύτερη καμπάνια είναι προδηλωμένη: full-process collection, πραγματικά inputs με είκοσι threads, εννέα ways και RSS-selected TC. Το footprint επιλέγεται πριν από τα Pin CDFs. Τα καλύτερα cases επισημαίνονται ως exploratory.', 'docs/pin-stage2-protocol.md');
 if(data.stage2.completed>0){
  await image(s,'results/fidelity-stage2-2026-10-28/exploratory-closest-full.png');
- caption(s,'Exploratory closest cases: επιλογή με βάση το reference, όχι ανεξάρτητη replication. Όλες οι δοκιμές διατηρούνται.');
+ caption(s,'Reference-selected, όχι ανεξάρτητη replication. Έλεγχοι: '+data.stage2.completed+' / '+data.stage2.total+'. Όλες οι δοκιμές διατηρούνται.');
 }else{
  const label=data.stage2.status.startsWith('waiting')?'αναμονή ολοκλήρωσης των repetition controls':data.stage2.status;
  body(s,'Full process έναντι timed-kernel ROI.\nReal inputs μαζί με 20 software threads.\n9 LLC ways αντί για 10.\nTC footprint: επιλογή μόνο με native RSS.\n\nΟλοκληρωμένοι έλεγχοι: '+data.stage2.completed+' / '+data.stage2.total+'\nΚατάσταση: '+label,170,28);

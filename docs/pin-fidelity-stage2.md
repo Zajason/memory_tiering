@@ -24,9 +24,9 @@ Campaign: running
 | threads20-sssp | complete |
 | ways9-bfs | complete |
 | ways9-cc | complete |
-| ways9-bc | running |
-| ways9-sssp | queued |
-| prepare-tc-footprint | queued |
+| ways9-bc | complete |
+| ways9-sssp | complete |
+| prepare-tc-footprint | running |
 | footprint-tc | queued |
 | footprint20-tc | queued |
 | process-pr | queued |
@@ -238,6 +238,18 @@ Campaign: running
 | ways9-cc | cc | whole | accesses | 52.60 | 1 | 9 | timed kernel |
 | ways9-cc | cc | whole | fills | 52.60 | 1 | 9 | timed kernel |
 | ways9-cc | cc | whole | traffic | 52.60 | 1 | 9 | timed kernel |
+| ways9-bc | bc | pooled | accesses | 77.66 | 1 | 9 | timed kernel |
+| ways9-bc | bc | pooled | fills | 77.70 | 1 | 9 | timed kernel |
+| ways9-bc | bc | pooled | traffic | 77.41 | 1 | 9 | timed kernel |
+| ways9-bc | bc | whole | accesses | 14.08 | 1 | 9 | timed kernel |
+| ways9-bc | bc | whole | fills | 14.08 | 1 | 9 | timed kernel |
+| ways9-bc | bc | whole | traffic | 14.08 | 1 | 9 | timed kernel |
+| ways9-sssp | sssp | pooled | accesses | 79.95 | 1 | 9 | timed kernel |
+| ways9-sssp | sssp | pooled | fills | 79.97 | 1 | 9 | timed kernel |
+| ways9-sssp | sssp | pooled | traffic | 79.92 | 1 | 9 | timed kernel |
+| ways9-sssp | sssp | whole | accesses | 10.94 | 1 | 9 | timed kernel |
+| ways9-sssp | sssp | whole | fills | 10.94 | 1 | 9 | timed kernel |
+| ways9-sssp | sssp | whole | traffic | 10.94 | 1 | 9 | timed kernel |
 
 ## Completed process-scope controls
 

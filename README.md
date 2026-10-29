@@ -61,6 +61,10 @@ Twenty-thread BC is also essentially unchanged: 77.66 versus 77.58 points.
 Twenty-thread SSSP gives 80.20 versus 79.65 points, not an improvement.
 The nine-way LLC controls give 54.89 points for BFS (ten-way: 55.56) and
 49.23 for CC (49.22). These small changes do not resolve the discrepancy.
+Nine-way BC/SSSP likewise give 77.70/79.97 points versus 77.58/79.65 with
+ten ways. The four tested LLC controls do not explain the gap. TC footprint
+preparation waits for 26 GiB available memory while simulator PageRank runs;
+this is an intentional resource guard, not a completed TC measurement.
 
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically

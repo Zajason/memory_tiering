@@ -1,0 +1,115 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-sssp
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                36864 KB, 9-way (shared)
+count_writebacks   yes
+epochs             19
+epoch_len_dram_acc 10000000
+instructions       5338540799
+mem_refs_profiled  2968391062
+dram_accesses      184553868
+llc_miss_ratio     0.062173  (DRAM accesses per memory ref)
+page_observations  5840673   (page x epoch pairs with >=1 access)
+mean_unique_words  14.451 / 64
+top4_word_share    0.1912   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.3248
+  8         12.5%   0.5495
+ 16           25%   0.7610
+ 32           50%   0.8692
+ 48           75%   0.9073
+
+# P(page has at least 48 of 64 words accessed) = 0.0940
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,419735
+2,556751
+3,484981
+4,435356
+5,387273
+6,346349
+7,306605
+8,272233
+9,239732
+10,208721
+11,181812
+12,158305
+13,136951
+14,118705
+15,102688
+16,88405
+17,76663
+18,66069
+19,58015
+20,50759
+21,45783
+22,40682
+23,37137
+24,34213
+25,32072
+26,30455
+27,28817
+28,28084
+29,27141
+30,26439
+31,25308
+32,24373
+33,23344
+34,22226
+35,20856
+36,19280
+37,17838
+38,16482
+39,14837
+40,13286
+41,12145
+42,11086
+43,10016
+44,9187
+45,8685
+46,8198
+47,7787
+48,7359
+49,7256
+50,7203
+51,7004
+52,6950
+53,6905
+54,7021
+55,7022
+56,7277
+57,7540
+58,8053
+59,8678
+60,9809
+61,11788
+62,16412
+63,31121
+64,391410
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,413385
+1,1019109
+2,1443569
+3,1402826
+4,647760
+5,343077
+6,225991
+7,115232
+8,208220
+9,20950
+10,554

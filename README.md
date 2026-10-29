@@ -64,8 +64,10 @@ The nine-way LLC controls give 54.89 points for BFS (ten-way: 55.56) and
 Nine-way BC/SSSP likewise give 77.70/79.97 points versus 77.58/79.65 with
 ten ways. The four tested LLC controls do not explain the gap. TC footprint
 preparation waited for 26 GiB available memory while simulator PageRank ran.
-That wait has cleared and native footprint candidates are being prepared;
-selection and the corresponding Pin measurements remain pending.
+That wait has cleared. None of the three predeclared candidates matched the
+5.0 GB target: the nearest measured 8.89 GB native peak RSS (77.9% above target).
+It was selected by RSS alone and is now being profiled. This is a larger-input
+control, not a size-matched M5 reproduction; its Pin CDF remains pending.
 
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically

@@ -62,6 +62,8 @@
 
 60 δευτερόλεπτα. Δεν επιλέγουμε πρωτόκολλο ανά workload αφού δούμε τη reference. Η δεύτερη καμπάνια είναι προδηλωμένη: full-process collection, πραγματικά inputs με είκοσι threads, εννέα ways και RSS-selected TC. Το footprint επιλέγεται πριν από τα Pin CDFs. Τα καλύτερα cases επισημαίνονται ως exploratory.
 
+TC native RSS: 8.89 GB, στόχος 5.0 GB. Εντός ανοχής: false. Η επιλογή έγινε μόνο με RSS. Δεν το παρουσιάζουμε ως size-matched reproduction.
+
 Πηγές: docs/pin-stage2-protocol.md
 
 ## 12. Το ίδιο γράφημα στο SimCXL

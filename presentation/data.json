@@ -85,9 +85,9 @@
   ],
   "stage2": {
     "status": "running",
-    "completed": 12,
+    "completed": 13,
     "total": 21,
-    "current": "prepare-tc-footprint"
+    "current": "footprint-tc"
   },
   "simulator": {
     "bfs": "complete",
@@ -100,5 +100,10 @@
   "sources": [
     "results/fidelity-2026-10-27/scores.csv",
     "results/revalidated-2026-10-25/sim-comparison/sources.json"
-  ]
+  ],
+  "tc_footprint": {
+    "rss_gb": 8.894693376,
+    "target_gb": 5.0,
+    "within_tolerance": false
+  }
 }

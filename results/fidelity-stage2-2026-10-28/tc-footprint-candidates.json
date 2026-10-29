@@ -1,0 +1,101 @@
+[
+  {
+    "path": "/mnt/research/memory-tiering/datasets/tc-footprint/attempt-1/hash11-of16/tc.sg",
+    "sha256": "83e0c0a07dc018a9912f84716759659c376ed961c342423172ea791f46eabeb8",
+    "selection": {
+      "source_nodes": 41652230,
+      "source_edges": 1468365182,
+      "main_nodes": 31239712,
+      "main_edges": 818955431,
+      "tc_nodes": 28636148,
+      "tc_edges": 700042684,
+      "tc_numerator": 11,
+      "tc_denominator": 16,
+      "vertex_count_self_loop_sentinel": true
+    },
+    "nodes": 28636148,
+    "edges": 1148145824,
+    "native": {
+      "peak_rss_kib": 10357088,
+      "exit_code": 0
+    },
+    "native_threads": 20,
+    "native_command": [
+      "/home/zajason/dev/advarch/memory_tiering/workloads/gapbs/tc",
+      "-f",
+      "/mnt/research/memory-tiering/datasets/tc-footprint/attempt-1/hash11-of16/tc.sg",
+      "-n",
+      "1"
+    ],
+    "native_elapsed_s": 40.89172434806824,
+    "target_bytes": 5000000000,
+    "relative_footprint_error": 1.1211316224,
+    "rule": "SplitMix64(original ID)%16 < 11; induced; ascending relabel; symmetrize"
+  },
+  {
+    "path": "/mnt/research/memory-tiering/datasets/tc-footprint/attempt-1/hash10-of16/tc.sg",
+    "sha256": "520185f870aec586e5d46752c9a76f3769bd9539c168379a451803ea466aa047",
+    "selection": {
+      "source_nodes": 41652230,
+      "source_edges": 1468365182,
+      "main_nodes": 31239712,
+      "main_edges": 818955431,
+      "tc_nodes": 26032504,
+      "tc_edges": 579540819,
+      "tc_numerator": 10,
+      "tc_denominator": 16,
+      "vertex_count_self_loop_sentinel": true
+    },
+    "nodes": 26032504,
+    "edges": 950339342,
+    "native": {
+      "peak_rss_kib": 8686224,
+      "exit_code": 0
+    },
+    "native_threads": 20,
+    "native_command": [
+      "/home/zajason/dev/advarch/memory_tiering/workloads/gapbs/tc",
+      "-f",
+      "/mnt/research/memory-tiering/datasets/tc-footprint/attempt-1/hash10-of16/tc.sg",
+      "-n",
+      "1"
+    ],
+    "native_elapsed_s": 32.516977071762085,
+    "target_bytes": 5000000000,
+    "relative_footprint_error": 0.7789386752,
+    "rule": "SplitMix64(original ID)%16 < 10; induced; ascending relabel; symmetrize"
+  },
+  {
+    "path": "/mnt/research/memory-tiering/datasets/tc-footprint/attempt-1/hash12-of16/tc.sg",
+    "sha256": "302d62a32247b67b05217a5d247829f6d5c4d1af61e53650bbb348406b30e296",
+    "selection": {
+      "source_nodes": 41652230,
+      "source_edges": 1468365182,
+      "main_nodes": 31239712,
+      "main_edges": 818955431,
+      "tc_nodes": 31241501,
+      "tc_edges": 831096317,
+      "tc_numerator": 12,
+      "tc_denominator": 16,
+      "vertex_count_self_loop_sentinel": true
+    },
+    "nodes": 31241501,
+    "edges": 1361942498,
+    "native": {
+      "peak_rss_kib": 12153444,
+      "exit_code": 0
+    },
+    "native_threads": 20,
+    "native_command": [
+      "/home/zajason/dev/advarch/memory_tiering/workloads/gapbs/tc",
+      "-f",
+      "/mnt/research/memory-tiering/datasets/tc-footprint/attempt-1/hash12-of16/tc.sg",
+      "-n",
+      "1"
+    ],
+    "native_elapsed_s": 55.09618520736694,
+    "target_bytes": 5000000000,
+    "relative_footprint_error": 1.4890253312,
+    "rule": "SplitMix64(original ID)%16 < 12; induced; ascending relabel; symmetrize"
+  }
+]

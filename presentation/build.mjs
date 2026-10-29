@@ -81,6 +81,11 @@ if(data.stage2.completed>0){
  const bfs=(data.repetition||[]).find(r=>r.workload==='bfs'&&r.scope==='pooled');
  if(bfs)caption(s,'BFS, 200 trials: pooled σφάλμα '+bfs.error_pp.toFixed(1)+' μ.μ. αντί 59,1. Η επανάληψη μόνη της δεν βελτιώνει τη συμφωνία.');
 }
+if(data.tc_footprint){
+ const f=data.tc_footprint;
+ const extra='TC native RSS: '+f.rss_gb.toFixed(2)+' GB, στόχος '+f.target_gb.toFixed(1)+' GB. Εντός ανοχής: '+f.within_tolerance+'. Η επιλογή έγινε μόνο με RSS. Δεν το παρουσιάζουμε ως size-matched reproduction.';
+ notes[10].note+='\n\n'+extra;s.speakerNotes.text+='\n\n'+extra;
+}
 s=slide('Το ίδιο γράφημα στο SimCXL',
  '70 δευτερόλεπτα. Η probe μετρά physical accepted requests στο CXL bridge. Τα bridge/controller clocks είναι ανεξάρτητα και δεν αθροίζονται. Το overview συγκρίνει διαφορετικά setups και όχι identical traces. Οι μη ολοκληρωμένες εκτελέσεις είναι pending, όχι μηδενικές μπάρες.', 'docs/simulator-figure4.md');
 await image(s,'results/revalidated-2026-10-25/sim-comparison/figure4-m5-pin-simulator.png');

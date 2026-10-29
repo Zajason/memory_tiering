@@ -59,8 +59,11 @@ changes, not evidence that the artifact's nine-way mask explains the mismatch.
 Nine-way BC and SSSP are also validated: pooled fill errors are 77.70 and 79.97
 points versus 77.58 and 79.65 with ten ways. No large LLC-way effect appears in
 these four controls. TC input preparation waited for 26 GiB available host RAM
-while simulator PageRank occupied about 10 GiB. That wait has cleared: native
-footprint candidates are now being evaluated. These are not new Pin CDF results.
+while simulator PageRank occupied about 10 GiB. That wait has cleared. All three
+predeclared native footprint candidates exceeded the 5.0 GB target. The nearest,
+the 10/16 induced hash subset, measured 8.89 GB peak RSS (77.9% above target).
+It was selected by RSS only, before its Pin CDF, and is now being profiled. This
+is not a size-matched reproduction; the residual footprint mismatch is retained.
 
 The [second Pin campaign](pin-stage2-protocol.md) tests full observed process
 scope, twenty-thread real-input runs, nine LLC ways and an RSS-selected TC graph.

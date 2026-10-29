@@ -119,6 +119,20 @@ def main():
                          'percentage points when observed user-space setup is included.')
         lines+=['','These are scope controls, not a recovered M5 collection procedure. '
                 'Kernel copies remain invisible. The common-protocol primary figure is not replaced.']
+    footprint=OUT/'tc-footprint.json'
+    if footprint.exists():
+        selected=json.loads(footprint.read_text())
+        lines+=['','## Native RSS input selection','',
+          f"Target: {selected['target_bytes']/1e9:.2f} GB. Selected native peak RSS: "
+          f"{selected['native']['peak_rss_kib']*1024/1e9:.2f} GB; absolute relative mismatch "
+          f"{100*selected['relative_footprint_error']:.1f}%. Within 10%: {selected['within_10_percent']}.", '',
+          'The candidate is selected by native RSS only, before its Pin CDF. '
+          'A nearest candidate outside tolerance is not a size-matched reproduction.', '',
+          '| Candidate rule | Native peak RSS (GB) | Absolute target mismatch (%) |',
+          '|---|---:|---:|']
+        for candidate in selected['candidates']:
+            lines.append(f"| {candidate['rule']} | {candidate['native']['peak_rss_kib']*1024/1e9:.2f} | "
+                         f"{100*candidate['relative_footprint_error']:.1f} |")
     lines+=['','## Exploratory closest pooled cases','',
       '![Exploratory closest pooled controls](../results/fidelity-stage2-2026-10-28/exploratory-closest.png)','',
       '![M5, closest access and closest miss controls](../results/fidelity-stage2-2026-10-28/exploratory-closest-full.png)','',

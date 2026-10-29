@@ -26,8 +26,8 @@ Campaign: running
 | ways9-cc | complete |
 | ways9-bc | complete |
 | ways9-sssp | complete |
-| prepare-tc-footprint | running |
-| footprint-tc | queued |
+| prepare-tc-footprint | complete |
+| footprint-tc | running |
 | footprint20-tc | queued |
 | process-pr | queued |
 | process-tc | queued |
@@ -259,6 +259,18 @@ BC: pooled demand-fill error changes from 77.58 to 76.56 percentage points when 
 SSSP: pooled demand-fill error changes from 79.65 to 78.05 percentage points when observed user-space setup is included.
 
 These are scope controls, not a recovered M5 collection procedure. Kernel copies remain invisible. The common-protocol primary figure is not replaced.
+
+## Native RSS input selection
+
+Target: 5.00 GB. Selected native peak RSS: 8.89 GB; absolute relative mismatch 77.9%. Within 10%: False.
+
+The candidate is selected by native RSS only, before its Pin CDF. A nearest candidate outside tolerance is not a size-matched reproduction.
+
+| Candidate rule | Native peak RSS (GB) | Absolute target mismatch (%) |
+|---|---:|---:|
+| SplitMix64(original ID)%16 < 11; induced; ascending relabel; symmetrize | 10.61 | 112.1 |
+| SplitMix64(original ID)%16 < 10; induced; ascending relabel; symmetrize | 8.89 | 77.9 |
+| SplitMix64(original ID)%16 < 12; induced; ascending relabel; symmetrize | 12.45 | 148.9 |
 
 ## Exploratory closest pooled cases
 

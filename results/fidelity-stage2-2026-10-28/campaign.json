@@ -265,16 +265,33 @@
       "elapsed_s": 265.48553347587585
     },
     "prepare-tc-footprint": {
-      "status": "running",
+      "status": "complete",
       "started": 1793231315.1027458,
       "command": [
         "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
         "/home/zajason/dev/advarch/memory_tiering/benchmarks/prepare_tc_footprint.py"
       ],
-      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-stage2-2026-10-28/prepare-tc-footprint-1793231315.run.log"
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-stage2-2026-10-28/prepare-tc-footprint-1793231315.run.log",
+      "elapsed_s": 42553.96407389641
     },
     "footprint-tc": {
-      "status": "queued"
+      "status": "running",
+      "started": 1793273870.3409104,
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-stage2-2026-10-28/footprint-tc/attempt-1",
+      "command": [
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py",
+        "tc",
+        "--epoch-traffic",
+        "10",
+        "--out",
+        "/home/zajason/dev/advarch/memory_tiering/results/fidelity-stage2-2026-10-28/footprint-tc/attempt-1",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/datasets/tc-footprint/attempt-1/hash10-of16/tc",
+        "--graph-family",
+        "Twitter RSS-selected induced reduction"
+      ],
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/fidelity-stage2-2026-10-28/footprint-tc-1793273870.run.log"
     },
     "footprint20-tc": {
       "status": "queued"
@@ -300,5 +317,5 @@
   },
   "status": "running",
   "pid": 30631,
-  "current": "prepare-tc-footprint"
+  "current": "footprint-tc"
 }

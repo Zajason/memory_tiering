@@ -28,6 +28,12 @@ def main():
         total=len(state['jobs']) or 21,current=state.get('current')),
         simulator={k:v['status'] for k,v in sim['jobs'].items()},
         sources=['results/fidelity-2026-10-27/scores.csv','results/revalidated-2026-10-25/sim-comparison/sources.json'])
+    footprint=ROOT/'results/fidelity-stage2-2026-10-28/tc-footprint.json'
+    if footprint.exists():
+        selected=json.loads(footprint.read_text())
+        data['tc_footprint']=dict(rss_gb=selected['native']['peak_rss_kib']*1024/1e9,
+                                  target_gb=selected['target_bytes']/1e9,
+                                  within_tolerance=selected['within_10_percent'])
     (ROOT/'presentation/data.json').write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
 
 if __name__=='__main__':main()

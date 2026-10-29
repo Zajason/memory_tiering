@@ -129,7 +129,7 @@ def main():
         lines.append(f"| {name} | {port} | {err:.2f} | {meta['events']:,} | {meta['pages']:,} |")
     lines+=['','## Same input-family, writeback-inclusive control','',
       'The primary overview retains the current Pin baseline, which uses Google+ for BC/SSSP. '
-      'The supplementary control instead uses existing kron-23 Pin total-traffic results for all four completed graph workloads. '
+      'The four-workload supplement uses existing kron-23 Pin total-traffic results for BFS, CC, BC and SSSP. '
       'This removes that graph-family mismatch and includes writebacks on both sides; it still does not establish identical graph files, binaries or traces.', '',
       '![All-Kronecker traffic comparison](../results/revalidated-2026-10-25/sim-comparison/kron-traffic-control.png)','',
       '| Workload | Pin kron-23 traffic error (pp) | Simulator bridge error (pp) |',

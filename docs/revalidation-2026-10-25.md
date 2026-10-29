@@ -47,8 +47,8 @@ The rebuilt simulator reports 30,321 accepted line requests and 474 page observa
 | cc | complete | 7196.2 |
 | bc | complete | 19838.3 |
 | sssp | complete | 17886.9 |
-| pr | running | 0.0 |
-| tc | queued | 0.0 |
+| pr | complete | 59625.6 |
+| tc | running | 0.0 |
 | liblinear | queued | 0.0 |
 | bc-window-1000000 | queued | 0.0 |
 | bc-window-100000000 | queued | 0.0 |

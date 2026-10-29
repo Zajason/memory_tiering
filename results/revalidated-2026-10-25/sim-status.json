@@ -181,17 +181,17 @@
       "elapsed_s": 17886.853593826294
     },
     "pr": {
-      "status": "interrupted",
-      "started": 1792991260.111214,
+      "status": "complete",
+      "started": 1793212568.2694845,
       "binary_sha256": "da6ad1eb2f8f71aece70b042d847825522f21bb43f6be6572845c9b69beee2d7",
-      "config_sha256": "dd04af3d778efd58773f5e45651b7a46598f0cddf29615e0ffcdded4a47fdce2",
+      "config_sha256": "080532ec48a32d7b8bea91ce196d44123e1e6933abecdde459159461c0a86614",
       "scope": "TimingSimpleCPU from ROI entry to ROI exit; atomic warm-up; independent per-port epochs",
       "graph": "kron-23",
       "guest_script_sha256": "fceb8513aa764f4e54553e64affa75acfe19c1a4204272e1a75285867f946669",
       "command": [
         "/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt",
         "-d",
-        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/pr/attempt-1",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/pr/attempt-2",
         "/home/zajason/dev/advarch/memory_tiering/src/sim/simcxl/fs_hotskew.py",
         "--workload",
         "pr",
@@ -204,15 +204,60 @@
         "--epoch",
         "10000000"
       ],
-      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/pr/attempt-1",
-      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/sim-pr-1792991261.run.log",
-      "error": "signal 15",
-      "elapsed_s": 25323.186588525772
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/pr/attempt-2",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/sim-pr-1793212569.run.log",
+      "checkpoint_state": "/mnt/research/memory-tiering/simulator-checkpoints/pr/attempt-2",
+      "summaries": {
+        "hotskew-pr.bridge": {
+          "events": 1472860926,
+          "epochs": 148,
+          "pages": 3689042
+        },
+        "hotskew-pr.high": {
+          "events": 1472860926,
+          "epochs": 148,
+          "pages": 3689042
+        },
+        "hotskew-pr": {
+          "events": 409783,
+          "epochs": 1,
+          "pages": 775
+        }
+      },
+      "elapsed_s": 59625.64751958847
+    },
+    "tc": {
+      "status": "running",
+      "started": 1793272195.4670856,
+      "binary_sha256": "da6ad1eb2f8f71aece70b042d847825522f21bb43f6be6572845c9b69beee2d7",
+      "config_sha256": "080532ec48a32d7b8bea91ce196d44123e1e6933abecdde459159461c0a86614",
+      "scope": "TimingSimpleCPU from ROI entry to ROI exit; atomic warm-up; independent per-port epochs",
+      "graph": "kron-21",
+      "guest_script_sha256": "4bf2828332ad3671f2e21153f6655fa2632c2f57609e195c0861c3d893d0eaa6",
+      "command": [
+        "/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt",
+        "-d",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/tc/attempt-1",
+        "/home/zajason/dev/advarch/memory_tiering/src/sim/simcxl/fs_hotskew.py",
+        "--workload",
+        "tc",
+        "--big-mem",
+        "--switch-at-roi",
+        "--max-exits",
+        "3",
+        "--llc-ways",
+        "10",
+        "--epoch",
+        "10000000"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/tc/attempt-1",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/sim-tc-1793272196.run.log",
+      "checkpoint_state": "/mnt/research/memory-tiering/simulator-checkpoints/tc/attempt-1"
     }
   },
-  "pid": 30553,
-  "status": "interrupted",
-  "started": 1792939374.3607886,
+  "pid": 18799,
+  "status": "running",
+  "started": 1793212567.5938494,
   "planned_jobs": [
     "bfs",
     "cc",
@@ -224,6 +269,6 @@
     "bc-window-1000000",
     "bc-window-100000000"
   ],
-  "updated": 1793016583.297805,
-  "current": "pr"
+  "updated": 1793272196.987601,
+  "current": "tc"
 }

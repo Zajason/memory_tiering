@@ -1,0 +1,39 @@
+Global frequency set at 1000000000000 ticks per second
+warn: No dot file generated. Please install pydot to generate the dot file and pdf.
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (32768 Mbytes) does not match the address range assigned (4096 Mbytes)
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (32768 Mbytes) does not match the address range assigned (16384 Mbytes)
+src/sim/kernel_workload.cc:46: info: kernel located at: /home/zajason/dev/advarch/fs_image/vmlinux-5.4.49
+      0: board.pc.south_bridge.cmos.rtc: Real-time clock set to Sun Jan  1 00:00:00 2012
+src/dev/serial/terminal.cc:174: warn: Sockets disabled, not accepting terminal connections
+src/base/statistics.hh:279: warn: One of the stats is a legacy stat. Legacy stat is a stat that does not belong to any statistics::Group. Legacy stat is deprecated.
+src/dev/intel_8254_timer.cc:128: warn: Reading current count from inactive timer.
+src/base/remote_gdb.cc:418: warn: Sockets disabled, not accepting gdb connections
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 23.1.0.0
+gem5 compiled Oct 25 2026 00:19:52
+gem5 started Oct 25 2026 16:42:56
+gem5 executing on zajason-MS-7D25, pid 30605
+command line: /home/zajason/dev/advarch/simcxl/build/X86/gem5.opt -d /home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/bfs/attempt-2 /home/zajason/dev/advarch/memory_tiering/src/sim/simcxl/fs_hotskew.py --workload bfs --big-mem --switch-at-roi --max-exits 3 --llc-ways 10 --epoch 10000000
+
+info: Standard input is not a terminal, disabling listeners.
+hotskew: big-mem on -- retyped 1 E820 entry to usable RAM, total guest RAM ~= 19 GB
+hotskew: CXL device port instrumented (BridgeResponsePort::recvTimingReq)
+hotskew: probe enabled at 3 point(s) -> hotskew-bfs*
+hotskew: 2 disks attached
+src/sim/simulate.cc:199: info: Entering event queue @ 0.  Starting simulation...
+build/X86/arch/x86/generated/exec-ns.cc.inc:27: warn: instruction 'fninit' unimplemented
+src/dev/x86/pc.cc:117: warn: Don't know what interrupt to clear for console.
+build/X86/arch/x86/generated/exec-ns.cc.inc:27: warn: instruction 'sgdt_Ms' unimplemented
+build/X86/arch/x86/generated/exec-ns.cc.inc:27: warn: instruction 'fwait' unimplemented
+src/dev/x86/i8042.cc:290: warn: Write to unknown i8042 (keyboard controller) command port.
+src/arch/generic/debugfaults.hh:145: warn: MOVNTDQ: Ignoring non-temporal hint, modeling as cacheable!
+hotskew: exit #1 at tick 4060648483470 (not measuring yet)
+src/sim/simulate.cc:199: info: Entering event queue @ 4060648483470.  Starting simulation...
+hotskew: switching to TimingSimpleCPU at exit #2, tick 9744677644923
+src/sim/power_state.cc:105: warn: PowerState: Already in the requested power state, request ignored
+switching cpus
+src/sim/simulate.cc:199: info: Entering event queue @ 9744677644923.  Starting simulation...
+hotskew: exit #3 at tick 10908114787179 -- stopping, summary follows
+hotskew: run complete; summary written by the exit callback

@@ -94,7 +94,8 @@
     "cc": "complete",
     "bc": "complete",
     "sssp": "complete",
-    "pr": "running"
+    "pr": "complete",
+    "tc": "running"
   },
   "sources": [
     "results/fidelity-2026-10-27/scores.csv",

@@ -63,8 +63,9 @@ The nine-way LLC controls give 54.89 points for BFS (ten-way: 55.56) and
 49.23 for CC (49.22). These small changes do not resolve the discrepancy.
 Nine-way BC/SSSP likewise give 77.70/79.97 points versus 77.58/79.65 with
 ten ways. The four tested LLC controls do not explain the gap. TC footprint
-preparation waits for 26 GiB available memory while simulator PageRank runs;
-this is an intentional resource guard, not a completed TC measurement.
+preparation waited for 26 GiB available memory while simulator PageRank ran.
+That wait has cleared and native footprint candidates are being prepared;
+selection and the corresponding Pin measurements remain pending.
 
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically
@@ -88,7 +89,11 @@ An actual reboot restore remains untested; see [checkpointing](docs/checkpointin
 
 The [simulator Figure 4 comparison](docs/simulator-figure4.md) now plots completed
 CXL-bridge measurements alongside M5 and the Pin baseline. BFS/CC discrepancies
-are 11.6/16.8 percentage points; BC/SSSP are 41.1/54.7. Simulation is not uniformly
+are 11.6/16.8 percentage points; BC/SSSP are 41.1/54.7. Simulator PageRank is
+now complete and validated: 1.58 points, from 1,472,860,926 bridge requests in
+148 windows, after 16.56 hours. TC is running. Numerical PR agreement lies within
+the approximate reference digitization uncertainty, not proof of identical
+inputs or collection. Simulation is not uniformly
 closer. Inputs and request streams differ, so these are not controlled Pin-versus-
 hardware or kernel-visibility measurements. Pending runs are explicitly marked.
 

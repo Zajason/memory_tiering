@@ -18,10 +18,13 @@ Only jobs marked complete with ROI-end evidence and intact full histograms enter
 | sssp | bridge | 54.73 | 257,564,245 | 2,843,919 |
 | sssp | high-controller | 54.73 | 257,564,245 | 2,843,919 |
 | sssp | ordinary-controller | 38.51 | 714,170 | 412 |
+| pr | bridge | 1.58 | 1,472,860,926 | 3,689,042 |
+| pr | high-controller | 1.58 | 1,472,860,926 | 3,689,042 |
+| pr | ordinary-controller | 47.16 | 409,783 | 775 |
 
 ## Same input-family, writeback-inclusive control
 
-The primary overview retains the current Pin baseline, which uses Google+ for BC/SSSP. The supplementary control instead uses existing kron-23 Pin total-traffic results for all four completed graph workloads. This removes that graph-family mismatch and includes writebacks on both sides; it still does not establish identical graph files, binaries or traces.
+The primary overview retains the current Pin baseline, which uses Google+ for BC/SSSP. The four-workload supplement uses existing kron-23 Pin total-traffic results for BFS, CC, BC and SSSP. This removes that graph-family mismatch and includes writebacks on both sides; it still does not establish identical graph files, binaries or traces.
 
 ![All-Kronecker traffic comparison](../results/revalidated-2026-10-25/sim-comparison/kron-traffic-control.png)
 

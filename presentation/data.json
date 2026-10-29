@@ -85,9 +85,9 @@
   ],
   "stage2": {
     "status": "running",
-    "completed": 13,
+    "completed": 14,
     "total": 21,
-    "current": "footprint-tc"
+    "current": "footprint20-tc"
   },
   "simulator": {
     "bfs": "complete",
@@ -104,6 +104,7 @@
   "tc_footprint": {
     "rss_gb": 8.894693376,
     "target_gb": 5.0,
-    "within_tolerance": false
+    "within_tolerance": false,
+    "pooled_fill_error_pp": 53.86577762414707
   }
 }

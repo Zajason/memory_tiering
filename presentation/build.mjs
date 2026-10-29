@@ -83,7 +83,8 @@ if(data.stage2.completed>0){
 }
 if(data.tc_footprint){
  const f=data.tc_footprint;
- const extra='TC native RSS: '+f.rss_gb.toFixed(2)+' GB, στόχος '+f.target_gb.toFixed(1)+' GB. Εντός ανοχής: '+f.within_tolerance+'. Η επιλογή έγινε μόνο με RSS. Δεν το παρουσιάζουμε ως size-matched reproduction.';
+ let extra='TC native RSS: '+f.rss_gb.toFixed(2)+' GB, στόχος '+f.target_gb.toFixed(1)+' GB. Εντός ανοχής: '+f.within_tolerance+'. Η επιλογή έγινε μόνο με RSS. Δεν το παρουσιάζουμε ως size-matched reproduction.';
+ if(f.pooled_fill_error_pp!==undefined)extra+=' Το ολοκληρωμένο one-thread control έχει pooled miss σφάλμα '+f.pooled_fill_error_pp.toFixed(2)+' μ.μ., χειρότερο από τις 34,87 μ.μ. του μικρότερου input. Το twenty-thread control παραμένει ξεχωριστό.';
  notes[10].note+='\n\n'+extra;s.speakerNotes.text+='\n\n'+extra;
 }
 s=slide('Το ίδιο γράφημα στο SimCXL',

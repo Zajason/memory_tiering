@@ -62,8 +62,11 @@ these four controls. TC input preparation waited for 26 GiB available host RAM
 while simulator PageRank occupied about 10 GiB. That wait has cleared. All three
 predeclared native footprint candidates exceeded the 5.0 GB target. The nearest,
 the 10/16 induced hash subset, measured 8.89 GB peak RSS (77.9% above target).
-It was selected by RSS only, before its Pin CDF, and is now being profiled. This
-is not a size-matched reproduction; the residual footprint mismatch is retained.
+It was selected by RSS only, before its Pin CDF. Its completed one-thread run
+took 4.03 hours and worsened pooled access/fill errors to 53.83/53.87 points,
+versus 33.67/34.87 on the smaller Twitter input. Whole-run error is 52.0 points.
+This is not a size-matched reproduction; the residual footprint mismatch and
+negative result are retained. The twenty-thread control remains in progress.
 
 The [second Pin campaign](pin-stage2-protocol.md) tests full observed process
 scope, twenty-thread real-input runs, nine LLC ways and an RSS-selected TC graph.

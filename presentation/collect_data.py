@@ -18,8 +18,11 @@ def main():
     state=json.loads(stage.read_text()) if stage.exists() else {'jobs':{},'status':'not started'}
     sim=json.loads((ROOT/'results/revalidated-2026-10-25/sim-status.json').read_text())
     repetition=[]
+    footprint_fill_error=None
     with (ROOT/'results/fidelity-stage2-2026-10-28/scores.csv').open() as f:
         for r in csv.DictReader(f):
+            if r['case']=='footprint-tc' and r['stream']=='fills' and r['scope']=='pooled':
+                footprint_fill_error=100*float(r['max_abs_error'])
             if r['case'].startswith('phase1/trials200-pool-') and r['stream']=='fills':
                 repetition.append(dict(workload=r['workload'],scope=r['scope'],
                                        error_pp=100*float(r['max_abs_error'])))
@@ -34,6 +37,8 @@ def main():
         data['tc_footprint']=dict(rss_gb=selected['native']['peak_rss_kib']*1024/1e9,
                                   target_gb=selected['target_bytes']/1e9,
                                   within_tolerance=selected['within_10_percent'])
+        if footprint_fill_error is not None:
+            data['tc_footprint']['pooled_fill_error_pp']=footprint_fill_error
     (ROOT/'presentation/data.json').write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
 
 if __name__=='__main__':main()

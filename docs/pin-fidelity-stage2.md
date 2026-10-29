@@ -27,8 +27,8 @@ Campaign: running
 | ways9-bc | complete |
 | ways9-sssp | complete |
 | prepare-tc-footprint | complete |
-| footprint-tc | running |
-| footprint20-tc | queued |
+| footprint-tc | complete |
+| footprint20-tc | running |
 | process-pr | queued |
 | process-tc | queued |
 | threads20-pr | queued |
@@ -250,6 +250,12 @@ Campaign: running
 | ways9-sssp | sssp | whole | accesses | 10.94 | 1 | 9 | timed kernel |
 | ways9-sssp | sssp | whole | fills | 10.94 | 1 | 9 | timed kernel |
 | ways9-sssp | sssp | whole | traffic | 10.94 | 1 | 9 | timed kernel |
+| footprint-tc | tc | pooled | accesses | 53.83 | 1 | 10 | timed kernel |
+| footprint-tc | tc | pooled | fills | 53.87 | 1 | 10 | timed kernel |
+| footprint-tc | tc | pooled | traffic | 53.78 | 1 | 10 | timed kernel |
+| footprint-tc | tc | whole | accesses | 52.00 | 1 | 10 | timed kernel |
+| footprint-tc | tc | whole | fills | 52.00 | 1 | 10 | timed kernel |
+| footprint-tc | tc | whole | traffic | 52.00 | 1 | 10 | timed kernel |
 
 ## Completed process-scope controls
 

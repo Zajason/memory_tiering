@@ -66,8 +66,10 @@ ten ways. The four tested LLC controls do not explain the gap. TC footprint
 preparation waited for 26 GiB available memory while simulator PageRank ran.
 That wait has cleared. None of the three predeclared candidates matched the
 5.0 GB target: the nearest measured 8.89 GB native peak RSS (77.9% above target).
-It was selected by RSS alone and is now being profiled. This is a larger-input
-control, not a size-matched M5 reproduction; its Pin CDF remains pending.
+It was selected by RSS alone. Its completed one-thread Pin run worsens pooled
+access/fill errors to 53.83/53.87 points, versus 33.67/34.87 on the smaller
+Twitter input. This is a larger-input control, not a size-matched M5 reproduction.
+The corresponding twenty-thread control is running.
 
 Twitter PageRank has also completed and passed validation: its pooled demand-fill
 error is 1.53 percentage points, versus 1.08 on Kronecker. It remains numerically

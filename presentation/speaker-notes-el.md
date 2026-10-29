@@ -62,7 +62,7 @@
 
 60 δευτερόλεπτα. Δεν επιλέγουμε πρωτόκολλο ανά workload αφού δούμε τη reference. Η δεύτερη καμπάνια είναι προδηλωμένη: full-process collection, πραγματικά inputs με είκοσι threads, εννέα ways και RSS-selected TC. Το footprint επιλέγεται πριν από τα Pin CDFs. Τα καλύτερα cases επισημαίνονται ως exploratory.
 
-TC native RSS: 8.89 GB, στόχος 5.0 GB. Εντός ανοχής: false. Η επιλογή έγινε μόνο με RSS. Δεν το παρουσιάζουμε ως size-matched reproduction.
+TC native RSS: 8.89 GB, στόχος 5.0 GB. Εντός ανοχής: false. Η επιλογή έγινε μόνο με RSS. Δεν το παρουσιάζουμε ως size-matched reproduction. Το ολοκληρωμένο one-thread control έχει pooled miss σφάλμα 53.87 μ.μ., χειρότερο από τις 34,87 μ.μ. του μικρότερου input. Το twenty-thread control παραμένει ξεχωριστό.
 
 Πηγές: docs/pin-stage2-protocol.md
 

@@ -13,10 +13,35 @@ heavy black footer bars. No decorative icons, stock imagery or card grids.
 Fonts are imported from Google Fonts.
 
 Fifteen English slides retain an approximately fifteen-minute narrative and
-speaker notes. Eighteen Chart.js charts are rebuilt from verified numerical
-outputs rather than shrinking report screenshots. Discrete threshold plots
-retain a common 0-1 CDF axis. Tracker and granularity slides show labelled
-subsets for readability, not reference-selected best outcomes.
+speaker notes. The initial redesign replaced the main comparison figures with
+alternate charts. The user rejected that evidence-presentation change: styling
+must not replace the original comparison plots. The corrected version restores
+the original figures intact on slides 6, 7 and 11. Five supplementary Chart.js
+charts remain. Tracker and granularity slides show labelled subsets for
+readability, not reference-selected best outcomes.
+
+## Required main figures
+
+Preserve the full six-workload bar plots, including all three rows, threshold
+colors, legends, labels and footnotes. Do not replace them with line charts or
+error-only summaries during future styling changes.
+
+| Slide | Original image | Rows |
+|---|---|---|
+| 6 | `docs/assets/fig4_uniform_full.png` | M5 / accesses / modeled misses |
+| 7 | `docs/assets/fig4_fidelity_full.png` | M5 / real-input accesses / modeled misses |
+| 11 | `results/revalidated-2026-10-25/sim-comparison/figure4-m5-pin-simulator.png` | M5 / Pin / simulator |
+
+These slides use nearly the whole canvas for the uncropped figure, with a small
+editable heading. Only these three slides changed in the correction; the other
+twelve are unchanged. The images were uploaded once each through Presenton and
+loaded using the returned HTTPS asset URLs. Their source SHA-256 values are:
+
+```text
+uniform:  0ad64a22912a5c30cf0dd2c095e6ac2642a110995207282410e359d4d181d7f1
+fidelity: 484ddcb24d0ccc2f1c29c8295a7531a4d734d17fbcc8c1c86ab149b1238b22d6
+sim:      a6713f40b1a676a6486537cea44c132d4a16ab355aaf9db24d6ed113946aa352
+```
 
 ## Evidence and boundaries
 
@@ -35,14 +60,19 @@ not assert full M5 replication or a causal explanation for residual disagreement
 
 ## Delivery and checks
 
-Presenton creation IDs: PPTX 24344, PDF 24345, PNG ZIP 24346. One preview was
-created from 24344. Download and preview links expire after 24 hours; creation
+Initial, superseded Presenton creation IDs: PPTX 24344, PDF 24345, PNG ZIP 24346.
+Corrected creation IDs with the restored main plots: PPTX 24352, PDF 24353,
+PNG ZIP 24354. The corrected preview was created once from 24352.
+The original preview was created from 24344. Download and preview links expire after 24 hours; creation
 IDs are provenance records, not a claim of permanent public access.
 
 The same final HTML was exported to all three formats. Preflight found fifteen
 direct 1280x720 slide children. Local Chromium checks confirmed fifteen notes,
 eighteen nonblank canvases, loaded fonts and no text beyond slide bounds; all
-slides were visually reviewed. This is not verification in native PowerPoint.
+slides were visually reviewed. The correction was checked separately for all
+three fully loaded original images, five remaining charts and fifteen slides
+and notes. All three corrected slides were visually reviewed. This is not
+verification in native PowerPoint.
 Chart canvases may be rasterized in the PPTX export.
 
 Working HTML and renders were held only in a private Presenton temporary

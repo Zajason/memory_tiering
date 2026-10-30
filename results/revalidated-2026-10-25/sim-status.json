@@ -227,7 +227,7 @@
       "elapsed_s": 59625.64751958847
     },
     "tc": {
-      "status": "running",
+      "status": "complete",
       "started": 1793272195.4670856,
       "binary_sha256": "da6ad1eb2f8f71aece70b042d847825522f21bb43f6be6572845c9b69beee2d7",
       "config_sha256": "080532ec48a32d7b8bea91ce196d44123e1e6933abecdde459159461c0a86614",
@@ -252,7 +252,53 @@
       ],
       "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/tc/attempt-1",
       "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/sim-tc-1793272196.run.log",
-      "checkpoint_state": "/mnt/research/memory-tiering/simulator-checkpoints/tc/attempt-1"
+      "checkpoint_state": "/mnt/research/memory-tiering/simulator-checkpoints/tc/attempt-1",
+      "summaries": {
+        "hotskew-tc": {
+          "events": 465136,
+          "epochs": 1,
+          "pages": 1144
+        },
+        "hotskew-tc.bridge": {
+          "events": 621867320,
+          "epochs": 63,
+          "pages": 2489108
+        },
+        "hotskew-tc.high": {
+          "events": 621867320,
+          "epochs": 63,
+          "pages": 2489108
+        }
+      },
+      "elapsed_s": 111842.99208259583
+    },
+    "liblinear": {
+      "status": "running",
+      "started": 1793384040.8673012,
+      "binary_sha256": "da6ad1eb2f8f71aece70b042d847825522f21bb43f6be6572845c9b69beee2d7",
+      "config_sha256": "080532ec48a32d7b8bea91ce196d44123e1e6933abecdde459159461c0a86614",
+      "scope": "TimingSimpleCPU from ROI entry to ROI exit; atomic warm-up; independent per-port epochs",
+      "graph": "kdda (KDD2010)",
+      "guest_script_sha256": "26be60505cd06b63992e97c016669d71cbdf184fa752fb44eee3101b70f264b4",
+      "command": [
+        "/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt",
+        "-d",
+        "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/liblinear/attempt-1",
+        "/home/zajason/dev/advarch/memory_tiering/src/sim/simcxl/fs_hotskew.py",
+        "--workload",
+        "liblinear",
+        "--big-mem",
+        "--switch-at-roi",
+        "--max-exits",
+        "3",
+        "--llc-ways",
+        "10",
+        "--epoch",
+        "10000000"
+      ],
+      "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/liblinear/attempt-1",
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/sim-liblinear-1793384042.run.log",
+      "checkpoint_state": "/mnt/research/memory-tiering/simulator-checkpoints/liblinear/attempt-1"
     }
   },
   "pid": 18799,
@@ -269,6 +315,6 @@
     "bc-window-1000000",
     "bc-window-100000000"
   ],
-  "updated": 1793272196.987601,
-  "current": "tc"
+  "updated": 1793384042.965826,
+  "current": "liblinear"
 }

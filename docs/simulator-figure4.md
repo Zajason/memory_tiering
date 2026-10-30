@@ -21,6 +21,9 @@ Only jobs marked complete with ROI-end evidence and intact full histograms enter
 | pr | bridge | 1.58 | 1,472,860,926 | 3,689,042 |
 | pr | high-controller | 1.58 | 1,472,860,926 | 3,689,042 |
 | pr | ordinary-controller | 47.16 | 409,783 | 775 |
+| tc | ordinary-controller | 16.86 | 465,136 | 1,144 |
+| tc | bridge | 37.78 | 621,867,320 | 2,489,108 |
+| tc | high-controller | 37.78 | 621,867,320 | 2,489,108 |
 
 ## Same input-family, writeback-inclusive control
 

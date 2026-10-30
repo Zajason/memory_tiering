@@ -88,7 +88,7 @@ if(data.tc_footprint){
  notes[10].note+='\n\n'+extra;s.speakerNotes.text+='\n\n'+extra;
 }
 s=slide('Το ίδιο γράφημα στο SimCXL',
- '70 δευτερόλεπτα. Η probe μετρά physical accepted requests στο CXL bridge. Τα bridge/controller clocks είναι ανεξάρτητα και δεν αθροίζονται. Το overview συγκρίνει διαφορετικά setups και όχι identical traces. Οι μη ολοκληρωμένες εκτελέσεις είναι pending, όχι μηδενικές μπάρες.', 'docs/simulator-figure4.md');
+ '70 δευτερόλεπτα. Η probe μετρά physical accepted requests στο CXL bridge. Τα bridge/controller clocks είναι ανεξάρτητα και δεν αθροίζονται. Το overview συγκρίνει διαφορετικά setups και όχι identical traces. Και τα έξι graph workloads ολοκληρώθηκαν και ελέγχθηκαν. TC: 621.867.320 requests σε 63 παράθυρα, 31,07 ώρες, μέγιστη απόκλιση 37,78 ποσοστιαίες μονάδες. Το PR έχει μικρή αριθμητική απόκλιση, αλλά δεν τεκμηριώνεται πλήρης αναπαραγωγή. Liblinear και BC window controls παραμένουν στην ουρά.', 'docs/simulator-figure4.md');
 await image(s,'results/revalidated-2026-10-25/sim-comparison/figure4-m5-pin-simulator.png');
 caption(s,'PR: '+(data.simulator.pr||'queued')+' · TC: '+(data.simulator.tc||'queued')+' · Snapshot resume: bounded validation passed, reboot untested.');
 s=slide('PAC / WAC και bounded trackers',

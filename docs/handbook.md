@@ -86,7 +86,13 @@ Simulator PageRank is now complete too: 1,472,860,926 bridge requests across
 points from M5. All three port histograms passed checks and ROI exit was recorded.
 The run took 16.56 hours. This is close numerical agreement, within the approximate
 digitization uncertainty, but does not establish identical inputs or hardware.
-Simulator TC is running; its bars remain pending until completion and validation.
+Simulator TC is now complete and validated too: 621,867,320 bridge requests in
+63 windows and 2,489,108 page-window observations, after 31.07 hours. Its maximum
+five-threshold difference is 37.78 percentage points. All six graph workloads
+are now plotted, but this is not full M5 replication. The ordinary-controller
+TC discrepancy is smaller (16.86 points); it is diagnostic, not a replacement
+for the predeclared bridge comparison. Liblinear and the declared BC window
+controls remain in the simulator queue; the Pin stage-2 campaign is still running.
 
 ## Start with the audited measurement
 

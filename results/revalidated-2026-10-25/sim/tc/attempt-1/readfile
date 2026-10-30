@@ -1,0 +1,1 @@
+m5 exit;mkdir -p /data;mount /dev/hdb /data;/data/run_tc.sh;m5 exit;

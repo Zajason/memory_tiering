@@ -388,5 +388,83 @@
     "events": 409783,
     "epochs": 1,
     "pages": 775
+  },
+  "tc/ordinary-controller": {
+    "summary": "results/revalidated-2026-10-25/sim/tc/attempt-1/hotskew-tc",
+    "summary_sha256": "7255aa9a4dc22ed03abdfc86f58a16e6749103c2a07ef11aaf61077eb4d8b0c0",
+    "command": [
+      "/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt",
+      "-d",
+      "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/tc/attempt-1",
+      "/home/zajason/dev/advarch/memory_tiering/src/sim/simcxl/fs_hotskew.py",
+      "--workload",
+      "tc",
+      "--big-mem",
+      "--switch-at-roi",
+      "--max-exits",
+      "3",
+      "--llc-ways",
+      "10",
+      "--epoch",
+      "10000000"
+    ],
+    "binary_sha256": "da6ad1eb2f8f71aece70b042d847825522f21bb43f6be6572845c9b69beee2d7",
+    "config_sha256": "080532ec48a32d7b8bea91ce196d44123e1e6933abecdde459159461c0a86614",
+    "graph": "kron-21",
+    "events": 465136,
+    "epochs": 1,
+    "pages": 1144
+  },
+  "tc/bridge": {
+    "summary": "results/revalidated-2026-10-25/sim/tc/attempt-1/hotskew-tc.bridge",
+    "summary_sha256": "b04b40c56aef6e081bc996323cb0d522e7e25ac83f002a7bc8e225ac4cb3f0e3",
+    "command": [
+      "/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt",
+      "-d",
+      "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/tc/attempt-1",
+      "/home/zajason/dev/advarch/memory_tiering/src/sim/simcxl/fs_hotskew.py",
+      "--workload",
+      "tc",
+      "--big-mem",
+      "--switch-at-roi",
+      "--max-exits",
+      "3",
+      "--llc-ways",
+      "10",
+      "--epoch",
+      "10000000"
+    ],
+    "binary_sha256": "da6ad1eb2f8f71aece70b042d847825522f21bb43f6be6572845c9b69beee2d7",
+    "config_sha256": "080532ec48a32d7b8bea91ce196d44123e1e6933abecdde459159461c0a86614",
+    "graph": "kron-21",
+    "events": 621867320,
+    "epochs": 63,
+    "pages": 2489108
+  },
+  "tc/high-controller": {
+    "summary": "results/revalidated-2026-10-25/sim/tc/attempt-1/hotskew-tc.high",
+    "summary_sha256": "b04b40c56aef6e081bc996323cb0d522e7e25ac83f002a7bc8e225ac4cb3f0e3",
+    "command": [
+      "/home/zajason/dev/advarch/simcxl/build/X86/gem5.opt",
+      "-d",
+      "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/tc/attempt-1",
+      "/home/zajason/dev/advarch/memory_tiering/src/sim/simcxl/fs_hotskew.py",
+      "--workload",
+      "tc",
+      "--big-mem",
+      "--switch-at-roi",
+      "--max-exits",
+      "3",
+      "--llc-ways",
+      "10",
+      "--epoch",
+      "10000000"
+    ],
+    "binary_sha256": "da6ad1eb2f8f71aece70b042d847825522f21bb43f6be6572845c9b69beee2d7",
+    "config_sha256": "080532ec48a32d7b8bea91ce196d44123e1e6933abecdde459159461c0a86614",
+    "graph": "kron-21",
+    "events": 621867320,
+    "epochs": 63,
+    "pages": 2489108
   }
 }

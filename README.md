@@ -95,11 +95,14 @@ The [simulator Figure 4 comparison](docs/simulator-figure4.md) now plots complet
 CXL-bridge measurements alongside M5 and the Pin baseline. BFS/CC discrepancies
 are 11.6/16.8 percentage points; BC/SSSP are 41.1/54.7. Simulator PageRank is
 now complete and validated: 1.58 points, from 1,472,860,926 bridge requests in
-148 windows, after 16.56 hours. TC is running. Numerical PR agreement lies within
+148 windows, after 16.56 hours. Simulator TC is also complete and validated:
+37.78 points, from 621,867,320 bridge requests in 63 windows, after 31.07 hours.
+All six graph workloads now appear in the comparison; Liblinear and the declared
+BC window controls remain in the simulator queue. Numerical PR agreement lies within
 the approximate reference digitization uncertainty, not proof of identical
 inputs or collection. Simulation is not uniformly
 closer. Inputs and request streams differ, so these are not controlled Pin-versus-
-hardware or kernel-visibility measurements. Pending runs are explicitly marked.
+hardware or kernel-visibility measurements. Remaining Pin controls are still pending.
 
 ### Corrected extension campaign
 

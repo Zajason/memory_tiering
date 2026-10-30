@@ -1,4 +1,4 @@
-# Greek CSLab research talk
+# CSLab research talk
 
 Fifteen slides for approximately fifteen minutes. The editable slide text,
 figures, native score table and speaker notes are built from verified outputs.
@@ -14,6 +14,19 @@ Presentation artifacts are not measurement evidence.
 The latest reviewed PPTX and Greek notes are also copied to this directory as
 `CSLab_Memory_Tiering_Current.pptx` and `speaker-notes-el.md` for repository access.
 
+The separate English version preserves the same fifteen-slide design, figures,
+score table and scientific limitations. Its reproducible source is `build-en.mjs`;
+the reviewed outputs are `CSLab_Memory_Tiering_English.pptx` and
+`speaker-notes-en.md`. Run it with the bundled Node executable:
+
+```bash
+node presentation/build-en.mjs
+```
+
+English builds use `~/Downloads/CSLab_Presentation/english-*/output/` and record
+their path in the local, ignored `latest-en.json`. They do not replace the Greek
+deck or its `latest.json` pointer. Neither builder updates the Presenton preview.
+
 ```bash
 .venv/bin/python src/analysis/publish_fidelity.py
 .venv/bin/python src/analysis/publish_revalidation.py
@@ -24,7 +37,7 @@ node presentation/build.mjs
 ```
 
 The local builder uses the bundled Artifact Tool runtime. Override `CODEX_RUNTIME`
-and `PRESENTATIONS_SKILL` if its location changes. A future completed simulator
-PR or TC run enters its figure after the simulator publisher validates it. Stage
+and `PRESENTATIONS_SKILL` if its location changes. All six primary simulator graph
+runs, including PR and TC, have completed and passed validation. Stage
 2 exploratory closest-case plots are shown only after a control completes and
 remain explicitly labelled as reference-selected, not independent replication.

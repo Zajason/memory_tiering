@@ -69,3 +69,4 @@ results/**/*.lock
 dmtcp_restart_script*.sh
 pinos.log.*
 /presentation/latest.json
+/presentation/latest-en.json

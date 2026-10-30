@@ -1,5 +1,10 @@
 # CSLab research talk
 
+The user-requested Presenton redesign is documented in `presenton-redesign.md`.
+It supersedes the styling of the local English deck below, which is retained as
+a historical version. Presenton exports are remote snapshots, not files rebuilt
+by `build.mjs` or `build-en.mjs`; do not silently refresh its shared preview.
+
 Fifteen slides for approximately fifteen minutes. The editable slide text,
 figures, native score table and speaker notes are built from verified outputs.
 The restrained paper/black/red visual style follows the revised research talk.

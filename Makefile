@@ -95,11 +95,14 @@ scope-test: $(PY)
 audit-test: $(PY)
 	g++ -std=c++17 -O2 -Wall -Wextra -Werror src/profiler/validate/audit_test.cpp -o /tmp/memory-tiering-audit-test
 	/tmp/memory-tiering-audit-test
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror src/profiler/validate/private_commutation_test.cpp -o /tmp/memory-tiering-private-test
+	/tmp/memory-tiering-private-test
 	$(PY) src/analysis/test_audit.py
 	$(PY) src/analysis/test_uniform.py
 	$(PY) src/analysis/test_extensions.py
 	$(PY) src/analysis/test_simulator_comparison.py
 	$(PY) -m unittest discover -s benchmarks -p 'test_prepare*.py'
+	$(PY) experiments/test_pin_scalability.py
 	$(MAKE) -C src/sim test
 
 paired: build

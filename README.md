@@ -91,6 +91,12 @@ outputs and the completion tick match an uninterrupted run. Managed snapshots
 are now eligible for the remaining simulator queue, after the dataset campaign.
 An actual reboot restore remains untested; see [checkpointing](docs/checkpointing.md).
 
+The oversized twenty-thread Pin TC attempt was stopped at the user's request
+on 31 October and remains incomplete. Remaining one-thread controls continue
+with the frozen original tool; multithreaded controls are held while separate
+[scalability changes are validated](docs/pin-scalability.md). Faster instrumentation
+must not weaken shared-cache ordering or measurement-window checks.
+
 The [simulator Figure 4 comparison](docs/simulator-figure4.md) now plots completed
 CXL-bridge measurements alongside M5 and the Pin baseline. BFS/CC discrepancies
 are 11.6/16.8 percentage points; BC/SSSP are 41.1/54.7. Simulator PageRank is

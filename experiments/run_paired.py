@@ -21,6 +21,10 @@ def main():
     ap.add_argument("--out", type=Path, default=ROOT / "results/paired-v2")
     ap.add_argument("--scale", type=int, default=23)
     ap.add_argument("--threads", type=int, default=1)
+    ap.add_argument("--tool", type=Path, default=ROOT/"src/profiler/pintool/obj-intel64/hotskew.so")
+    ap.add_argument("--sync-mode", choices=['legacy','mutex'], default='legacy')
+    ap.add_argument("--local-bbl", action='store_true')
+    ap.add_argument("--private-parallel", action='store_true')
     ap.add_argument("--trials", type=int, default=1)
     ap.add_argument("--pr-iterations", type=int)
     ap.add_argument("--pr-tolerance", type=float)
@@ -62,7 +66,7 @@ def main():
     args.out = args.out.resolve()
     args.out.mkdir(parents=True, exist_ok=True)
     pin = Path(os.environ.get("PIN_ROOT", Path.home()/"dev/advarch/pin"))/"pin"
-    tool = ROOT/"src/profiler/pintool/obj-intel64/hotskew.so"
+    tool = args.tool.resolve()
     failures = []
     input_hashes = {}
     for name in args.workloads:
@@ -89,6 +93,10 @@ def main():
         if args.scope=='process':
             # Pin rejects empty argv entries; absent ROI knobs retain their defaults.
             at=cmd.index('-roi_begin');del cmd[at:at+4]
+        if args.sync_mode != 'legacy' or args.local_bbl or args.private_parallel:
+            at=cmd.index('--')
+            cmd[at:at]=['-sync_mode',args.sync_mode,'-local_bbl',str(int(args.local_bbl))]
+            if args.private_parallel:cmd[at:at]=['-private_parallel','1']
         if name=='pr':
             if args.pr_iterations is not None:cmd+=['-i',str(args.pr_iterations)]
             if args.pr_tolerance is not None:cmd+=['-t',str(args.pr_tolerance)]
@@ -97,6 +105,7 @@ def main():
             cmd[at:at] = ['-track_algo', args.track_algo, '-track_n', args.track_budgets,
                           '-track_k', str(args.track_k), '-dump_topk', '1']
         metadata = dict(command=cmd, gzip_pages=args.gzip_pages, threads=args.threads, input=str(graph),
+                        sync_mode=args.sync_mode, local_bbl=args.local_bbl, private_parallel=args.private_parallel,
                         input_bytes=graph.stat().st_size,
                         input_sha256=input_hashes[graph],
                         executable_sha256=hashlib.sha256(binary.read_bytes()).hexdigest(),

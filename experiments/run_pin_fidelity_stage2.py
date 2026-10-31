@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Declared scope, thread, CAT and RSS controls; retain all results, never tune CDFs."""
+import argparse
 import fcntl
 import json
 import os
@@ -12,11 +13,20 @@ ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'results/fidelity-stage2-2026-10-28'
 PY=ROOT/'.venv/bin/python'
 
+def held_job(state, options):
+    return bool(state.get('multithread_hold') and '--threads' in options
+                and int(options[options.index('--threads')+1]) > 1)
+
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--single-thread-only',action='store_true')
+    parser.add_argument('--tool',type=Path)
+    args=parser.parse_args()
     OUT.mkdir(exist_ok=True)
     lock=(OUT/'campaign.lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     path=OUT/'campaign.json'
     state=json.loads(path.read_text()) if path.exists() else {'jobs':{}}
+    if args.single_thread_only:state['multithread_hold']=True
     def save():
         tmp=path.with_suffix('.tmp');tmp.write_text(json.dumps(state,indent=2)+'\n');tmp.replace(path)
     def stop(sig,frame):raise KeyboardInterrupt(f'signal {sig}')
@@ -45,6 +55,8 @@ def main():
     for key,name,opts,footprint in jobs:
         old=state['jobs'][key]
         if old['status']=='complete':continue
+        if held_job(state, opts):
+            continue
         state['current']=key
         while True:
             memory={line.split(':')[0]:int(line.split()[1])*1024
@@ -62,6 +74,7 @@ def main():
             cmd=[PY,ROOT/'experiments/run_paired.py',name,'--epoch-traffic','10','--out',directory,
                  '--graph-prefix',str(Path(graph['path']).with_suffix('')),
                  '--graph-family','Twitter RSS-selected induced reduction' if footprint else graph['family'],*opts]
+            if args.tool:cmd+=['--tool',str(args.tool.resolve())]
         log=OUT/f'{key}-{int(time.time())}.run.log';row.update(command=list(map(str,cmd)),log=str(log));save()
         child=None
         try:
@@ -80,6 +93,7 @@ def main():
                 except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait()
             row.update(status='interrupted' if isinstance(e,KeyboardInterrupt) else 'failed',error=str(e))
             state['status']=row['status'];save();raise
-    state.update(status='complete',current=None);save()
+    pending=any(j['status']!='complete' for j in state['jobs'].values())
+    state.update(status='multithread controls held for validation' if pending else 'complete',current=None);save()
 
 if __name__=='__main__':main()

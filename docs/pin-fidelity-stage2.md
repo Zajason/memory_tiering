@@ -12,6 +12,8 @@ Full observed process versus timed-kernel collection; real-input 20-thread contr
 
 Campaign: running
 
+Multithreaded controls are held for separate profiler correctness and scaling validation. The oversized TC attempt was interrupted at the user's request; no partial CDF is published. One-thread controls continue with the frozen original instrument. See [scalability validation](pin-scalability.md).
+
 | Job | State |
 |---|---|
 | process-bfs | complete |
@@ -28,8 +30,8 @@ Campaign: running
 | ways9-sssp | complete |
 | prepare-tc-footprint | complete |
 | footprint-tc | complete |
-| footprint20-tc | running |
-| process-pr | queued |
+| footprint20-tc | interrupted |
+| process-pr | running |
 | process-tc | queued |
 | threads20-pr | queued |
 | threads20-tc | queued |

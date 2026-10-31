@@ -99,7 +99,13 @@ def main():
       'All use paired accesses/fills/traffic and 10M memory-event boundaries, with partial final windows and separate whole-ROI distributions. '
       'Footprint candidates use hash fractions 11/16, 10/16, 12/16, in that order, targeting native 20-thread TC RSS of 5,000,000,000 bytes. '
       'Stop at the first candidate within 10%; otherwise select the nearest RSS and label the mismatch. No Pin CDF enters this input selection.', '',
-      '## Progress','',f"Campaign: {state['status']}",'','| Job | State |','|---|---|']
+      '## Progress','',f"Campaign: {state['status']}",'']
+    if state.get('multithread_hold'):
+        lines += ['Multithreaded controls are held for separate profiler correctness and scaling validation. '
+                  'The oversized TC attempt was interrupted at the user\'s request; no partial CDF is published. '
+                  'One-thread controls continue with the frozen original instrument. '
+                  'See [scalability validation](pin-scalability.md).','']
+    lines += ['| Job | State |','|---|---|']
     for key,job in state['jobs'].items():lines.append(f"| {key} | {job['status']} |")
     lines+=['','## All completed scores','',
       '| Case | Workload | Scope | Stream | Max difference (pp) | Threads | LLC ways | Collection |',

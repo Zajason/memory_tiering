@@ -71,6 +71,12 @@ KNOB<UINT32> KnobCountWB(KNOB_MODE_WRITEONCE, "pintool", "count_wb", "1",
                          "count dirty LLC writebacks as DRAM accesses (PAC snoops them too)");
 KNOB<UINT32> KnobPaired(KNOB_MODE_WRITEONCE, "pintool", "paired", "0",
                        "record access/fill/traffic coverage in the same execution intervals");
+KNOB<string> KnobSyncMode(KNOB_MODE_WRITEONCE, "pintool", "sync_mode", "legacy",
+                         "legacy | mutex; same serialized measurement transaction");
+KNOB<UINT32> KnobLocalBbl(KNOB_MODE_WRITEONCE, "pintool", "local_bbl", "0",
+                        "thread-local instruction totals; incompatible with instruction-driven phases/windows");
+KNOB<UINT32> KnobPrivateOutsideLock(KNOB_MODE_WRITEONCE, "pintool", "private_parallel", "0",
+                                  "compute independent private-cache outcomes before the serialized shared transaction");
 KNOB<UINT64> KnobEpochRefs(KNOB_MODE_WRITEONCE, "pintool", "epoch_refs", "0",
                           "profiled line-operand references per epoch (Millions); overrides epoch");
 KNOB<UINT32> KnobWarmOutsideROI(KNOB_MODE_WRITEONCE, "pintool", "warm_outside_roi", "0",
@@ -205,12 +211,27 @@ UINT32 g_trackEpochs = 0;
 
 CacheLevel g_llc;
 PIN_LOCK g_lock;
+PIN_MUTEX g_stateMutex;
+bool g_mutexMode = false;
+bool g_localBbl = false;
+bool g_privateParallel = false;
+
+void acquireState(THREADID tid = 0) {
+    if (g_mutexMode) PIN_MutexLock(&g_stateMutex);
+    else PIN_GetLock(&g_lock, tid + 1);
+}
+
+void releaseState() {
+    if (g_mutexMode) PIN_MutexUnlock(&g_stateMutex);
+    else PIN_ReleaseLock(&g_lock);
+}
 
 // Per-thread private levels.
 struct ThreadState {
     CacheLevel l1;
     CacheLevel l2;
     UINT64 refs;
+    UINT64 instructions;
     UINT8 pad[64];  // keep neighbouring threads off the same line
 };
 TLS_KEY g_tlsKey;
@@ -286,10 +307,15 @@ VOID analyzeMemRef(THREADID tid, ADDRINT addr, UINT32 size, BOOL isWrite) {
     const AccessType type = isWrite ? ACCESS_WRITE : ACCESS_READ;
 
     for (UINT64 line = firstLine; line <= lastLine; ++line) {
+        // No coherence or inclusive invalidations touch another thread's private
+        // caches. Their outcomes commute with other threads' shared transactions.
+        PrivateResult privateResult;
+        if (g_privateParallel && g_useCache)
+            privateResult = accessPrivate(ts->l1, ts->l2, line, type);
         // Serialize state transitions and both observation streams. This is an
         // instrumentation order, not a model of coherent multicore execution.
-        PIN_GetLock(&g_lock, tid + 1);
-        if (g_phase == PHASE_DONE) { PIN_ReleaseLock(&g_lock); return; }
+        acquireState(tid);
+        if (g_phase == PHASE_DONE) { releaseState(); return; }
         const bool recording = g_phase == PHASE_PROFILE && g_roiEnabled;
         if (recording) {
             ++ts->refs;
@@ -300,7 +326,8 @@ VOID analyzeMemRef(THREADID tid, ADDRINT addr, UINT32 size, BOOL isWrite) {
         if (!g_useCache) {
             if (recording) recordDram(line, isWrite);
         } else {
-            const PrivateResult r = accessPrivate(ts->l1, ts->l2, line, type);
+            const PrivateResult r = g_privateParallel ? privateResult :
+                accessPrivate(ts->l1, ts->l2, line, type);
             accessShared(g_llc, line, r, [&](uint64_t evicted, bool write) {
                 if (recording && (!write || g_countWB)) recordDram(evicted, write);
             });
@@ -308,13 +335,13 @@ VOID analyzeMemRef(THREADID tid, ADDRINT addr, UINT32 size, BOOL isWrite) {
         if (recording && ((g_epochTarget && g_dramAccesses >= g_epochTarget) ||
                           (g_epochRefsTarget && g_epochRefs >= g_epochRefsTarget)))
             finishEpoch();
-        PIN_ReleaseLock(&g_lock);
+        releaseState();
     }
 }
 
 // Phase advance, driven by the instruction counter at basic-block granularity.
 VOID PIN_FAST_ANALYSIS_CALL countBbl(UINT32 numIns) {
-    PIN_GetLock(&g_lock, 1);
+    acquireState();
     g_insCount += numIns;
 
     switch (g_phase) {
@@ -356,7 +383,13 @@ VOID PIN_FAST_ANALYSIS_CALL countBbl(UINT32 numIns) {
         case PHASE_DONE:
             break;
     }
-    PIN_ReleaseLock(&g_lock);
+    releaseState();
+}
+
+// Event-window runs need the final instruction total, not a global BBL order.
+VOID PIN_FAST_ANALYSIS_CALL countBblLocal(UINT32 numIns, THREADID tid) {
+    ThreadState* ts = threadState(tid);
+    if (ts) ts->instructions += numIns;
 }
 
 /* -------------------------------------------------- epoch bookkeeping */
@@ -566,8 +599,12 @@ VOID unsupportedMemoryVector() {
 
 VOID instrumentTrace(TRACE trace, VOID*) {
     for (BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl)) {
-        BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)countBbl, IARG_FAST_ANALYSIS_CALL,
-                       IARG_UINT32, BBL_NumIns(bbl), IARG_END);
+        if (g_localBbl)
+            BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)countBblLocal, IARG_FAST_ANALYSIS_CALL,
+                           IARG_UINT32, BBL_NumIns(bbl), IARG_THREAD_ID, IARG_END);
+        else
+            BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)countBbl, IARG_FAST_ANALYSIS_CALL,
+                           IARG_UINT32, BBL_NumIns(bbl), IARG_END);
 
         for (INS ins = BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins)) {
             if (!INS_IsMemoryRead(ins) && !INS_IsMemoryWrite(ins)) continue;
@@ -595,17 +632,17 @@ VOID instrumentTrace(TRACE trace, VOID*) {
 }
 
 VOID roiEnter() {
-    PIN_GetLock(&g_lock, 1);
+    acquireState();
     g_roiEnabled = true;
     // Restart the time-proportional epoch clock, so the first epoch inside the
     // region is a full window rather than however long we spent outside it.
     g_epochStartIns = g_insCount;
     if (g_phase == PHASE_WARMUP || g_phase == PHASE_PROFILE) g_active = 1;
-    PIN_ReleaseLock(&g_lock);
+    releaseState();
 }
 
 VOID roiExit() {
-    PIN_GetLock(&g_lock, 1);
+    acquireState();
     g_roiEnabled = false;
     g_active = KnobWarmOutsideROI.Value() && g_phase != PHASE_DONE;
     // Close the epoch at the ROI boundary. Without this, a short kernel invocation
@@ -615,7 +652,7 @@ VOID roiExit() {
     if (KnobRoiEpoch.Value() && (g_dramAccesses > 0 || (g_paired && !g_pair.empty()))) {
         finishEpoch();
     }
-    PIN_ReleaseLock(&g_lock);
+    releaseState();
 }
 
 // Hook whichever of the three ROI knobs the user supplied. Symbol names are matched
@@ -652,6 +689,7 @@ VOID instrumentRoutine(RTN rtn, VOID*) {
 VOID onThreadStart(THREADID tid, CONTEXT*, INT32, VOID*) {
     ThreadState* ts = new ThreadState();
     ts->refs = 0;
+    ts->instructions = 0;
     if (g_useCache) {
         std::ostringstream n1, n2;
         n1 << "L1d[t" << tid << "]";
@@ -704,6 +742,9 @@ void writeSummary() {
 
     f << "# hotskew summary\n";
     f << "instrument_version cache-path-v2\n";
+    f << "sync_mode          " << (g_mutexMode ? "mutex" : "legacy") << "\n";
+    f << "instruction_count  " << (g_localBbl ? "thread-local" : "serialized") << "\n";
+    f << "private_parallel   " << g_privateParallel << "\n";
     f << "exit_code          " << g_exitCode << "\n";
     f << "collection_status  " << (g_exitCode ? "application_failed" :
         (g_phase == PHASE_DONE ? "limited" : "complete")) << "\n";
@@ -794,16 +835,20 @@ void writeSummary() {
 
 VOID onFini(INT32 code, VOID*) {
     g_exitCode = code;
-    PIN_GetLock(&g_lock, 1);
+    acquireState();
     // Roll the per-thread reference counters up now that every thread has stopped.
     PIN_GetLock(&g_threadsLock, 1);
     g_memRefs = 0;
-    for (size_t i = 0; i < g_threads.size(); ++i) g_memRefs += g_threads[i]->refs;
+    if (g_localBbl) g_insCount = 0;
+    for (size_t i = 0; i < g_threads.size(); ++i) {
+        g_memRefs += g_threads[i]->refs;
+        if (g_localBbl) g_insCount += g_threads[i]->instructions;
+    }
     PIN_ReleaseLock(&g_threadsLock);
 
     if (g_dramAccesses > 0 || (g_paired && !g_pair.empty()) || g_epochId == 0) finishEpoch();
     if (g_paired) { g_pair.finish(g_pairCsv, g_epochId); g_pairCsv.close(); }
-    PIN_ReleaseLock(&g_lock);
+    releaseState();
 
     if (g_pagesBin) {
         fclose(g_pagesBin);
@@ -832,6 +877,10 @@ int main(int argc, char* argv[]) {
     g_useCache = KnobCacheOn.Value() != 0;
     g_countWB = KnobCountWB.Value() != 0;
     g_paired = KnobPaired.Value() != 0;
+    if (KnobSyncMode.Value() != "legacy" && KnobSyncMode.Value() != "mutex") return usage();
+    g_mutexMode = KnobSyncMode.Value() == "mutex";
+    g_localBbl = KnobLocalBbl.Value() != 0;
+    g_privateParallel = KnobPrivateOutsideLock.Value() != 0;
     if (g_paired && (!g_useCache || !g_countWB)) {
         std::cerr << "[hotskew] paired measurements require -cache 1 -count_wb 1\n";
         return 1;
@@ -844,6 +893,10 @@ int main(int argc, char* argv[]) {
     g_epochTarget = KnobEpoch.Value() * M;
     g_epochInsTarget = KnobEpochIns.Value() * M;
     g_epochRefsTarget = KnobEpochRefs.Value() * M;
+    if (g_localBbl && (g_ffTarget || g_warmupTarget || g_lenTarget || g_epochInsTarget)) {
+        std::cerr << "[hotskew] local_bbl requires event/reference windows without instruction-driven phases\n";
+        return 1;
+    }
     if (g_epochRefsTarget && g_epochInsTarget) return usage();
     if (g_epochRefsTarget) g_epochTarget = 0;
     // A time-proportional window and an access-proportional window are different
@@ -876,6 +929,7 @@ int main(int argc, char* argv[]) {
                 (g_roiEnabled || KnobWarmOutsideROI.Value())) ? 1 : 0;
 
     PIN_InitLock(&g_lock);
+    if (g_mutexMode && !PIN_MutexInit(&g_stateMutex)) return 1;
     PIN_InitLock(&g_threadsLock);
     g_tlsKey = PIN_CreateThreadDataKey(NULL);
 

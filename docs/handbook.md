@@ -96,6 +96,13 @@ controls remain in the simulator queue; the Pin stage-2 campaign is still runnin
 
 ## Start with the audited measurement
 
+On 31 October the user stopped the oversized twenty-thread TC control for
+profiler scalability work. Its attempt remains interrupted, with partial files
+preserved and excluded from completed comparisons. Remaining one-thread controls
+continue on the frozen original tool; multithreaded controls are held behind
+[correctness and scaling gates](pin-scalability.md). A faster instrument is not
+automatically a validated new scientific protocol.
+
 ### Are the extensions still usable?
 
 Checkpoint/resume development is tracked in [checkpointing.md](checkpointing.md).

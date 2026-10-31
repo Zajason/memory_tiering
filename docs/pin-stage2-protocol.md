@@ -1,5 +1,19 @@
 # Declared Pin stage 2 protocol: 28 October 2026
 
+## 31 October operational amendment
+
+The user authorized stopping the oversized twenty-thread TC attempt and improving
+profiler scalability without weakening measurement reliability. That attempt is
+`interrupted`, not complete; its files remain in `footprint20-tc/attempt-1` and
+must never enter completed CDF comparisons. `campaign.json` now records
+`multithread_hold: true`. Do not automatically restart or clear this hold.
+
+The service continues only the remaining one-thread process-scope and nine-way
+controls, using the frozen original tool hash. The simulator runs independently
+and is not stopped or modified. Candidate instrumentation is built separately
+and is not deployed merely because a timing test is faster. See
+[Pin scalability validation](pin-scalability.md) for the validation and rollout gates.
+
 The user requested all remaining justified controls, both access and miss plots,
 retention of closer results, and presentation updates. All outcomes are retained.
 Lower-error cases are preserved as exploratory controls, not silently substituted

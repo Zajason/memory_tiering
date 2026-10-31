@@ -60,7 +60,8 @@ def checked_histograms(directory, name):
                 writer.writeheader()
                 writer.writerows(r for r in reader if r['scope'] != 'epoch')
             pending.replace(compact)
-    print(f'PASS {stem.relative_to(ROOT)}: completion, totals, populations, unions')
+    label = stem.relative_to(ROOT) if stem.is_relative_to(ROOT) else stem
+    print(f'PASS {label}: completion, totals, populations, unions')
     return data, events, manifest
 
 

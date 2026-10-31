@@ -31,8 +31,8 @@ Multithreaded controls are held for separate profiler correctness and scaling va
 | prepare-tc-footprint | complete |
 | footprint-tc | complete |
 | footprint20-tc | interrupted |
-| process-pr | running |
-| process-tc | queued |
+| process-pr | complete |
+| process-tc | running |
 | threads20-pr | queued |
 | threads20-tc | queued |
 | ways9-pr | queued |
@@ -258,6 +258,12 @@ Multithreaded controls are held for separate profiler correctness and scaling va
 | footprint-tc | tc | whole | accesses | 52.00 | 1 | 10 | timed kernel |
 | footprint-tc | tc | whole | fills | 52.00 | 1 | 10 | timed kernel |
 | footprint-tc | tc | whole | traffic | 52.00 | 1 | 10 | timed kernel |
+| process-pr | pr | pooled | accesses | 1.55 | 1 | 10 | full observed process |
+| process-pr | pr | pooled | fills | 1.55 | 1 | 10 | full observed process |
+| process-pr | pr | pooled | traffic | 1.49 | 1 | 10 | full observed process |
+| process-pr | pr | whole | accesses | 1.98 | 1 | 10 | full observed process |
+| process-pr | pr | whole | fills | 1.98 | 1 | 10 | full observed process |
+| process-pr | pr | whole | traffic | 1.98 | 1 | 10 | full observed process |
 
 ## Completed process-scope controls
 
@@ -265,6 +271,7 @@ BFS: pooled demand-fill error changes from 55.56 to 50.70 percentage points when
 CC: pooled demand-fill error changes from 49.22 to 44.78 percentage points when observed user-space setup is included.
 BC: pooled demand-fill error changes from 77.58 to 76.56 percentage points when observed user-space setup is included.
 SSSP: pooled demand-fill error changes from 79.65 to 78.05 percentage points when observed user-space setup is included.
+PR: pooled demand-fill error changes from 1.53 to 1.55 percentage points when observed user-space setup is included.
 
 These are scope controls, not a recovered M5 collection procedure. Kernel copies remain invisible. The common-protocol primary figure is not replaced.
 

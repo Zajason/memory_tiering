@@ -52,6 +52,8 @@ kernel-only collection. These are modest scope effects, not close replication;
 Pin still cannot observe kernel copies. The primary figure remains unchanged.
 
 Full-process SSSP changes pooled fill error only from 79.6 to 78.1 points.
+Full-process PR is also essentially unchanged: 1.55 versus 1.53 points of
+pooled fill error (whole-process fill error: 1.98 points), not an improvement.
 The joint real-input/20-thread BFS control reaches 56.0 points versus 55.6
 with one thread, so this execution change does not improve agreement.
 The matching 20-thread CC control is essentially unchanged: 49.27 versus 49.22

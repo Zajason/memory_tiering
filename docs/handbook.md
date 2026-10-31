@@ -45,6 +45,9 @@ user-space setup changes pooled fill error from 55.6 to 50.7 points for BFS,
 and from 49.2 to 44.8 for CC. Access errors change similarly, to 50.7 and 44.7
 points. This identifies a modest collection-scope effect; it neither recovers
 invisible kernel traffic nor establishes that M5 used full-process collection.
+The completed PR scope control gives 1.55 points of pooled fill error versus
+1.53 for kernel-only collection; whole-process fill error is 1.98 points.
+This is no meaningful improvement, and the original primary figure is retained.
 Full-process SSSP similarly changes pooled fill error only from 79.6 to 78.1
 points. Combining the real Twitter input with 20 software threads gives BFS
 56.0 points versus 55.6 with one thread: this control does not improve agreement.

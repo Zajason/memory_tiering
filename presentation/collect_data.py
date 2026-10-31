@@ -28,7 +28,8 @@ def main():
                                        error_pp=100*float(r['max_abs_error'])))
     data=dict(scores=records,repetition=repetition,stage2=dict(status=state['status'],
         completed=sum(j['status']=='complete' for j in state['jobs'].values()),
-        total=len(state['jobs']) or 21,current=state.get('current')),
+        total=len(state['jobs']) or 21,current=state.get('current'),
+        multithread_hold=bool(state.get('multithread_hold'))),
         simulator={k:v['status'] for k,v in sim['jobs'].items()},
         sources=['results/fidelity-2026-10-27/scores.csv','results/revalidated-2026-10-25/sim-comparison/sources.json'])
     footprint=ROOT/'results/fidelity-stage2-2026-10-28/tc-footprint.json'

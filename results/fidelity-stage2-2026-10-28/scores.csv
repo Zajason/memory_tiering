@@ -221,3 +221,9 @@ process-pr,pr,pooled,traffic,0.014904750959898655,1,1,1,False,full observed proc
 process-pr,pr,whole,accesses,0.019833851210268275,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,41227018022
 process-pr,pr,whole,fills,0.019833851210268275,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,6985007476
 process-pr,pr,whole,traffic,0.019833851210268275,1,1,1,False,full observed process,10,7e1a29012fff9ae6b96ada269bc2c16709ebc29cf5018b807f48ce0c9bfdeffc,7047472231
+process-tc,tc,pooled,accesses,0.3228074366017756,1,1,1,False,full observed process,10,085d5efd0ebf4556d0a10d133017246bf0db4f0875063e92e28bb35efaa16f5a,183917171177
+process-tc,tc,pooled,fills,0.3345152110048015,1,1,1,False,full observed process,10,085d5efd0ebf4556d0a10d133017246bf0db4f0875063e92e28bb35efaa16f5a,172793721
+process-tc,tc,pooled,traffic,0.3345152110048015,1,1,1,False,full observed process,10,085d5efd0ebf4556d0a10d133017246bf0db4f0875063e92e28bb35efaa16f5a,174098152
+process-tc,tc,whole,accesses,0.26367920499046543,1,1,1,False,full observed process,10,085d5efd0ebf4556d0a10d133017246bf0db4f0875063e92e28bb35efaa16f5a,183917171177
+process-tc,tc,whole,fills,0.26367920499046543,1,1,1,False,full observed process,10,085d5efd0ebf4556d0a10d133017246bf0db4f0875063e92e28bb35efaa16f5a,172793721
+process-tc,tc,whole,traffic,0.26367920499046543,1,1,1,False,full observed process,10,085d5efd0ebf4556d0a10d133017246bf0db4f0875063e92e28bb35efaa16f5a,174098152

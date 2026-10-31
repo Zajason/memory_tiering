@@ -85,9 +85,10 @@
   ],
   "stage2": {
     "status": "running",
-    "completed": 14,
+    "completed": 16,
     "total": 21,
-    "current": "footprint20-tc"
+    "current": "ways9-pr",
+    "multithread_hold": true
   },
   "simulator": {
     "bfs": "complete",

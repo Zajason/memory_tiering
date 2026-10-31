@@ -108,6 +108,35 @@ These are preliminary, non-isolated engineering timings, not reliable large-TC
 runtime predictions or evidence of identical concurrent CDFs. No new favorable
 curve has replaced the common-protocol primary comparison.
 
+### Repeated larger-input check
+
+Attempt 6 repeats scale 14 at all five thread counts with the same frozen
+candidate. All fourteen exact-output fixture cases, the instruction-clock guard
+and fifty completed scaling runs passed. Every scaling output passed the paired
+histogram audit. Median seconds over two repetitions:
+
+| Threads | Baseline | Local BBL | Mutex + local | Private + local | Mutex + private + local |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 3.395 | 2.869 | 2.820 | 2.994 | 2.968 |
+| 2 | 7.803 | 5.473 | 5.250 | 5.149 | 5.174 |
+| 4 | 13.444 | 7.402 | 6.976 | 6.924 | 7.003 |
+| 8 | 25.679 | 12.838 | 13.014 | 12.463 | 12.388 |
+| 20 | 48.559 | 21.829 | 24.606 | 22.978 | 23.734 |
+
+The simplest local-BBL option again improves twenty-thread instrumentation
+runtime (about 2.22x), but twenty threads still take about 7.61x the optimized
+one-thread time. This supports removing unnecessary instruction-counter locking,
+not a claim of scalable parallel profiling. More complicated locking/private
+options do not consistently improve on it. Baseline and candidate configurations
+ran sequentially in fixed order while the original Pin PR and simulator jobs
+continued; these observations are not an isolated or randomized timing study.
+
+Deployment remains unapproved. A bounded representative-input pilot with explicit
+runtime/resource limits and audited completed outputs is still needed before a
+large restart; small synthetic graphs cannot establish its completion cost.
+The one-thread fidelity queue keeps its original tool and the simulator remains
+unchanged. No partial measurement or new candidate CDF enters the primary plots.
+
 ## Deployment gate
 
 Do not clear the hold or launch another large twenty-thread TC merely because a

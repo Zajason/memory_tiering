@@ -184,3 +184,25 @@ Failed cases and slower outcomes remain in the report. The report always keeps
 `deployment_approved: false`: even a passing reduced proxy cannot establish the
 cost of the much larger held TC input. No pilot CDF enters fidelity scoring or
 the exploratory closest-case figure. The campaign's multithread hold is unchanged.
+
+### Fixed follow-up for the capacity limitation
+
+The first proxy's completed cases have no full 1M-event window: its serialized
+graph is 20,709,073 bytes and the measured footprint is largely cache-resident.
+This is useful for lock contention, but not a capacity-representative cost gate.
+The one-thread paired/epoch CSVs were checked byte-for-byte; the overall pilot
+must still finish before its timing result is published.
+
+The next engineering check is declared before collection: use denominator four
+instead of eight on exactly the same frozen source CSR, in a new output
+directory. Retain all first-proxy outcomes. Keep the same tools, native checks,
+one-thread exact-output gate, twenty-thread ABBA order, 600-second per-case
+deadline and resource limits. Start only after the denominator-eight pilot
+finishes with `passed bounded proxy` and its completed-output audits are
+inspected. A failed exact-output check, wrong native answer or timeout blocks
+the larger follow-up; publish that result without escalating cost. This larger subset is
+motivated by the lack of full memory-event windows, not any reference CDF.
+There is no automatic sequence of further graph resizing. If it times out or
+still fails to exercise full windows, retain that negative result and leave
+large deployment unapproved rather than extend the deadline after seeing it.
+`--denominator 4` explicitly identifies this follow-up; the default remains eight.

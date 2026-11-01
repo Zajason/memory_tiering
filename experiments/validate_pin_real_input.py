@@ -125,6 +125,7 @@ def measured(command, log, timeout, env=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--denominator', type=int, choices=(4, 8), default=8)
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=False)
     storage = Path('/mnt/research/memory-tiering')
@@ -132,6 +133,7 @@ def main():
     tools = {name: storage/f'profiler-builds/{digest}/hotskew.so'
              for name, digest in [('baseline', BASELINE), ('local-bbl', CANDIDATE)]}
     report = dict(status='preparing', deployment_approved=False, timeout_s=600,
+                  denominator=args.denominator,
                   purpose=__doc__, source=str(source), source_sha256=sha(source),
                   script_sha256=sha(Path(__file__)), runner_sha256=sha(ROOT/'experiments/run_paired.py'),
                   executable_sha256=sha(ROOT/'workloads/gapbs/tc'),
@@ -159,8 +161,8 @@ def main():
                 or len(gate['scaling']) != 50 or not all(r.get('audited') for r in gate['scaling'])):
             raise ValueError('Required completed correctness/scaling gate missing')
         report['prerequisite_report_sha256'] = sha(prerequisite); save()
-        graph = args.out/'twitter-nested-hash8.sg'
-        report['graph'] = induce(source, graph)
+        graph = args.out/f'twitter-nested-hash{args.denominator}.sg'
+        report['graph'] = induce(source, graph, args.denominator)
         report['status'] = 'running'; save()
         expected = None
         for threads in (1, 20):
@@ -213,6 +215,7 @@ def main():
                 for suffix in ('.epochs.csv', '.paired.csv'))
         report['status'] = ('passed bounded proxy' if all(r.get('audited') for r in report['runs'])
                             and report.get('one_thread_exact_outputs') else 'pilot not passed')
+        report['every_case_has_full_event_window'] = all(r.get('full_event_windows', 0) > 0 for r in report['runs'])
         report['limitation'] = 'Reduced real-input proxy, not the full held input. No M5 scores or automatic deployment approval.'
         save()
         return int(report['status'] != 'passed bounded proxy')

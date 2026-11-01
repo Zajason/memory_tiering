@@ -1,0 +1,226 @@
+$ objdump -d --start-address=0x38920 --stop-address=0x389b0 /mnt/research/memory-tiering/profiler-builds/6a24fae0dd3fbd7a61d9b0db1dc65e8bf8764bac65780aa85c46268d9eaf3941/hotskew.so
+
+/mnt/research/memory-tiering/profiler-builds/6a24fae0dd3fbd7a61d9b0db1dc65e8bf8764bac65780aa85c46268d9eaf3941/hotskew.so:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000038920 <_ZN10LEVEL_BASE11PIN_GetLockEPNS_8PIN_LOCKEi>:
+   38920:	55                   	push   %rbp
+   38921:	89 f5                	mov    %esi,%ebp
+   38923:	53                   	push   %rbx
+   38924:	48 89 fb             	mov    %rdi,%rbx
+   38927:	48 83 ec 08          	sub    $0x8,%rsp
+   3892b:	e8 50 4f 12 00       	call   15d880 <OS_MutexLock>
+   38930:	89 ab 80 00 00 00    	mov    %ebp,0x80(%rbx)
+   38936:	48 83 c4 08          	add    $0x8,%rsp
+   3893a:	5b                   	pop    %rbx
+   3893b:	5d                   	pop    %rbp
+   3893c:	c3                   	ret
+   3893d:	0f 1f 00             	nopl   (%rax)
+
+0000000000038940 <_ZN10LEVEL_BASE15PIN_ReleaseLockEPNS_8PIN_LOCKE>:
+   38940:	41 54                	push   %r12
+   38942:	44 8b a7 80 00 00 00 	mov    0x80(%rdi),%r12d
+   38949:	e8 52 54 12 00       	call   15dda0 <OS_MutexUnlock>
+   3894e:	44 89 e0             	mov    %r12d,%eax
+   38951:	41 5c                	pop    %r12
+   38953:	c3                   	ret
+   38954:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
+   3895b:	00 00 00 00 
+   3895f:	90                   	nop
+
+0000000000038960 <_ZN10LEVEL_BASE13PIN_MutexInitEPN5PINVM16PINSYNC_POD_LOCKE>:
+   38960:	48 83 ec 08          	sub    $0x8,%rsp
+   38964:	e8 67 4e 12 00       	call   15d7d0 <OS_MutexInit>
+   38969:	b8 01 00 00 00       	mov    $0x1,%eax
+   3896e:	48 83 c4 08          	add    $0x8,%rsp
+   38972:	c3                   	ret
+   38973:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
+   3897a:	00 00 00 00 
+   3897e:	66 90                	xchg   %ax,%ax
+
+0000000000038980 <_ZN10LEVEL_BASE13PIN_MutexFiniEPN5PINVM16PINSYNC_POD_LOCKE>:
+   38980:	e9 eb 4e 12 00       	jmp    15d870 <OS_MutexDestroy>
+   38985:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
+   3898c:	00 00 00 00 
+
+0000000000038990 <_ZN10LEVEL_BASE13PIN_MutexLockEPN5PINVM16PINSYNC_POD_LOCKE>:
+   38990:	e9 eb 4e 12 00       	jmp    15d880 <OS_MutexLock>
+   38995:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
+   3899c:	00 00 00 00 
+
+00000000000389a0 <_ZN10LEVEL_BASE15PIN_MutexUnlockEPN5PINVM16PINSYNC_POD_LOCKE>:
+   389a0:	e9 fb 53 12 00       	jmp    15dda0 <OS_MutexUnlock>
+   389a5:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
+   389ac:	00 00 00 00 
+
+$ objdump -d --start-address=0x15d880 --stop-address=0x15d900 /mnt/research/memory-tiering/profiler-builds/6a24fae0dd3fbd7a61d9b0db1dc65e8bf8764bac65780aa85c46268d9eaf3941/hotskew.so
+
+/mnt/research/memory-tiering/profiler-builds/6a24fae0dd3fbd7a61d9b0db1dc65e8bf8764bac65780aa85c46268d9eaf3941/hotskew.so:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+000000000015d880 <OS_MutexLock>:
+  15d880:	55                   	push   %rbp
+  15d881:	48 83 ef 01          	sub    $0x1,%rdi
+  15d885:	53                   	push   %rbx
+  15d886:	48 83 e7 c0          	and    $0xffffffffffffffc0,%rdi
+  15d88a:	31 db                	xor    %ebx,%ebx
+  15d88c:	48 8d 6f 40          	lea    0x40(%rdi),%rbp
+  15d890:	48 83 ec 08          	sub    $0x8,%rsp
+  15d894:	8b 45 00             	mov    0x0(%rbp),%eax
+  15d897:	85 c0                	test   %eax,%eax
+  15d899:	0f 85 99 00 00 00    	jne    15d938 <OS_MutexLock+0xb8>
+  15d89f:	31 d2                	xor    %edx,%edx
+  15d8a1:	31 f6                	xor    %esi,%esi
+  15d8a3:	bf 87 03 00 00       	mov    $0x387,%edi
+  15d8a8:	e8 73 d5 ea ff       	call   ae20 <OS_Syscall@plt>
+  15d8ad:	48 89 c2             	mov    %rax,%rdx
+  15d8b0:	8b 45 20             	mov    0x20(%rbp),%eax
+  15d8b3:	39 c2                	cmp    %eax,%edx
+  15d8b5:	74 0e                	je     15d8c5 <OS_MutexLock+0x45>
+  15d8b7:	eb 47                	jmp    15d900 <OS_MutexLock+0x80>
+  15d8b9:	0f 1f 80 00 00 00 00 	nopl   0x0(%rax)
+  15d8c0:	e8 3b cb ea ff       	call   a400 <sched_yield@plt>
+  15d8c5:	8b 45 20             	mov    0x20(%rbp),%eax
+  15d8c8:	83 f8 ff             	cmp    $0xffffffff,%eax
+  15d8cb:	74 f3                	je     15d8c0 <OS_MutexLock+0x40>
+  15d8cd:	b8 ff ff ff ff       	mov    $0xffffffff,%eax
+  15d8d2:	85 db                	test   %ebx,%ebx
+  15d8d4:	be 01 00 00 00       	mov    $0x1,%esi
+  15d8d9:	0f 44 d8             	cmove  %eax,%ebx
+  15d8dc:	8b 45 00             	mov    0x0(%rbp),%eax
+  15d8df:	85 c0                	test   %eax,%eax
+  15d8e1:	74 0c                	je     15d8ef <OS_MutexLock+0x6f>
+  15d8e3:	48 8b 45 08          	mov    0x8(%rbp),%rax
+  15d8e7:	48 63 f3             	movslq %ebx,%rsi
+  15d8ea:	48 39 f0             	cmp    %rsi,%rax
+  15d8ed:	74 59                	je     15d948 <OS_MutexLock+0xc8>
+  15d8ef:	48 83 c4 08          	add    $0x8,%rsp
+  15d8f3:	48 89 ef             	mov    %rbp,%rdi
+  15d8f6:	5b                   	pop    %rbx
+  15d8f7:	5d                   	pop    %rbp
+  15d8f8:	e9 53 fd ff ff       	jmp    15d650 <LockInternal>
+  15d8fd:	0f 1f 00             	nopl   (%rax)
+
+$ perf annotate --stdio --stdio-color never --symbol LockInternal -i /mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-3.perf.data
+ Percent |	Source code & Disassembly of hotskew.so for cpu-clock:u (69348 samples, percent: local period)
+--------------------------------------------------------------------------------------------------------------
+         :
+         :
+         :
+         : 3      Disassembly of section .text:
+         :
+         : 5      000000000015d650 <LockInternal>:
+    0.00 :   15d650: push   %r15
+    0.00 :   15d652: push   %r14
+    0.00 :   15d654: push   %r13
+    0.00 :   15d656: mov    %rdi,%r13
+    0.00 :   15d659: push   %r12
+    0.00 :   15d65b: push   %rbp
+    0.00 :   15d65c: push   %rbx
+    0.00 :   15d65d: mov    %rsi,%rbx
+    0.00 :   15d660: sub    $0x28,%rsp
+    0.00 :   15d664: mov    0x14(%rdi),%eax
+    0.22 :   15d667: cmp    $0x1,%eax
+    0.00 :   15d66a: je     15d694 <LockInternal+0x44>
+    0.00 :   15d66c: xor    %eax,%eax
+    0.00 :   15d66e: mov    $0xffffffff,%edx
+    0.00 :   15d673: lock cmpxchg %edx,0x14(%rdi)
+    0.00 :   15d678: test   %eax,%eax
+    0.00 :   15d67a: jne    15d752 <LockInternal+0x102>
+    0.00 :   15d680: movl   $0x0,0x10(%rdi)
+    0.00 :   15d687: mov    $0x1,%eax
+    0.00 :   15d68c: mov    %eax,0x14(%rdi)
+    0.00 :   15d68f: lock orl $0x0,0x14(%rdi)
+    0.00 :   15d694: lea    0x8(%r13),%r15
+    0.00 :   15d698: mov    $0x400,%ecx
+    0.10 :   15d69d: xor    %edx,%edx
+    0.03 :   15d69f: cmp    %edx,%ecx
+    0.23 :   15d6a1: js     15d6a7 <LockInternal+0x57>
+    0.07 :   15d6a3: dec    %ecx
+    0.00 :   15d6a5: js     15d6b5 <LockInternal+0x65>
+    0.04 :   15d6a7: xor    %eax,%eax
+    0.01 :   15d6a9: lock cmpxchg %rbx,0x8(%r13)
+   92.82 :   15d6af: je     15d6b5 <LockInternal+0x65>
+    0.40 :   15d6b1: pause
+    6.02 :   15d6b3: jmp    15d69d <LockInternal+0x4d>
+    0.03 :   15d6b5: sete   %cl
+    0.01 :   15d6b8: xor    %r14d,%r14d
+    0.00 :   15d6bb: lea    0x18(%r13),%r12
+    0.00 :   15d6bf: lea    0x10(%r13),%rbp
+    0.00 :   15d6c3: test   %cl,%cl
+    0.00 :   15d6c5: jne    15d79a <LockInternal+0x14a>
+    0.00 :   15d6cb: nopl   0x0(%rax,%rax,1)
+    0.00 :   15d6d0: mov    $0x1,%eax
+    0.00 :   15d6d5: lock xadd %eax,(%r12)
+    0.00 :   15d6db: xor    %eax,%eax
+    0.00 :   15d6dd: cmp    %eax,(%r15)
+    0.00 :   15d6e0: jne    15d6e7 <LockInternal+0x97>
+    0.00 :   15d6e2: lock cmpxchg %rbx,(%r15)
+    0.00 :   15d6e7: sete   %dl
+    0.00 :   15d6ea: test   %dl,%dl
+    0.00 :   15d6ec: jne    15d7b0 <LockInternal+0x160>
+    0.00 :   15d6f2: mov    0x10(%r13),%eax
+    0.00 :   15d6f6: cmp    $0x1,%eax
+    0.00 :   15d6f9: je     15d760 <LockInternal+0x110>
+    0.00 :   15d6fb: mov    %rsp,%rdx
+    0.00 :   15d6fe: mov    $0x3,%esi
+    0.00 :   15d703: mov    $0xca,%edi
+    0.00 :   15d708: mov    %rbp,(%rsp)
+    0.00 :   15d70c: movq   $0x80,0x8(%rsp)
+    0.00 :   15d715: movq   $0x0,0x10(%rsp)
+    0.00 :   15d71e: call   ae20 <OS_Syscall@plt>
+    0.00 :   15d723: cmp    $0xfffffffffffffff4,%rax
+    0.00 :   15d727: jne    15d6f2 <LockInternal+0xa2>
+    0.00 :   15d729: lea    0x17a48(%rip),%rcx        # 175178 <_fini+0x16d2a>
+    0.00 :   15d730: mov    $0x2f,%edx
+    0.00 :   15d735: lea    0x24504(%rip),%rsi        # 181c40 <__PRETTY_FUNCTION__.2>
+    0.00 :   15d73c: lea    0x17a65(%rip),%rdi        # 1751a8 <_fini+0x16d5a>
+    0.00 :   15d743: call   a750 <OS_Abort_with_msg@plt>
+    0.00 :   15d748: nopl   0x0(%rax,%rax,1)
+    0.00 :   15d750: pause
+    0.00 :   15d752: mov    0x14(%r13),%eax
+    0.00 :   15d756: cmp    $0x1,%eax
+    0.00 :   15d759: jne    15d750 <LockInternal+0x100>
+    0.00 :   15d75b: jmp    15d694 <LockInternal+0x44>
+    0.00 :   15d760: lock cmpxchg %r14d,0x0(%rbp)
+    0.00 :   15d766: jne    15d6fb <LockInternal+0xab>
+    0.00 :   15d768: mov    $0xffffffff,%eax
+    0.00 :   15d76d: lock xadd %eax,(%r12)
+    0.00 :   15d773: mov    $0x400,%ecx
+    0.00 :   15d778: xor    %edx,%edx
+    0.00 :   15d77a: cmp    %edx,%ecx
+    0.00 :   15d77c: js     15d782 <LockInternal+0x132>
+    0.00 :   15d77e: dec    %ecx
+    0.00 :   15d780: js     15d78f <LockInternal+0x13f>
+    0.00 :   15d782: xor    %eax,%eax
+    0.00 :   15d784: lock cmpxchg %rbx,(%r15)
+    0.00 :   15d789: je     15d78f <LockInternal+0x13f>
+    0.00 :   15d78b: pause
+    0.00 :   15d78d: jmp    15d778 <LockInternal+0x128>
+    0.00 :   15d78f: sete   %cl
+    0.00 :   15d792: test   %cl,%cl
+    0.00 :   15d794: je     15d6d0 <LockInternal+0x80>
+    0.00 :   15d79a: add    $0x28,%rsp
+    0.00 :   15d79e: pop    %rbx
+    0.01 :   15d79f: pop    %rbp
+    0.00 :   15d7a0: pop    %r12
+    0.00 :   15d7a2: pop    %r13
+    0.00 :   15d7a4: pop    %r14
+    0.00 :   15d7a6: pop    %r15
+    0.00 :   15d7a8: ret
+    0.00 :   15d7a9: nopl   0x0(%rax)
+    0.00 :   15d7b0: mov    $0xffffffff,%eax
+    0.00 :   15d7b5: lock xadd %eax,0x18(%r13)
+    0.00 :   15d7bb: add    $0x28,%rsp
+    0.00 :   15d7bf: pop    %rbx
+    0.00 :   15d7c0: pop    %rbp
+    0.00 :   15d7c1: pop    %r12
+    0.00 :   15d7c3: pop    %r13
+    0.00 :   15d7c5: pop    %r14
+    0.00 :   15d7c7: pop    %r15
+    0.00 :   15d7c9: ret
+

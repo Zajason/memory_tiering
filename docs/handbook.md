@@ -120,6 +120,11 @@ twenty-thread baseline repetitions and both local-BBL repetitions exceeded
 audits, with byte-identical epoch/paired CSVs. This is a cost-limit outcome,
 not a demonstrated correctness failure, OOM or permission to resize/retry.
 Large deployment remains unapproved; three stage-2 controls remain incomplete.
+The subsequent fixed-input [CPU attribution study](pin-bottleneck-findings.md)
+completed six bounded profiles: twenty-thread samples concentrate in the internal
+lock-acquisition retry loop. Both public Pin lock APIs use the same backend in
+this frozen build. The study stops at diagnosis, preserving the hold and all
+ordering/correctness gates; no redesign or additional input is implied.
 
 ### Are the extensions still usable?
 

@@ -110,6 +110,10 @@ instrumentation, but the larger fixed follow-up timed out in all four
 twenty-thread cases, including the optimized tool. The runtime gate did not
 pass; large deployment remains unapproved. Correctness checks passed for the
 two completed one-thread cases. No incomplete output enters the fidelity plots.
+The separate [bounded CPU attribution study](docs/pin-bottleneck-findings.md)
+found 89--90% of sampled twenty-thread user CPU in Pin's internal lock-acquisition
+routine in both frozen tools. This identifies synchronization as the next
+engineering problem, not approval for a redesign or another large run.
 
 The [simulator Figure 4 comparison](docs/simulator-figure4.md) now plots completed
 CXL-bridge measurements alongside M5 and the Pin baseline. BFS/CC discrepancies

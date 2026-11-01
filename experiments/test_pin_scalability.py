@@ -16,6 +16,16 @@ def module(name):
 
 
 class ScalabilityTests(unittest.TestCase):
+    def test_bottleneck_publisher_rejects_unfinished(self):
+        path = HERE.parent/'src/analysis/publish_pin_bottleneck.py'
+        spec = importlib.util.spec_from_file_location('publish_pin_bottleneck', path)
+        publisher = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(publisher)
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp)
+            (source/'study.json').write_text('{"status":"running"}')
+            with self.assertRaises(ValueError): publisher.derive(source)
+
     def test_bottleneck_report_and_cutoff(self):
         study=module('profile_pin_bottleneck')
         report=study.parse_report('# header\n60.0%;600;6;hotskew.so;[.] ATOMIC_SpinLock\n'
@@ -24,6 +34,10 @@ class ScalabilityTests(unittest.TestCase):
         self.assertEqual(report['total_samples'],10)
         self.assertEqual(report['category_percent']['synchronization symbols'],60)
         self.assertEqual(report['category_percent']['unresolved/JIT'],10)
+        for symbol in ('LockInternal', 'UnlockInternal', 'OS_MutexLock', 'PIN_GetLock'):
+            self.assertEqual(study.category('hotskew.so', symbol), 'synchronization symbols')
+        self.assertEqual(study.category('hotskew.so', 'PIN_GetThreadData'),
+                         'other tool-linked code')
         with self.assertRaises(ValueError): study.parse_report('# no samples')
         with tempfile.TemporaryDirectory() as temp:
             result=study.capture([sys.executable,'-c','import time;time.sleep(30)'],Path(temp)/'log',1)

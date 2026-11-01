@@ -47,3 +47,12 @@ storage. Only terminal small attribution reports and the conservative assessment
 are committed. No pilot CDF enters fidelity scoring or presentation comparison
 plots. No automatic tool redesign, new graph, repeated budget expansion, large
 restart or change to `deployment_approved: false` follows from this study.
+
+## Terminal result
+
+All six profiles finished within the declared bounds; see the
+[audited findings](pin-bottleneck-findings.md). Internal lock functions were
+initially grouped under other tool-linked code. Derived classification version 2
+corrects this after disassembly inspection, preserving original capture hashes
+and outputs. There were no additional target runs or tool changes. This bounded
+effort is finished; it does not automatically authorize a redesign.

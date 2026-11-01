@@ -280,3 +280,16 @@ instructions. The three held controls remain explicitly incomplete. Further
 performance redesign or a different cost budget needs a newly declared decision,
 not a silent continuation of this failed gate. Liblinear and the existing BC
 simulator queue continue unchanged; no application speedup is claimed.
+
+### Separate CPU attribution effort completed
+
+The user then authorized a separate bounded bottleneck diagnosis before another
+redesign. Its [protocol](pin-bottleneck-protocol.md) reused the existing smaller
+graph, unchanged tools and six capped CPU profiles. The
+[completed assessment](pin-bottleneck-findings.md) finds synchronization dominant
+in all four twenty-thread prefixes, with 89--90% of user CPU period attributed
+to `LockInternal`. The one-thread outputs still match exactly; twenty-thread
+prefixes remain interrupted. This is neither a new capacity pilot nor an
+extension of its failed budget. No new fidelity curves or tool changes were
+made. Further redesign requires an explicit engineering decision and must
+preserve shared-cache order and epoch semantics. The large-run hold remains.

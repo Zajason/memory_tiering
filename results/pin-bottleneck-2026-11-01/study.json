@@ -1,0 +1,1621 @@
+{
+  "status": "completed attribution study",
+  "purpose": "Fixed-input, bounded CPU attribution; not fidelity collection or a speedup test.",
+  "deployment_approved": false,
+  "profile_seconds": 40,
+  "graph": "/mnt/research/memory-tiering/profiler-validation/2026-11-01-real-input-attempt-1/twitter-nested-hash8.sg",
+  "graph_sha256": "76c74f519c81ca04c22bdc41ae30a9c5cad0d55b257f1cc60d395c9154151e41",
+  "script_sha256": "fcda5f9928acf3ce1ff579566991422b9ac26d784e6d3c072121f1ea91238a35",
+  "runner_sha256": "ec1355ffd20240f016f8e35c3f9892c17e9c5948665b3af44ba699086c824f54",
+  "binary_sha256": "c651c1df23511f68da33ba21b2f09939430644f36f1f8e35ee9701362fef4cac",
+  "tool_sha256": {
+    "baseline": "a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a",
+    "local-bbl": "6a24fae0dd3fbd7a61d9b0db1dc65e8bf8764bac65780aa85c46268d9eaf3941"
+  },
+  "perf_version": "perf version 7.0.14",
+  "kernel": "7.0.0-38-generic",
+  "cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+  ],
+  "profiles": [
+    {
+      "case": "baseline",
+      "threads": 1,
+      "command": [
+        "perf",
+        "record",
+        "-e",
+        "cpu-clock:u",
+        "-F",
+        "99",
+        "--call-graph",
+        "fp",
+        "-o",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-0.perf.data",
+        "--",
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py",
+        "tc",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/profiler-validation/2026-11-01-real-input-attempt-1/twitter-nested-hash8",
+        "--graph-family",
+        "Bottleneck attribution only; fixed existing Twitter subset",
+        "--threads",
+        "1",
+        "--epoch-traffic",
+        "1",
+        "--application-stats",
+        "--tool",
+        "/mnt/research/memory-tiering/profiler-builds/a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a/hotskew.so",
+        "--out",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-0-1-baseline"
+      ],
+      "status": "profile complete",
+      "profile_cutoff": false,
+      "returncode": 0,
+      "elapsed_s": 29.3183325479622,
+      "sampled_peak_group_rss_bytes": 275365888,
+      "sampled_peak_group_cpu_seconds": 28.89,
+      "accounting_limit": "Sampled process-group sums include perf/wrapper; RSS may double-count shared pages; CPU can undercount exited tasks.",
+      "collection_status": "complete and audited, engineering only",
+      "attribution": {
+        "total_period": 29080807790,
+        "total_samples": 2879,
+        "category_percent": {
+          "memory callback (includes inlined work)": 16.741924279263632,
+          "synchronization symbols": 37.374088225078154,
+          "observer/epoch symbols": 10.837096213963182,
+          "other runtime/application code": 6.8426536992011116,
+          "unresolved/JIT": 19.555401180965614,
+          "other tool-linked code": 6.877387981938173,
+          "instruction callback": 1.7714484195901354
+        },
+        "top_symbols": [
+          {
+            "overhead_percent": 16.74,
+            "period": 4868686820,
+            "samples": 482,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::analyzeMemRef(int, unsigned long, unsigned int, bool)",
+            "category": "memory callback (includes inlined work)"
+          },
+          {
+            "overhead_percent": 15.28,
+            "period": 4444444400,
+            "samples": 440,
+            "dso": "hotskew.so",
+            "symbol": "[.] LockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 13.09,
+            "period": 3808080770,
+            "samples": 377,
+            "dso": "hotskew.so",
+            "symbol": "[.] UnlockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 10.84,
+            "period": 3151515120,
+            "samples": 312,
+            "dso": "hotskew.so",
+            "symbol": "[.] std::__1::unordered_map<unsigned long, hotskew::PairedObserver::Masks, std::__1::hash<unsigned long>, std::__1::equal_to<unsigned long>, std::__1::allocator<std::__1::pair<unsigned long const, hotskew::PairedObserver::Masks> > >::operator[](unsigned long const&)",
+            "category": "observer/epoch symbols"
+          },
+          {
+            "overhead_percent": 5.04,
+            "period": 1464646450,
+            "samples": 145,
+            "dso": "libpincrt.so",
+            "symbol": "[.] OS_Syscall",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 4.1,
+            "period": 1191919180,
+            "samples": 118,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexUnlock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 2.88,
+            "period": 838383830,
+            "samples": 83,
+            "dso": "[JIT] tid 233501",
+            "symbol": "[.] 0x00007fffe3d07928",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 2.78,
+            "period": 808080800,
+            "samples": 80,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexLock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 2.64,
+            "period": 767676760,
+            "samples": 76,
+            "dso": "[JIT] tid 233501",
+            "symbol": "[.] 0x00007fffe3d425dc",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 2.47,
+            "period": 717171710,
+            "samples": 71,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000dfffc",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 2.43,
+            "period": 707070700,
+            "samples": 70,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::PIN_GetThreadData(int, int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 1.84,
+            "period": 535353530,
+            "samples": 53,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_GetLock(LEVEL_BASE::PIN_LOCK*, int)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 1.77,
+            "period": 515151510,
+            "samples": 51,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::countBbl(unsigned int)",
+            "category": "instruction callback"
+          },
+          {
+            "overhead_percent": 1.46,
+            "period": 424242420,
+            "samples": 42,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::Instance()",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 1.39,
+            "period": 404040400,
+            "samples": 40,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsCurrentTlsAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 1.11,
+            "period": 323232320,
+            "samples": 32,
+            "dso": "[JIT] tid 233501",
+            "symbol": "[.] 0x00007fffe3d425e0",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 1.04,
+            "period": 303030300,
+            "samples": 30,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x000000000008cdc0",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.87,
+            "period": 252525250,
+            "samples": 25,
+            "dso": "[JIT] tid 233501",
+            "symbol": "[.] 0x00007fffe3d07935",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.87,
+            "period": 252525250,
+            "samples": 25,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsKeyAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.69,
+            "period": 202020200,
+            "samples": 20,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000dffc5",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.69,
+            "period": 202020200,
+            "samples": 20,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000dffe7",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.66,
+            "period": 191919190,
+            "samples": 19,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_Syscall@plt",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.66,
+            "period": 191919190,
+            "samples": 19,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000e0000",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.66,
+            "period": 191919190,
+            "samples": 19,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000e0008",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.45,
+            "period": 131313130,
+            "samples": 13,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000dffeb",
+            "category": "unresolved/JIT"
+          }
+        ]
+      },
+      "reported_lost_samples": 0,
+      "symbols_sha256": "7053e0522bc9e4639952ff3578e0260cdd7bf1263e57073e353907dc6fb3507f",
+      "lock_internal_percent": 15.28308440430705
+    },
+    {
+      "case": "local-bbl",
+      "threads": 1,
+      "command": [
+        "perf",
+        "record",
+        "-e",
+        "cpu-clock:u",
+        "-F",
+        "99",
+        "--call-graph",
+        "fp",
+        "-o",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-1.perf.data",
+        "--",
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py",
+        "tc",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/profiler-validation/2026-11-01-real-input-attempt-1/twitter-nested-hash8",
+        "--graph-family",
+        "Bottleneck attribution only; fixed existing Twitter subset",
+        "--threads",
+        "1",
+        "--epoch-traffic",
+        "1",
+        "--application-stats",
+        "--tool",
+        "/mnt/research/memory-tiering/profiler-builds/6a24fae0dd3fbd7a61d9b0db1dc65e8bf8764bac65780aa85c46268d9eaf3941/hotskew.so",
+        "--out",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-1-1-local-bbl",
+        "--local-bbl"
+      ],
+      "status": "profile complete",
+      "profile_cutoff": false,
+      "returncode": 0,
+      "elapsed_s": 22.298777556978166,
+      "sampled_peak_group_rss_bytes": 275738624,
+      "sampled_peak_group_cpu_seconds": 21.75,
+      "accounting_limit": "Sampled process-group sums include perf/wrapper; RSS may double-count shared pages; CPU can undercount exited tasks.",
+      "collection_status": "complete and audited, engineering only",
+      "attribution": {
+        "total_period": 22080807860,
+        "total_samples": 2186,
+        "category_percent": {
+          "memory callback (includes inlined work)": 29.826166514181153,
+          "observer/epoch symbols": 13.540713632204941,
+          "synchronization symbols": 20.90576395242452,
+          "other tool-linked code": 12.671546203110704,
+          "instruction callback": 4.528819762122598,
+          "unresolved/JIT": 14.409881061299176,
+          "other runtime/application code": 4.117108874656908
+        },
+        "top_symbols": [
+          {
+            "overhead_percent": 29.83,
+            "period": 6585858520,
+            "samples": 652,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::analyzeMemRef(int, unsigned long, unsigned int, bool)",
+            "category": "memory callback (includes inlined work)"
+          },
+          {
+            "overhead_percent": 13.54,
+            "period": 2989898960,
+            "samples": 296,
+            "dso": "hotskew.so",
+            "symbol": "[.] std::__1::unordered_map<unsigned long, hotskew::PairedObserver::Masks, std::__1::hash<unsigned long>, std::__1::equal_to<unsigned long>, std::__1::allocator<std::__1::pair<unsigned long const, hotskew::PairedObserver::Masks> > >::operator[](unsigned long const&)",
+            "category": "observer/epoch symbols"
+          },
+          {
+            "overhead_percent": 9.79,
+            "period": 2161616140,
+            "samples": 214,
+            "dso": "hotskew.so",
+            "symbol": "[.] LockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 7.91,
+            "period": 1747474730,
+            "samples": 173,
+            "dso": "hotskew.so",
+            "symbol": "[.] UnlockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 4.8,
+            "period": 1060606050,
+            "samples": 105,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::PIN_GetThreadData(int, int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 4.53,
+            "period": 999999990,
+            "samples": 99,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::countBblLocal(unsigned int, int)",
+            "category": "instruction callback"
+          },
+          {
+            "overhead_percent": 2.79,
+            "period": 616161610,
+            "samples": 61,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsCurrentTlsAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 2.38,
+            "period": 525252520,
+            "samples": 52,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsKeyAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 2.24,
+            "period": 494949490,
+            "samples": 49,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::Instance()",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 1.92,
+            "period": 424242420,
+            "samples": 42,
+            "dso": "[JIT] tid 233731",
+            "symbol": "[.] 0x00007fffe3d07b13",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 1.83,
+            "period": 404040400,
+            "samples": 40,
+            "dso": "[JIT] tid 233731",
+            "symbol": "[.] 0x00007fffe3d07b17",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 1.78,
+            "period": 393939390,
+            "samples": 39,
+            "dso": "libpincrt.so",
+            "symbol": "[.] OS_Syscall",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 1.69,
+            "period": 373737370,
+            "samples": 37,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000dfffc",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 1.24,
+            "period": 272727270,
+            "samples": 27,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexLock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.91,
+            "period": 202020200,
+            "samples": 20,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x000000000008cdc0",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.78,
+            "period": 171717170,
+            "samples": 17,
+            "dso": "[JIT] tid 233731",
+            "symbol": "[.] 0x00007fffe3d47928",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.73,
+            "period": 161616160,
+            "samples": 16,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_GetLock(LEVEL_BASE::PIN_LOCK*, int)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.64,
+            "period": 141414140,
+            "samples": 14,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_ReleaseLock(LEVEL_BASE::PIN_LOCK*)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.59,
+            "period": 131313130,
+            "samples": 13,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexUnlock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.55,
+            "period": 121212120,
+            "samples": 12,
+            "dso": "[JIT] tid 233731",
+            "symbol": "[.] 0x00007fffe3d07b33",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.55,
+            "period": 121212120,
+            "samples": 12,
+            "dso": "[JIT] tid 233731",
+            "symbol": "[.] 0x00007fffe3d4793b",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.46,
+            "period": 101010100,
+            "samples": 10,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000dffeb",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.41,
+            "period": 90909090,
+            "samples": 9,
+            "dso": "[JIT] tid 233731",
+            "symbol": "[.] 0x00007fffe3d07b11",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.37,
+            "period": 80808080,
+            "samples": 8,
+            "dso": "[JIT] tid 233731",
+            "symbol": "[.] 0x00007fffe3d072b7",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.37,
+            "period": 80808080,
+            "samples": 8,
+            "dso": "[JIT] tid 233731",
+            "symbol": "[.] 0x00007fffe3d07b51",
+            "category": "unresolved/JIT"
+          }
+        ]
+      },
+      "reported_lost_samples": 0,
+      "symbols_sha256": "0830a6eed3ac3f1946cd23c2317dc4241d19b2de42ba68396dfb3f8ebb2ca4f8",
+      "lock_internal_percent": 9.78956999085087
+    },
+    {
+      "case": "baseline",
+      "threads": 20,
+      "command": [
+        "perf",
+        "record",
+        "-e",
+        "cpu-clock:u",
+        "-F",
+        "99",
+        "--call-graph",
+        "fp",
+        "-o",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-2.perf.data",
+        "--",
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py",
+        "tc",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/profiler-validation/2026-11-01-real-input-attempt-1/twitter-nested-hash8",
+        "--graph-family",
+        "Bottleneck attribution only; fixed existing Twitter subset",
+        "--threads",
+        "20",
+        "--epoch-traffic",
+        "1",
+        "--application-stats",
+        "--tool",
+        "/mnt/research/memory-tiering/profiler-builds/a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a/hotskew.so",
+        "--out",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-2-20-baseline"
+      ],
+      "status": "profile complete",
+      "profile_cutoff": true,
+      "returncode": -15,
+      "elapsed_s": 40.11364511400461,
+      "sampled_peak_group_rss_bytes": 288157696,
+      "sampled_peak_group_cpu_seconds": 778.96,
+      "accounting_limit": "Sampled process-group sums include perf/wrapper; RSS may double-count shared pages; CPU can undercount exited tasks.",
+      "collection_status": "bounded prefix, not a completed application",
+      "attribution": {
+        "total_period": 778555547770,
+        "total_samples": 77077,
+        "category_percent": {
+          "synchronization symbols": 99.4200604590215,
+          "memory callback (includes inlined work)": 0.22834308548594262,
+          "instruction callback": 0.14141702453390764,
+          "observer/epoch symbols": 0.031137693475355815,
+          "other tool-linked code": 0.025948077896129844,
+          "other runtime/application code": 0.08043904147800252,
+          "unresolved/JIT": 0.07265461810916356
+        },
+        "top_symbols": [
+          {
+            "overhead_percent": 89.22,
+            "period": 694616154670,
+            "samples": 68767,
+            "dso": "hotskew.so",
+            "symbol": "[.] LockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 4.3,
+            "period": 33515151180,
+            "samples": 3318,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexLock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 3.04,
+            "period": 23676767440,
+            "samples": 2344,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexUnlock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 2.84,
+            "period": 22131312910,
+            "samples": 2191,
+            "dso": "hotskew.so",
+            "symbol": "[.] UnlockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.23,
+            "period": 1777777760,
+            "samples": 176,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::analyzeMemRef(int, unsigned long, unsigned int, bool)",
+            "category": "memory callback (includes inlined work)"
+          },
+          {
+            "overhead_percent": 0.14,
+            "period": 1101010090,
+            "samples": 109,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::countBbl(unsigned int)",
+            "category": "instruction callback"
+          },
+          {
+            "overhead_percent": 0.03,
+            "period": 242424240,
+            "samples": 24,
+            "dso": "hotskew.so",
+            "symbol": "[.] std::__1::unordered_map<unsigned long, hotskew::PairedObserver::Masks, std::__1::hash<unsigned long>, std::__1::equal_to<unsigned long>, std::__1::allocator<std::__1::pair<unsigned long const, hotskew::PairedObserver::Masks> > >::operator[](unsigned long const&)",
+            "category": "observer/epoch symbols"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 90909090,
+            "samples": 9,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_GetLock(LEVEL_BASE::PIN_LOCK*, int)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 90909090,
+            "samples": 9,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsCurrentTlsAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 90909090,
+            "samples": 9,
+            "dso": "libpincrt.so",
+            "symbol": "[.] OS_Syscall",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 50505050,
+            "samples": 5,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x000000000008cdc0",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 40404040,
+            "samples": 4,
+            "dso": "pinbin",
+            "symbol": "[.] LEVEL_VM::RECONCILIATOR::ProcessRegForReconciliation(LEVEL_CORE::INDEX<6>, LEVEL_BASE::REG, LEVEL_VM::REGLOCTAB const*, LEVEL_VM::REGLOCTAB const*, LEVEL_CORE::INDEX<4>, LEVEL_CORE::REGISTER_SET<3u, 580u>*, bool*, bool*, bool)",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 40404040,
+            "samples": 4,
+            "dso": "pinbin",
+            "symbol": "[.] 0x00000000003b4abf",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::Instance()",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsKeyAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::PIN_GetThreadData(int, int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "pinbin",
+            "symbol": "[.] ATOMIC_CompareAndSwap32",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "pinbin",
+            "symbol": "[.] LEVEL_VM::GetRecursiveRegionRegallocParams(LEVEL_VM::REGION_REGALLOC_PARAMS*, LEVEL_CORE::INDEX<5>)",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "pinbin",
+            "symbol": "[.] 0x00000000003b4b99",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233748",
+            "symbol": "[.] 0x00007fffe3d848f5",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233748",
+            "symbol": "[.] 0x00007fffe3d867e8",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233748",
+            "symbol": "[.] 0x00007fffe3dc10ba",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "libpincrt.so",
+            "symbol": "[.] memcpy",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "libpincrt.so",
+            "symbol": "[.] memset",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x000000000008cbd0",
+            "category": "unresolved/JIT"
+          }
+        ]
+      },
+      "reported_lost_samples": 0,
+      "symbols_sha256": "5c468cade5f17806b4802ba6eccbcc809c80b8522b9854cd4377a226ed7a73f8",
+      "lock_internal_percent": 89.21857363415805
+    },
+    {
+      "case": "local-bbl",
+      "threads": 20,
+      "command": [
+        "perf",
+        "record",
+        "-e",
+        "cpu-clock:u",
+        "-F",
+        "99",
+        "--call-graph",
+        "fp",
+        "-o",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-3.perf.data",
+        "--",
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py",
+        "tc",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/profiler-validation/2026-11-01-real-input-attempt-1/twitter-nested-hash8",
+        "--graph-family",
+        "Bottleneck attribution only; fixed existing Twitter subset",
+        "--threads",
+        "20",
+        "--epoch-traffic",
+        "1",
+        "--application-stats",
+        "--tool",
+        "/mnt/research/memory-tiering/profiler-builds/6a24fae0dd3fbd7a61d9b0db1dc65e8bf8764bac65780aa85c46268d9eaf3941/hotskew.so",
+        "--out",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-3-20-local-bbl",
+        "--local-bbl"
+      ],
+      "status": "profile complete",
+      "profile_cutoff": true,
+      "returncode": -15,
+      "elapsed_s": 40.0635654880316,
+      "sampled_peak_group_rss_bytes": 288755712,
+      "sampled_peak_group_cpu_seconds": 780.3,
+      "accounting_limit": "Sampled process-group sums include perf/wrapper; RSS may double-count shared pages; CPU can undercount exited tasks.",
+      "collection_status": "bounded prefix, not a completed application",
+      "attribution": {
+        "total_period": 780282820480,
+        "total_samples": 77248,
+        "category_percent": {
+          "synchronization symbols": 99.18573943661971,
+          "memory callback (includes inlined work)": 0.4259009942004971,
+          "observer/epoch symbols": 0.08932270091135046,
+          "other tool-linked code": 0.08155550952775477,
+          "instruction callback": 0.03106876553438277,
+          "other runtime/application code": 0.07767191383595692,
+          "unresolved/JIT": 0.10874067937033968
+        },
+        "top_symbols": [
+          {
+            "overhead_percent": 89.77,
+            "period": 700484841480,
+            "samples": 69348,
+            "dso": "hotskew.so",
+            "symbol": "[.] LockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 4.22,
+            "period": 32898989570,
+            "samples": 3257,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexLock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 3.15,
+            "period": 24565656320,
+            "samples": 2432,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexUnlock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 2.03,
+            "period": 15818181660,
+            "samples": 1566,
+            "dso": "hotskew.so",
+            "symbol": "[.] UnlockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.43,
+            "period": 3323232290,
+            "samples": 329,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::analyzeMemRef(int, unsigned long, unsigned int, bool)",
+            "category": "memory callback (includes inlined work)"
+          },
+          {
+            "overhead_percent": 0.09,
+            "period": 696969690,
+            "samples": 69,
+            "dso": "hotskew.so",
+            "symbol": "[.] std::__1::unordered_map<unsigned long, hotskew::PairedObserver::Masks, std::__1::hash<unsigned long>, std::__1::equal_to<unsigned long>, std::__1::allocator<std::__1::pair<unsigned long const, hotskew::PairedObserver::Masks> > >::operator[](unsigned long const&)",
+            "category": "observer/epoch symbols"
+          },
+          {
+            "overhead_percent": 0.04,
+            "period": 292929290,
+            "samples": 29,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::PIN_GetThreadData(int, int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.03,
+            "period": 242424240,
+            "samples": 24,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::countBblLocal(unsigned int, int)",
+            "category": "instruction callback"
+          },
+          {
+            "overhead_percent": 0.02,
+            "period": 141414140,
+            "samples": 14,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsCurrentTlsAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.02,
+            "period": 131313130,
+            "samples": 13,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_GetLock(LEVEL_BASE::PIN_LOCK*, int)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 111111110,
+            "samples": 11,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsKeyAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 60606060,
+            "samples": 6,
+            "dso": "libpincrt.so",
+            "symbol": "[.] OS_Syscall",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 60606060,
+            "samples": 6,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x000000000008cdc0",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 40404040,
+            "samples": 4,
+            "dso": "[JIT] tid 233815",
+            "symbol": "[.] 0x00007fffe3d867ee",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 40404040,
+            "samples": 4,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::Instance()",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 40404040,
+            "samples": 4,
+            "dso": "libpincrt.so",
+            "symbol": "[.] memcpy",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 40404040,
+            "samples": 4,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000dfffc",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "[JIT] tid 233815",
+            "symbol": "[.] 0x00007fffe3dc3d13",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_ReleaseLock(LEVEL_BASE::PIN_LOCK*)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_Syscall@plt",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "pinbin",
+            "symbol": "[.] LEVEL_VM::INS_AllocateRegisters(LEVEL_CORE::INDEX<6>*, LEVEL_VM::REGMAP&, LEVEL_VM::REGION*)",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "pinbin",
+            "symbol": "[.] LEVEL_VM::RECONCILIATOR::REGLOCTAB_Reconciliate(LEVEL_CORE::INDEX<4>, LEVEL_CORE::INDEX<6>, LEVEL_VM::REGLOCTAB const*, LEVEL_VM::REGLOCTAB const*, LEVEL_CORE::INDEX<4>, bool)",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233815",
+            "symbol": "[.] 0x00007fffe3dc3c7f",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233815",
+            "symbol": "[.] 0x00007fffe3dc3cc3",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233815",
+            "symbol": "[.] 0x00007fffe3dc3d20",
+            "category": "unresolved/JIT"
+          }
+        ]
+      },
+      "reported_lost_samples": 0,
+      "symbols_sha256": "4fc4b02b8bcacd7da726f05cbf2df7a823c282ce03b4d810ac3e4d01aab00274",
+      "lock_internal_percent": 89.773198011599
+    },
+    {
+      "case": "local-bbl",
+      "threads": 20,
+      "command": [
+        "perf",
+        "record",
+        "-e",
+        "cpu-clock:u",
+        "-F",
+        "99",
+        "--call-graph",
+        "fp",
+        "-o",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-4.perf.data",
+        "--",
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py",
+        "tc",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/profiler-validation/2026-11-01-real-input-attempt-1/twitter-nested-hash8",
+        "--graph-family",
+        "Bottleneck attribution only; fixed existing Twitter subset",
+        "--threads",
+        "20",
+        "--epoch-traffic",
+        "1",
+        "--application-stats",
+        "--tool",
+        "/mnt/research/memory-tiering/profiler-builds/6a24fae0dd3fbd7a61d9b0db1dc65e8bf8764bac65780aa85c46268d9eaf3941/hotskew.so",
+        "--out",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-4-20-local-bbl",
+        "--local-bbl"
+      ],
+      "status": "profile complete",
+      "profile_cutoff": true,
+      "returncode": -15,
+      "elapsed_s": 40.11361380800372,
+      "sampled_peak_group_rss_bytes": 288288768,
+      "sampled_peak_group_cpu_seconds": 779.7,
+      "accounting_limit": "Sampled process-group sums include perf/wrapper; RSS may double-count shared pages; CPU can undercount exited tasks.",
+      "collection_status": "bounded prefix, not a completed application",
+      "attribution": {
+        "total_period": 780797971990,
+        "total_samples": 77299,
+        "category_percent": {
+          "synchronization symbols": 99.27295307830632,
+          "memory callback (includes inlined work)": 0.4010401169484728,
+          "observer/epoch symbols": 0.0724459566100467,
+          "other tool-linked code": 0.07373963440665468,
+          "instruction callback": 0.015524133559295722,
+          "other runtime/application code": 0.07762066779647861,
+          "unresolved/JIT": 0.08667641237273445
+        },
+        "top_symbols": [
+          {
+            "overhead_percent": 89.63,
+            "period": 699797972800,
+            "samples": 69280,
+            "dso": "hotskew.so",
+            "symbol": "[.] LockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 4.52,
+            "period": 35323231970,
+            "samples": 3497,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexLock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 3.16,
+            "period": 24686868440,
+            "samples": 2444,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexUnlock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 1.95,
+            "period": 15222222070,
+            "samples": 1507,
+            "dso": "hotskew.so",
+            "symbol": "[.] UnlockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.4,
+            "period": 3131313100,
+            "samples": 310,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::analyzeMemRef(int, unsigned long, unsigned int, bool)",
+            "category": "memory callback (includes inlined work)"
+          },
+          {
+            "overhead_percent": 0.07,
+            "period": 565656560,
+            "samples": 56,
+            "dso": "hotskew.so",
+            "symbol": "[.] std::__1::unordered_map<unsigned long, hotskew::PairedObserver::Masks, std::__1::hash<unsigned long>, std::__1::equal_to<unsigned long>, std::__1::allocator<std::__1::pair<unsigned long const, hotskew::PairedObserver::Masks> > >::operator[](unsigned long const&)",
+            "category": "observer/epoch symbols"
+          },
+          {
+            "overhead_percent": 0.02,
+            "period": 191919190,
+            "samples": 19,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::PIN_GetThreadData(int, int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.02,
+            "period": 151515150,
+            "samples": 15,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsCurrentTlsAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.02,
+            "period": 121212120,
+            "samples": 12,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::countBblLocal(unsigned int, int)",
+            "category": "instruction callback"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 111111110,
+            "samples": 11,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsKeyAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 80808080,
+            "samples": 8,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::Instance()",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 80808080,
+            "samples": 8,
+            "dso": "libpincrt.so",
+            "symbol": "[.] OS_Syscall",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 60606060,
+            "samples": 6,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_GetLock(LEVEL_BASE::PIN_LOCK*, int)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 50505050,
+            "samples": 5,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000dfffc",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_ReleaseLock(LEVEL_BASE::PIN_LOCK*)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x000000000008cbd0",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x00000000000dffd0",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "pinbin",
+            "symbol": "[.] LEVEL_VM::GetRecursiveRegionRegallocParams(LEVEL_VM::REGION_REGALLOC_PARAMS*, LEVEL_CORE::INDEX<5>)",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "pinbin",
+            "symbol": "[.] LEVEL_VM::RECONCILIATOR::REGLOCTAB_Reconciliate(LEVEL_CORE::INDEX<4>, LEVEL_CORE::INDEX<6>, LEVEL_VM::REGLOCTAB const*, LEVEL_VM::REGLOCTAB const*, LEVEL_CORE::INDEX<4>, bool)",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233860",
+            "symbol": "[.] 0x00007fffe3dc39e1",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233860",
+            "symbol": "[.] 0x00007fffe3dc3eb9",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233860",
+            "symbol": "[.] 0x00007fffe3dc3ec8",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233860",
+            "symbol": "[.] 0x00007fffe3dc3ede",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_Syscall@plt",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x0000000000032714",
+            "category": "unresolved/JIT"
+          }
+        ]
+      },
+      "reported_lost_samples": 0,
+      "symbols_sha256": "872d4a3793cf56d738488b2e36b1bdb4a8f7fbd1249981f48ddd58f43889d79a",
+      "lock_internal_percent": 89.62599774900063
+    },
+    {
+      "case": "baseline",
+      "threads": 20,
+      "command": [
+        "perf",
+        "record",
+        "-e",
+        "cpu-clock:u",
+        "-F",
+        "99",
+        "--call-graph",
+        "fp",
+        "-o",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-5.perf.data",
+        "--",
+        "/home/zajason/dev/advarch/memory_tiering/.venv/bin/python",
+        "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py",
+        "tc",
+        "--graph-prefix",
+        "/mnt/research/memory-tiering/profiler-validation/2026-11-01-real-input-attempt-1/twitter-nested-hash8",
+        "--graph-family",
+        "Bottleneck attribution only; fixed existing Twitter subset",
+        "--threads",
+        "20",
+        "--epoch-traffic",
+        "1",
+        "--application-stats",
+        "--tool",
+        "/mnt/research/memory-tiering/profiler-builds/a7276ee255ea5e74179fd22fff41ad4d7052520ea626339717b67032514a706a/hotskew.so",
+        "--out",
+        "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/case-5-20-baseline"
+      ],
+      "status": "profile complete",
+      "profile_cutoff": true,
+      "returncode": -15,
+      "elapsed_s": 40.06355702801375,
+      "sampled_peak_group_rss_bytes": 288784384,
+      "sampled_peak_group_cpu_seconds": 780.62,
+      "accounting_limit": "Sampled process-group sums include perf/wrapper; RSS may double-count shared pages; CPU can undercount exited tasks.",
+      "collection_status": "bounded prefix, not a completed application",
+      "attribution": {
+        "total_period": 780616153810,
+        "total_samples": 77281,
+        "category_percent": {
+          "synchronization symbols": 99.45005887604974,
+          "memory callback (includes inlined work)": 0.20574267931315587,
+          "instruction callback": 0.12551597417217686,
+          "observer/epoch symbols": 0.02846754053389578,
+          "other runtime/application code": 0.09057853806239567,
+          "other tool-linked code": 0.0271735614187187,
+          "unresolved/JIT": 0.07246283044991654
+        },
+        "top_symbols": [
+          {
+            "overhead_percent": 89.83,
+            "period": 701202013190,
+            "samples": 69419,
+            "dso": "hotskew.so",
+            "symbol": "[.] LockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 4.06,
+            "period": 31666666350,
+            "samples": 3135,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexLock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 3.23,
+            "period": 25181817930,
+            "samples": 2493,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_MutexUnlock",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 2.33,
+            "period": 18161615980,
+            "samples": 1798,
+            "dso": "hotskew.so",
+            "symbol": "[.] UnlockInternal",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.21,
+            "period": 1606060590,
+            "samples": 159,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::analyzeMemRef(int, unsigned long, unsigned int, bool)",
+            "category": "memory callback (includes inlined work)"
+          },
+          {
+            "overhead_percent": 0.13,
+            "period": 979797970,
+            "samples": 97,
+            "dso": "hotskew.so",
+            "symbol": "[.] (anonymous namespace)::countBbl(unsigned int)",
+            "category": "instruction callback"
+          },
+          {
+            "overhead_percent": 0.03,
+            "period": 222222220,
+            "samples": 22,
+            "dso": "hotskew.so",
+            "symbol": "[.] std::__1::unordered_map<unsigned long, hotskew::PairedObserver::Masks, std::__1::hash<unsigned long>, std::__1::equal_to<unsigned long>, std::__1::allocator<std::__1::pair<unsigned long const, hotskew::PairedObserver::Masks> > >::operator[](unsigned long const&)",
+            "category": "observer/epoch symbols"
+          },
+          {
+            "overhead_percent": 0.02,
+            "period": 131313130,
+            "samples": 13,
+            "dso": "libpincrt.so",
+            "symbol": "[.] OS_Syscall",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 80808080,
+            "samples": 8,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_GetLock(LEVEL_BASE::PIN_LOCK*, int)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 70707070,
+            "samples": 7,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::PIN_GetThreadData(int, int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.01,
+            "period": 40404040,
+            "samples": 4,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsKeyAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "[JIT] tid 233896",
+            "symbol": "[.] 0x00007fffe3dc124c",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "[JIT] tid 233896",
+            "symbol": "[.] 0x00007fffe3dc16bc",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_BASE::PIN_ReleaseLock(LEVEL_BASE::PIN_LOCK*)",
+            "category": "synchronization symbols"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "hotskew.so",
+            "symbol": "[.] LEVEL_PINCLIENT::CLIENT_TLS::IsCurrentTlsAllocated(int)",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "hotskew.so",
+            "symbol": "[.] OS_Syscall@plt",
+            "category": "other tool-linked code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "libdwarf.so",
+            "symbol": "[.] dwarf_basic_crc32",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "libpincrt.so",
+            "symbol": "[.] memcpy",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "libpincrt.so",
+            "symbol": "[.] memset",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x000000000008cdd7",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "pinbin",
+            "symbol": "[.] LEVEL_VM::GetRecursiveRegionRegallocParams(LEVEL_VM::REGION_REGALLOC_PARAMS*, LEVEL_CORE::INDEX<5>)",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 30303030,
+            "samples": 3,
+            "dso": "pinbin",
+            "symbol": "[.] LEVEL_VM::REGLOCTAB::operator==(LEVEL_VM::REGLOCTAB const&) const",
+            "category": "other runtime/application code"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233896",
+            "symbol": "[.] 0x00007fffe3d8685d",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "[JIT] tid 233896",
+            "symbol": "[.] 0x00007fffe3dc1294",
+            "category": "unresolved/JIT"
+          },
+          {
+            "overhead_percent": 0.0,
+            "period": 20202020,
+            "samples": 2,
+            "dso": "libpincrt.so",
+            "symbol": "[.] 0x000000000008cdc0",
+            "category": "unresolved/JIT"
+          }
+        ]
+      },
+      "reported_lost_samples": 0,
+      "symbols_sha256": "0a4b8e960d45084f89ee3ee0afeff9d6c5fe38bf6e9b8c9d71814cd409084d45",
+      "lock_internal_percent": 89.82673619647778
+    }
+  ],
+  "one_thread_exact_outputs": true,
+  "limitations": [
+    "User CPU samples, not wall-wait fractions or lock latency.",
+    "Unknown/JIT symbols retained; frame-pointer stacks may be incomplete.",
+    "Short fixed prefixes contain different completed work; not a speedup measurement.",
+    "External sampling perturbs timing; concurrent simulator continues unchanged.",
+    "No input/settings selected against M5; no redesign or large deployment approved."
+  ],
+  "analysis": {
+    "capture_path": "/mnt/research/memory-tiering/profiler-bottleneck/2026-11-01-attempt-1/study.json",
+    "capture_sha256": "7a92f91530b812dd4d0b8564cf5340c106adadf98ad05e8d134fce65f47b5df3",
+    "publisher_sha256": "7e70753af11fe08c906689e209cd05f6035ae4faab6c2f0d8577b1ef55905559",
+    "classifier_sha256": "2ee5affb3d886205a72a759824d7fd3db79e754252ae767900456deadd1e2c80",
+    "classification_version": 2,
+    "correction": "Internal lock/unlock functions classified as synchronization after symbol/disassembly inspection. Original capture is unchanged; no target rerun.",
+    "evidence_sha256": {
+      "lock-evidence.txt": "4f2a43f96f8c40ce5711033bd0946dfbbe1e5fd2e814f5c1bdcb80925c36427f"
+    }
+  }
+}

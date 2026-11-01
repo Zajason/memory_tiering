@@ -27,7 +27,8 @@ def sha(path):
 def category(dso, symbol):
     name = symbol.lower()
     if any(term in name for term in ('spindelay', 'spinlock', 'getlock', 'releaselock',
-                                     'mutexlock', 'mutexunlock', 'sync_lock', 'sync_unlock')):
+                                     'mutexlock', 'mutexunlock', 'lockinternal',
+                                     'sync_lock', 'sync_unlock')):
         return 'synchronization symbols'
     if 'analyzememref' in name:
         return 'memory callback (includes inlined work)'

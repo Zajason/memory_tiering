@@ -85,9 +85,9 @@
   ],
   "stage2": {
     "status": "running",
-    "completed": 16,
+    "completed": 17,
     "total": 21,
-    "current": "ways9-pr",
+    "current": "ways9-tc",
     "multithread_hold": true
   },
   "simulator": {

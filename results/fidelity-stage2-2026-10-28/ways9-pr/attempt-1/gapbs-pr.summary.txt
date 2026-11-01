@@ -1,0 +1,114 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-pr
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                36864 KB, 9-way (shared)
+count_writebacks   yes
+epochs             745
+epoch_len_dram_acc 10000000
+instructions       105809948452
+mem_refs_profiled  41163811854
+dram_accesses      7441173951
+llc_miss_ratio     0.180770  (DRAM accesses per memory ref)
+page_observations  42481196   (page x epoch pairs with >=1 access)
+mean_unique_words  62.420 / 64
+top4_word_share    0.1262   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.0003
+  8         12.5%   0.0004
+ 16           25%   0.0006
+ 32           50%   0.0015
+ 48           75%   0.0066
+
+# P(page has at least 48 of 64 words accessed) = 0.9943
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,6077
+2,3346
+3,1614
+4,1311
+5,1105
+6,1306
+7,768
+8,731
+9,687
+10,717
+11,853
+12,986
+13,1174
+14,1457
+15,1761
+16,2072
+17,2331
+18,2526
+19,2660
+20,2570
+21,2410
+22,2391
+23,2099
+24,1985
+25,2001
+26,1820
+27,1868
+28,2011
+29,2130
+30,2467
+31,2673
+32,3094
+33,3608
+34,4040
+35,4762
+36,5205
+37,6065
+38,6689
+39,7864
+40,8967
+41,10559
+42,12398
+43,14859
+44,17569
+45,21514
+46,25554
+47,30972
+48,37913
+49,46541
+50,58244
+51,75819
+52,100638
+53,138700
+54,197984
+55,290170
+56,432334
+57,648937
+58,980779
+59,1452372
+60,2095667
+61,2885004
+62,3697582
+63,4329979
+64,24768907
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,4128
+1,4129
+2,4591
+3,8247
+4,28827
+5,25984
+6,19507191
+7,10352425
+8,12532573
+9,13101

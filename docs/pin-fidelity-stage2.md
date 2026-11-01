@@ -35,8 +35,8 @@ Multithreaded controls are held for separate profiler correctness and scaling va
 | process-tc | complete |
 | threads20-pr | queued |
 | threads20-tc | queued |
-| ways9-pr | running |
-| ways9-tc | queued |
+| ways9-pr | complete |
+| ways9-tc | running |
 
 ## All completed scores
 
@@ -270,6 +270,12 @@ Multithreaded controls are held for separate profiler correctness and scaling va
 | process-tc | tc | whole | accesses | 26.37 | 1 | 10 | full observed process |
 | process-tc | tc | whole | fills | 26.37 | 1 | 10 | full observed process |
 | process-tc | tc | whole | traffic | 26.37 | 1 | 10 | full observed process |
+| ways9-pr | pr | pooled | accesses | 1.40 | 1 | 9 | timed kernel |
+| ways9-pr | pr | pooled | fills | 1.39 | 1 | 9 | timed kernel |
+| ways9-pr | pr | pooled | traffic | 1.34 | 1 | 9 | timed kernel |
+| ways9-pr | pr | whole | accesses | 2.00 | 1 | 9 | timed kernel |
+| ways9-pr | pr | whole | fills | 2.00 | 1 | 9 | timed kernel |
+| ways9-pr | pr | whole | traffic | 2.00 | 1 | 9 | timed kernel |
 
 ## Completed process-scope controls
 

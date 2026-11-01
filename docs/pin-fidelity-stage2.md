@@ -10,7 +10,7 @@ Full observed process versus timed-kernel collection; real-input 20-thread contr
 
 ## Progress
 
-Campaign: running
+Campaign: multithread controls held for validation
 
 Multithreaded controls are held for separate profiler correctness and scaling validation. The oversized TC attempt was interrupted at the user's request; no partial CDF is published. One-thread controls continue with the frozen original instrument. See [scalability validation](pin-scalability.md).
 
@@ -36,7 +36,7 @@ Multithreaded controls are held for separate profiler correctness and scaling va
 | threads20-pr | queued |
 | threads20-tc | queued |
 | ways9-pr | complete |
-| ways9-tc | running |
+| ways9-tc | complete |
 
 ## All completed scores
 
@@ -276,6 +276,12 @@ Multithreaded controls are held for separate profiler correctness and scaling va
 | ways9-pr | pr | whole | accesses | 2.00 | 1 | 9 | timed kernel |
 | ways9-pr | pr | whole | fills | 2.00 | 1 | 9 | timed kernel |
 | ways9-pr | pr | whole | traffic | 2.00 | 1 | 9 | timed kernel |
+| ways9-tc | tc | pooled | accesses | 34.80 | 1 | 9 | timed kernel |
+| ways9-tc | tc | pooled | fills | 35.87 | 1 | 9 | timed kernel |
+| ways9-tc | tc | pooled | traffic | 35.87 | 1 | 9 | timed kernel |
+| ways9-tc | tc | whole | accesses | 22.88 | 1 | 9 | timed kernel |
+| ways9-tc | tc | whole | fills | 22.88 | 1 | 9 | timed kernel |
+| ways9-tc | tc | whole | traffic | 22.88 | 1 | 9 | timed kernel |
 
 ## Completed process-scope controls
 

@@ -58,6 +58,9 @@ Full-process TC modestly improves pooled fill error from 34.87 to 33.45 points;
 its separate whole-process result is 26.37 points, not a replacement scope.
 Nine-way PR gives 1.39 points of pooled fill error versus 1.53 with ten ways;
 this small difference does not identify the authors' configuration.
+Nine-way TC worsens pooled fill error from 34.87 to 35.87 points. All currently
+runnable one-thread stage-2 controls are complete; three multithreaded controls
+remain held for profiler validation, so stage 2 is not complete.
 The joint real-input/20-thread BFS control reaches 56.0 points versus 55.6
 with one thread, so this execution change does not improve agreement.
 The matching 20-thread CC control is essentially unchanged: 49.27 versus 49.22

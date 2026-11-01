@@ -7,6 +7,20 @@ possible cause has been exhausted, nor evidence for a hardware-imposed ceiling.
 
 ## Running and queued
 
+Status on 1 November: the original input campaign and both 200-trial controls
+are complete. All six main simulator graph workloads, including PR/TC, are
+complete and audited; Liblinear is active, followed by BC window controls.
+The stage-2 one-thread queue has finished normally. Its three remaining
+multithreaded controls are held under the user-directed
+[profiler validation gate](pin-scalability.md), not eligible for blind restart.
+The numbered sequence below records the original queue, not outstanding jobs.
+
+Completed scope controls show modest BFS/CC/TC improvements, little change for
+PR/BC/SSSP, and no recovered author collection procedure. Nine-way PR slightly
+improves pooled fill error (1.53 to 1.39 points), whereas nine-way TC worsens it
+(34.87 to 35.87). Neither changes the primary protocol or resolves the large
+remaining distribution gaps. All cases and both scopes remain published.
+
 1. Resume the existing declared input campaign: Twitter PR/TC and Google+ BC/SSSP.
    Completed BFS/CC and all earlier execution controls are reused. Yesterday's
    incomplete PR output remains in place; the restarted PR uses `dataset/attempt-1`.

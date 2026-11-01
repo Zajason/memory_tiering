@@ -84,10 +84,10 @@
     }
   ],
   "stage2": {
-    "status": "running",
-    "completed": 17,
+    "status": "multithread controls held for validation",
+    "completed": 18,
     "total": 21,
-    "current": "ways9-tc",
+    "current": null,
     "multithread_hold": true
   },
   "simulator": {

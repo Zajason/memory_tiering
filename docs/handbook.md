@@ -54,6 +54,9 @@ TC's completed process-scope control changes pooled fill error from 34.87 to
 The completed nine-way PR control gives 1.39 points of pooled fill error versus
 1.53 with ten ways; whole-kernel fill error remains 2.00 points. The small
 pooled difference is not evidence that the reference used nine ways.
+Nine-way TC worsens pooled fill error from 34.87 to 35.87 points; its separate
+whole-kernel result is 22.88 points. All runnable one-thread stage-2 controls
+finished on 1 November. Three multithreaded controls remain held, not complete.
 Full-process SSSP similarly changes pooled fill error only from 79.6 to 78.1
 points. Combining the real Twitter input with 20 software threads gives BFS
 56.0 points versus 55.6 with one thread: this control does not improve agreement.

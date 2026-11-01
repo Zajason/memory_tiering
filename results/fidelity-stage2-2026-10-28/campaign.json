@@ -420,7 +420,7 @@
     }
   },
   "multithread_hold": true,
-  "multithread_hold_reason": "User authorized stopping oversized TC and validating profiler scalability before further multithreaded controls on 2026-10-31.",
+  "multithread_hold_reason": "User-directed hold from 2026-10-31 remains active: the 2026-11-01 larger real-input profiler pilot did not pass its fixed runtime gate (all four twenty-thread cases timed out at 600 seconds). Deployment remains unapproved; see docs/pin-scalability.md.",
   "status": "multithread controls held for validation",
   "pid": 198681,
   "current": null

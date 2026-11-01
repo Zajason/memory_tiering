@@ -236,3 +236,47 @@ are not claimed. This confirms why the smaller proxy cannot approve the full
 held graph. The declared denominator-four capacity follow-up was launched only
 after the first report passed and all six outputs were independently re-audited.
 It retains the original fixed timeouts, all failures and the large-run hold.
+
+### Capacity follow-up: runtime gate not passed
+
+The denominator-four follow-up finished with `pilot not passed`. Its small
+terminal report is archived as `real-input-capacity-attempt-1.json` in the same
+results directory. The 62,903,561-byte graph has 2,602,852 vertices and 10,520,180
+directed adjacency entries; SHA-256 is
+`068e183fc38b871912cd07dc0bca512213d6d6db7c77a263991f3dfadf419556`.
+
+| Threads / case | Run 1 seconds | Run 2 seconds | Completed and audited |
+| --- | ---: | ---: | --- |
+| 1 / baseline | 375.897 | not repeated | yes |
+| 1 / local BBL | 290.720 | not repeated | yes |
+| 20 / baseline | timeout at 600 | timeout at 600 | no |
+| 20 / local BBL | timeout at 600 | timeout at 600 | no |
+
+Both native runs and the completed one-thread instrumented runs returned
+8,438,439 triangles. Their epoch/full paired CSVs match byte-for-byte. Independent
+audits confirm 5,766,344,921 demand accesses, 890,779 fills and 890,814 modeled
+memory events in each completed run. Even these completed runs do not contain
+a full 1M-event window, so increasing serialized graph size did not establish
+the required full-window memory-traffic behavior. File size alone is not the
+modeled cache working set.
+
+The four timeouts were checked to have interrupted manifests with the explicit
+600-second reason. Their partial files remain only in external engineering
+storage; no partial CDF is published. No pilot processes remain. The service
+returned exit code 1 for the failed gate, not an OOM or an unhandled exception;
+systemd reported a 448,159,744-byte peak, below the 3 GiB limit.
+
+The one-thread instrument-runtime reduction is about 1.29x in this single pair.
+Both twenty-thread configurations exceeded the budget, so there is **no measured
+complete-run twenty-thread speedup for this larger input**. Equal timeout limits
+do not imply equal completion times. The first proxy's 2.01x cannot be projected
+onto the full held input. No correctness failure was found in completed cases,
+but the declared cost/representativeness gate did not pass.
+
+Decision: preserve the negative result and keep `deployment_approved: false`
+and the campaign's multithread hold. Do not enlarge or shrink another proxy,
+extend deadlines post hoc, or restart the oversized TC under these pilot
+instructions. The three held controls remain explicitly incomplete. Further
+performance redesign or a different cost budget needs a newly declared decision,
+not a silent continuation of this failed gate. Liblinear and the existing BC
+simulator queue continue unchanged; no application speedup is claimed.

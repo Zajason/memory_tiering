@@ -101,10 +101,15 @@ are now eligible for the remaining simulator queue, after the dataset campaign.
 An actual reboot restore remains untested; see [checkpointing](docs/checkpointing.md).
 
 The oversized twenty-thread Pin TC attempt was stopped at the user's request
-on 31 October and remains incomplete. Remaining one-thread controls continue
+on 31 October and remains incomplete. All runnable one-thread controls finished
 with the frozen original tool; multithreaded controls are held while separate
 [scalability changes are validated](docs/pin-scalability.md). Faster instrumentation
 must not weaken shared-cache ordering or measurement-window checks.
+The first real-input proxy passed and showed about 2x faster twenty-thread
+instrumentation, but the larger fixed follow-up timed out in all four
+twenty-thread cases, including the optimized tool. The runtime gate did not
+pass; large deployment remains unapproved. Correctness checks passed for the
+two completed one-thread cases. No incomplete output enters the fidelity plots.
 
 The [simulator Figure 4 comparison](docs/simulator-figure4.md) now plots completed
 CXL-bridge measurements alongside M5 and the Pin baseline. BFS/CC discrepancies

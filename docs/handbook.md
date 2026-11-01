@@ -110,10 +110,16 @@ controls remain in the simulator queue; the Pin stage-2 campaign is still runnin
 
 On 31 October the user stopped the oversized twenty-thread TC control for
 profiler scalability work. Its attempt remains interrupted, with partial files
-preserved and excluded from completed comparisons. Remaining one-thread controls
-continue on the frozen original tool; multithreaded controls are held behind
+preserved and excluded from completed comparisons. All runnable one-thread controls
+finished on the frozen original tool; multithreaded controls are held behind
 [correctness and scaling gates](pin-scalability.md). A faster instrument is not
 automatically a validated new scientific protocol.
+The 1 November larger real-input proxy failed its fixed runtime gate: both
+twenty-thread baseline repetitions and both local-BBL repetitions exceeded
+600 seconds. Two completed one-thread cases passed native-answer and paired
+audits, with byte-identical epoch/paired CSVs. This is a cost-limit outcome,
+not a demonstrated correctness failure, OOM or permission to resize/retry.
+Large deployment remains unapproved; three stage-2 controls remain incomplete.
 
 ### Are the extensions still usable?
 

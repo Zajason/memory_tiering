@@ -16,6 +16,19 @@ def module(name):
 
 
 class ScalabilityTests(unittest.TestCase):
+    def test_bottleneck_report_and_cutoff(self):
+        study=module('profile_pin_bottleneck')
+        report=study.parse_report('# header\n60.0%;600;6;hotskew.so;[.] ATOMIC_SpinLock\n'
+                                  '30.0%;300;3;hotskew.so;[.] analyzeMemRef\n'
+                                  '10.0%;100;1;[unknown];[.] 0x1234\n')
+        self.assertEqual(report['total_samples'],10)
+        self.assertEqual(report['category_percent']['synchronization symbols'],60)
+        self.assertEqual(report['category_percent']['unresolved/JIT'],10)
+        with self.assertRaises(ValueError): study.parse_report('# no samples')
+        with tempfile.TemporaryDirectory() as temp:
+            result=study.capture([sys.executable,'-c','import time;time.sleep(30)'],Path(temp)/'log',1)
+            self.assertTrue(result['profile_cutoff'])
+
     def test_real_input_induction_and_measurement(self):
         pilot = module('validate_pin_real_input')
         with tempfile.TemporaryDirectory() as temp:

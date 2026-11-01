@@ -147,3 +147,40 @@ controls consistently as a new instrument-version control series, never silently
 replace individual favorable workloads or mix versions into the primary figure.
 The current validation script always records `deployment_approved: false`;
 passing smoke tests is not automatic deployment approval.
+
+## Real-input pilot declared on 1 November
+
+After the one-thread queue finished, the user explicitly authorized the next
+bounded real-input pilot. `experiments/validate_pin_real_input.py` prepares one
+fixed nested induced subset of the completed TC Twitter input (SHA-256
+`085d5efd0ebf4556d0a10d133017246bf0db4f0875063e92e28bb35efaa16f5a`).
+It retains vertices whose SplitMix64 hash of the source CSR vertex ID is zero
+modulo eight, preserving ascending order and all induced edges. These are already
+relabelled IDs, not original Twitter IDs. The fraction is fixed before any pilot
+timing or CDF and will not be enlarged or shrunk to obtain favorable results.
+This is a reduced real-input proxy, not the full held graph or an M5 input.
+
+The frozen baseline and candidate above are reused; only `local_bbl` is enabled
+for the candidate. Both use the same executable, cold timed-kernel ROI, ten LLC
+ways, one trial, and 1M modeled-event windows for finer engineering progress
+reporting. No instruction-driven phase or cache-order relaxation is enabled.
+Application triangle statistics are requested in both configurations.
+
+The finite sequence is native one/twenty threads (120-second cap each), then
+instrumented one-thread baseline/candidate, then twenty-thread baseline/candidate
+and candidate/baseline. Each instrumented run has a 600-second deadline. A user
+service adds a 75-minute overall cap, 3 GiB memory limit and 512 MiB swap limit;
+it does not modify or stop Liblinear. Each case uses a fresh output directory.
+RSS is sampled once/second across its process group (shared pages can double
+count); timing includes wrapper startup and input hashing. ABBA reduces a simple
+order bias but is not a randomized isolated-host timing study.
+
+Completed cases must match native triangle counts and pass the existing paired
+access/fill/traffic audits for pooled and whole scopes. The one-thread paired and
+epoch CSVs must additionally match byte-for-byte. Concurrent traces need not be
+identical. Timeouts preserve partial files and mark their manifests interrupted;
+they cannot qualify as completed data or provide a complete-run speedup.
+Failed cases and slower outcomes remain in the report. The report always keeps
+`deployment_approved: false`: even a passing reduced proxy cannot establish the
+cost of the much larger held TC input. No pilot CDF enters fidelity scoring or
+the exploratory closest-case figure. The campaign's multithread hold is unchanged.

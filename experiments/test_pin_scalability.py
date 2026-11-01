@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import struct
 
 HERE = Path(__file__).resolve().parent
 
@@ -15,6 +16,32 @@ def module(name):
 
 
 class ScalabilityTests(unittest.TestCase):
+    def test_real_input_induction_and_measurement(self):
+        pilot = module('validate_pin_real_input')
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp)/'source.sg'
+            target = Path(temp)/'subset.sg'
+            nodes = 16
+            with source.open('wb') as stream:
+                stream.write(struct.pack('<?qq', False, nodes*(nodes-1), nodes))
+                stream.write(struct.pack('<17q', *[i*(nodes-1) for i in range(nodes+1)]))
+                for u in range(nodes):
+                    stream.write(struct.pack('<15i', *[v for v in range(nodes) if v != u]))
+            meta = pilot.induce(source, target, 2)
+            count = len(pilot.selected_nodes(nodes, 2))
+            self.assertEqual(meta['directed_entries'], count*(count-1))
+            with target.open('rb') as stream:
+                self.assertEqual(struct.unpack('<?qq', stream.read(17)), (False, count*(count-1), count))
+                self.assertEqual(struct.unpack(f'<{count+1}q', stream.read((count+1)*8)),
+                                 tuple(i*(count-1) for i in range(count+1)))
+                for u in range(count):
+                    self.assertEqual(struct.unpack(f'<{count-1}i', stream.read((count-1)*4)),
+                                     tuple(v for v in range(count) if v != u))
+            with self.assertRaises(FileExistsError): pilot.induce(source, target, 2)
+            result = pilot.measured([sys.executable,'-c','import time; time.sleep(30)'],Path(temp)/'log',1)
+            self.assertEqual(result['status'], 'timeout')
+            self.assertGreater(result['sampled_peak_process_group_rss_bytes'], 0)
+
     def test_campaign_hold(self):
         runner = module('run_pin_fidelity_stage2')
         self.assertTrue(runner.held_job({'multithread_hold':True}, ['--threads','20']))

@@ -26,6 +26,7 @@ def main():
     ap.add_argument("--local-bbl", action='store_true')
     ap.add_argument("--private-parallel", action='store_true')
     ap.add_argument("--trials", type=int, default=1)
+    ap.add_argument("--application-stats", action="store_true")
     ap.add_argument("--pr-iterations", type=int)
     ap.add_argument("--pr-tolerance", type=float)
     ap.add_argument("--roi-epoch", type=int, choices=[0,1], default=1,
@@ -93,6 +94,7 @@ def main():
         if args.scope=='process':
             # Pin rejects empty argv entries; absent ROI knobs retain their defaults.
             at=cmd.index('-roi_begin');del cmd[at:at+4]
+        if args.application_stats:cmd+=['-a']
         if args.sync_mode != 'legacy' or args.local_bbl or args.private_parallel:
             at=cmd.index('--')
             cmd[at:at]=['-sync_mode',args.sync_mode,'-local_bbl',str(int(args.local_bbl))]
@@ -105,6 +107,7 @@ def main():
             cmd[at:at] = ['-track_algo', args.track_algo, '-track_n', args.track_budgets,
                           '-track_k', str(args.track_k), '-dump_topk', '1']
         metadata = dict(command=cmd, gzip_pages=args.gzip_pages, threads=args.threads, input=str(graph),
+                        application_stats=args.application_stats,
                         sync_mode=args.sync_mode, local_bbl=args.local_bbl, private_parallel=args.private_parallel,
                         input_bytes=graph.stat().st_size,
                         input_sha256=input_hashes[graph],

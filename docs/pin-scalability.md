@@ -206,3 +206,33 @@ There is no automatic sequence of further graph resizing. If it times out or
 still fails to exercise full windows, retain that negative result and leave
 large deployment unapproved rather than extend the deadline after seeing it.
 `--denominator 4` explicitly identifies this follow-up; the default remains eight.
+
+### First real-input proxy completed
+
+`real-input-attempt-1.json` under `results/pin-scalability-2026-10-31/` records
+six completed, audited runs. Both native runs and all six instrumented runs
+returned 957,682 triangles. The one-thread epoch and full paired CSVs match
+byte-for-byte; an independent post-completion audit rechecked every case's
+access/fill/traffic totals, histograms, populations and whole unions.
+
+| Threads / case | Run 1 seconds | Run 2 seconds | Median seconds |
+| --- | ---: | ---: | ---: |
+| 1 / baseline | 29.203 | not repeated | 29.203 |
+| 1 / local BBL | 22.418 | not repeated | 22.418 |
+| 20 / baseline | 592.686 | 538.471 | 565.578 |
+| 20 / local BBL | 287.469 | 275.048 | 281.259 |
+
+The twenty-thread median instrument-runtime improvement is about 2.01x, yet
+optimized twenty-thread profiling remains about 12.55x slower than optimized
+one-thread profiling. Sampled process-group peak RSS is 257.5/258.0 MB for the
+one-thread cases and 271.0--271.8 MB for the twenty-thread cases (decimal MB;
+shared pages may double count). This is not an isolated-host application-speedup
+measurement, and two repetitions do not establish a robust timing distribution.
+
+Every run contains only its final partial event window: 284,441 memory events
+at one thread and 284,671--284,672 at twenty threads, below 1M. The twenty-thread
+access totals vary slightly (426,734,500--426,734,532); exact concurrent traces
+are not claimed. This confirms why the smaller proxy cannot approve the full
+held graph. The declared denominator-four capacity follow-up was launched only
+after the first report passed and all six outputs were independently re-audited.
+It retains the original fixed timeouts, all failures and the large-run hold.

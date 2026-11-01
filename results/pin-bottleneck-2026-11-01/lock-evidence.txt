@@ -27,7 +27,7 @@ Disassembly of section .text:
    38951:	41 5c                	pop    %r12
    38953:	c3                   	ret
    38954:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
-   3895b:	00 00 00 00 
+   3895b:	00 00 00 00
    3895f:	90                   	nop
 
 0000000000038960 <_ZN10LEVEL_BASE13PIN_MutexInitEPN5PINVM16PINSYNC_POD_LOCKE>:
@@ -37,23 +37,23 @@ Disassembly of section .text:
    3896e:	48 83 c4 08          	add    $0x8,%rsp
    38972:	c3                   	ret
    38973:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
-   3897a:	00 00 00 00 
+   3897a:	00 00 00 00
    3897e:	66 90                	xchg   %ax,%ax
 
 0000000000038980 <_ZN10LEVEL_BASE13PIN_MutexFiniEPN5PINVM16PINSYNC_POD_LOCKE>:
    38980:	e9 eb 4e 12 00       	jmp    15d870 <OS_MutexDestroy>
    38985:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
-   3898c:	00 00 00 00 
+   3898c:	00 00 00 00
 
 0000000000038990 <_ZN10LEVEL_BASE13PIN_MutexLockEPN5PINVM16PINSYNC_POD_LOCKE>:
    38990:	e9 eb 4e 12 00       	jmp    15d880 <OS_MutexLock>
    38995:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
-   3899c:	00 00 00 00 
+   3899c:	00 00 00 00
 
 00000000000389a0 <_ZN10LEVEL_BASE15PIN_MutexUnlockEPN5PINVM16PINSYNC_POD_LOCKE>:
    389a0:	e9 fb 53 12 00       	jmp    15dda0 <OS_MutexUnlock>
    389a5:	66 66 2e 0f 1f 84 00 	data16 cs nopw 0x0(%rax,%rax,1)
-   389ac:	00 00 00 00 
+   389ac:	00 00 00 00
 
 $ objdump -d --start-address=0x15d880 --stop-address=0x15d900 /mnt/research/memory-tiering/profiler-builds/6a24fae0dd3fbd7a61d9b0db1dc65e8bf8764bac65780aa85c46268d9eaf3941/hotskew.so
 
@@ -223,4 +223,3 @@ $ perf annotate --stdio --stdio-color never --symbol LockInternal -i /mnt/resear
     0.00 :   15d7c5: pop    %r14
     0.00 :   15d7c7: pop    %r15
     0.00 :   15d7c9: ret
-

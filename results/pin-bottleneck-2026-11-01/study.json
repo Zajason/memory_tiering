@@ -1615,7 +1615,7 @@
     "classification_version": 2,
     "correction": "Internal lock/unlock functions classified as synchronization after symbol/disassembly inspection. Original capture is unchanged; no target rerun.",
     "evidence_sha256": {
-      "lock-evidence.txt": "4f2a43f96f8c40ce5711033bd0946dfbbe1e5fd2e814f5c1bdcb80925c36427f"
+      "lock-evidence.txt": "175df66ffbc550fc43d182dcbb4d3ea1bbcda5e33a5aaf846abe56605f858d4a"
     }
   }
 }

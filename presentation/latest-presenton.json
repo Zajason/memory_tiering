@@ -1,0 +1,19 @@
+{
+  "title": "CSLab Memory Tiering - Signal Edition",
+  "date": "2026-11-01",
+  "language": "el",
+  "slides": 15,
+  "design": {"id": 18, "title": "Bauhaus Signal"},
+  "preview": "https://presenton.ai/presentation-preview?t=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiaHRtbC10by1hbnktcHJldmlldyIsImh0bWxfdG9fYW55X2NyZWF0aW9uIjoyNDcwOSwiZXhwIjoxNzkzNjE3MDgyfQ.qU9QPGWe0IJf65o1IlI102MltIbL3cSQxa0USp8Pn_U",
+  "exports": {
+    "pptx": {"id": 24711, "url": "https://api.presenton.ai/s/-g93qanZsz7TxkbITiZsowenhxzk3xiv"},
+    "pdf": {"id": 24709, "url": "https://api.presenton.ai/s/gnv-MD6Tx9m4uwJPJ39l1-221_psDw-d"},
+    "png": {"id": 24710, "url": "https://api.presenton.ai/s/fFUxFuoUf8SQCBVr1TI72brijkl0Nasn"}
+  },
+  "expiry_notice": "Download and preview links expire after 24 hours.",
+  "fonts": ["League Spartan", "IBM Plex Sans", "Noto Sans"],
+  "font_stylesheet": "https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700;800;900&display=swap",
+  "required_primary_plot_slides": [6, 7, 11],
+  "evidence_snapshot": {"stage2_completed": 18, "stage2_total": 21, "multithread_hold": true},
+  "supersedes_style_of": ["presentation/build.mjs", "presentation/build-en.mjs", "presentation/presenton-redesign.md"]
+}

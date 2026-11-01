@@ -1,13 +1,17 @@
 # CSLab research talk
 
-The user-requested Presenton redesign is documented in `presenton-redesign.md`.
-It supersedes the styling of the local English deck below, which is retained as
-a historical version. Presenton exports are remote snapshots, not files rebuilt
-by `build.mjs` or `build-en.mjs`; do not silently refresh its shared preview.
+The current user-approved direction is the Greek Presenton **Signal Edition**,
+documented in `presenton-signal.md`; `latest-presenton.json` identifies its remote
+exports and preview. Consult that pointer first when asked for the latest deck.
+It supersedes the styling of both local builders below and the earlier English
+Presenton redesign in `presenton-redesign.md`. Do not deliver or rebuild a plain
+local deck as a substitute for the Presenton version without explaining it.
+Presenton exports are remote snapshots, not files rebuilt by `build.mjs` or
+`build-en.mjs`; do not silently refresh shared previews.
 
 Fifteen slides for approximately fifteen minutes. The editable slide text,
 figures, native score table and speaker notes are built from verified outputs.
-The restrained paper/black/red visual style follows the revised research talk.
+The local snapshots below retain the historical paper/black/red style.
 
 `collect_data.py` snapshots completed score rows and current pending states.
 `build.mjs` writes a new, timestamped PPTX under

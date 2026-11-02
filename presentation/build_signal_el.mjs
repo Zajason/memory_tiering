@@ -19,7 +19,7 @@
  *         presentation/build_signal_el.mjs
  */
 import path from 'node:path';
-import {existsSync} from 'node:fs';
+import {existsSync, readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 
 const RUNTIME = process.env.CODEX_RUNTIME ||
@@ -28,6 +28,19 @@ const require = createRequire(`${RUNTIME}/node/node_modules/`);
 const PptxGenJS = require('pptxgenjs');
 
 const REPO = path.resolve(import.meta.dirname, '..');
+
+/* The liblinear simulator run writes its summary every epoch, so its window
+ * count climbs while the run continues. Read it at build time rather than
+ * hardcoding: the deck said 61 within hours of being built, when the run had
+ * already reached 81. */
+function liblinearWindows() {
+  const f = path.join(REPO,
+    'results/revalidated-2026-10-25/sim/liblinear/attempt-1/hotskew-liblinear.bridge');
+  if (!existsSync(f)) return null;
+  const m = readFileSync(f, 'utf8').match(/^epochs\s+(\d+)/m);
+  return m ? Number(m[1]) : null;
+}
+const LIB_WINDOWS = liblinearWindows();
 const OUT = path.join(REPO, 'presentation', 'CSLab_Memory_Tiering_Signal_EL.pptx');
 
 /* ---- Bauhaus Signal, as declared in presenton-signal.md ---- */
@@ -358,7 +371,8 @@ function dataTable(s, head, rows, {y = 1.5, colW, highlight = []} = {}) {
   bullets(s, [
     ['Το CXLRAMSim δεν έχει κυκλοφορήσει — πήγαμε σε SimCXL / CXL-DMSim (gem5 23.1)', 'Ο ίδιος κώδικας καταμέτρησης, χωρίς αλλαγή: μία κλήση ανά request.'],
     ['Μέτρηση στη θύρα της συσκευής CXL και στον controller πίσω της', 'Τα ιστογράμματα συμφωνούν — ίδια κατανομή, άρα η θέση του μετρητή δεν αλλάζει το αποτέλεσμα.'],
-    ['Έξι graph workloads ολοκληρωμένα και ελεγμένα', 'liblinear: ενεργό, 61 windows × 10M events μέχρι τώρα — μερικό, δηλώνεται ως μερικό.'],
+    ['Έξι graph workloads ολοκληρωμένα και ελεγμένα', `liblinear: ενεργό, ${LIB_WINDOWS ?? '—'} windows × 10M events μέχρι τη στιγμή της `
+      + 'μέτρησης — μερικό, και δηλώνεται ως μερικό.'],
   ], {y: 1.45});
   figure(s, 'results/revalidated-2026-10-25/sim-comparison/figure4-m5-pin-simulator.png',
     {y: 3.25, h: 2.1});

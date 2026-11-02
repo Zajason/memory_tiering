@@ -1,8 +1,9 @@
 # Ομιλία — Signal Edition (ελληνικά, 15 διαφάνειες / ~15 λεπτά)
 
 Παράχθηκε από `presentation/build_signal_el.mjs`. Η τεχνική ορολογία μένει στα
-αγγλικά (streams, window, words, coverage, collection protocol), όπως χρησιμοποιείται
-στην πράξη. Κάθε αριθμός προέρχεται από επαληθευμένα αρχεία αποτελεσμάτων.
+αγγλικά (streams, window, words, coverage, collection protocol). Κάθε αριθμός
+προέρχεται από επαληθευμένα αρχεία· το window count του liblinear διαβάζεται
+κατά το build, γιατί το run συνεχίζεται.
 
 ## 1. HOT SKEWNESS — Αναπαραγωγή του Figure 4 του M5
 

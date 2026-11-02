@@ -50,3 +50,29 @@ and `PRESENTATIONS_SKILL` if its location changes. All six primary simulator gra
 runs, including PR and TC, have completed and passed validation. Stage
 2 exploratory closest-case plots are shown only after a control completes and
 remain explicitly labelled as reference-selected, not independent replication.
+
+## Signal Edition, rebuilt locally (3 Νοεμβρίου 2026)
+
+`CSLab_Memory_Tiering_Signal_EL.pptx` + `speaker-notes-signal-el.md`, built by
+`build_signal_el.mjs`. This exists because the 1 November Presenton Signal
+Edition became unretrievable: its preview JWT expired 2026-11-02 12:58, all
+three export URLs were 24-hour, and `presenton-signal.md` records that the
+source HTML lived only in a temporary directory and was deleted after delivery.
+`CSLab_Memory_Tiering_Current.pptx` is dated 11-01 06:17 -- six hours *before*
+the Signal design brief -- so it is the older paper/black/red local build, not
+that edition.
+
+The rebuild keeps the declared Signal design (#185ADB / #F04438 / #F5C542 /
+#171717, League Spartan / IBM Plex Sans / Noto Sans, fifteen slides) and
+preserves the evidence plots uncropped via `sizing: contain`. It is built with
+pptxgenjs rather than the Codex artifact runtime, so it is reproducible here.
+
+Greek all-caps drops the monotonic accent; `elUpper()` handles that, because
+`toUpperCase()` alone yields "ΤΟ ΠΡΌΒΛΗΜΑ".
+
+Run it with the Node in the Codex runtime cache:
+
+```bash
+~/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node \
+  presentation/build_signal_el.mjs
+```

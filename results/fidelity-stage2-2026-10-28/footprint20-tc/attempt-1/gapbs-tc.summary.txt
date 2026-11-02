@@ -1,0 +1,118 @@
+# hotskew summary
+instrument_version cache-path-v2
+exit_code          0
+collection_status  complete
+wac_saturations    0
+warm_outside_roi   0
+roi_begin          hotskew_roi_begin
+roi_end            hotskew_roi_end
+epoch_len_refs     0
+benchmark          gapbs-tc
+cache_filter       on
+l1d                48 KB, 12-way (per thread)
+l2                 2048 KB, 16-way (per thread)
+llc                40960 KB, 10-way (shared)
+count_writebacks   yes
+epochs             196
+epoch_len_dram_acc 10000000
+instructions       591956248563
+mem_refs_profiled  124332904786
+dram_accesses      1953486532
+llc_miss_ratio     0.015712  (DRAM accesses per memory ref)
+page_observations  19627616   (page x epoch pairs with >=1 access)
+mean_unique_words  33.735 / 64
+top4_word_share    0.1443   (share of accesses in each page's 4 hottest words)
+
+# M5 Figure 4: P(page has at most N unique 64B words accessed)
+N       pct_of_page   P(<=N)
+  4         6.25%   0.0885
+  8         12.5%   0.1559
+ 16           25%   0.2820
+ 32           50%   0.5246
+ 48           75%   0.6915
+
+# P(page has at least 48 of 64 words accessed) = 0.3156
+
+# full unique-word histogram (unique_words, page_observations)
+0,0
+1,399840
+2,517628
+3,434810
+4,385040
+5,349428
+6,325624
+7,329077
+8,317756
+9,316285
+10,306515
+11,311284
+12,308405
+13,310059
+14,308607
+15,305089
+16,308906
+17,308437
+18,305868
+19,301564
+20,306590
+21,307875
+22,306202
+23,304132
+24,296013
+25,299144
+26,295579
+27,296005
+28,293578
+29,292544
+30,287995
+31,276572
+32,283360
+33,268539
+34,257570
+35,247447
+36,248424
+37,239418
+38,221265
+39,213704
+40,211727
+41,199770
+42,195397
+43,185901
+44,173742
+45,163727
+46,161925
+47,149413
+48,137840
+49,135054
+50,115280
+51,113280
+52,101170
+53,98953
+54,93963
+55,94242
+56,101353
+57,113715
+58,138987
+59,169516
+60,212103
+61,256736
+62,293940
+63,314690
+64,3703014
+
+# M5 Figure 10: log2 histogram of accesses per 4KB page per epoch
+# (log2_bucket, pages)  -- bucket b covers access counts [2^b, 2^(b+1))
+0,159055
+1,411815
+2,737662
+3,1339706
+4,2160320
+5,3427350
+6,5590497
+7,4386146
+8,1307692
+9,98284
+10,8124
+11,873
+12,89
+13,3

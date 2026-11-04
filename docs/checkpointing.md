@@ -1,5 +1,36 @@
 # Checkpointing: feasibility and remaining validation
 
+## 4 November recovery
+
+The simulator service was found inactive after a host reboot. Its journal records
+a service stop at 01:48 EET on 3 November and campaign interruption by signal 15;
+the checkpoint supervisor records a coordinator-status failure, not a confirmed
+paused state. No pause request was present. These interruption records were
+preserved externally before the authorized recovery, under
+`/mnt/research/memory-tiering/checkpoint-recovery/2026-11-04-liblinear`.
+
+Before restoring, SHA-256 checks matched all five guarded files (gem5, config,
+guest kernel and both disk images) and the retained 1,986,941,635-byte checkpoint.
+The bounded full-system validation report remains passed and matches this gem5.
+The retained checkpoint was created at 01:22:38 EET on 3 November, so recovery
+discards progress after that snapshot rather than claiming lossless shutdown.
+
+The same Liblinear attempt was restored on 4 November through
+`memory-tiering-revalidate-sim`, with repository WorkingDirectory, Nice=10 and
+SuccessExitStatus=75. The old boot ID was
+`aaec0a68-7ac6-4154-a431-f29d74af8d80`; the new boot ID is
+`563a70fc-715e-408c-afa1-a969fe13c687`. The restored process reached
+`DMTCP:gem5.opt` and consumed CPU; this is an observed post-reboot process restore,
+**not yet a validated post-reboot measurement completion**. Final summaries,
+completion tick and semantic correctness remain pending. Completed graph jobs
+are reused and the existing BC window controls remain queued. No held Pin job,
+new input or profiler redesign was launched.
+
+The checkpoint SHA-256 used for this recovery is
+`fb9ee387280643de7b7ce7489c53a7420e0b0a3999cb93ccf29ac00ca52c85e1`.
+Checkpoint images and partial measurement files remain outside this documentation
+milestone and must not be committed as completed evidence.
+
 ## Why native checkpoints are not enough here
 
 The local gem5 classic-cache implementation does not serialize cache contents.

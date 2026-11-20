@@ -39,6 +39,9 @@ def main():
     ap.add_argument("--graph-family", default="synthetic Kronecker")
     ap.add_argument("--llc-ways", type=int, default=10)
     ap.add_argument("--warm-setup", action="store_true")
+    ap.add_argument("--prefetch", action="store_true",
+                    help="Model L2 spatial + streamer hardware prefetchers")
+    ap.add_argument("--pf-confirm", type=int, default=2)
     ap.add_argument('--scope', choices=['kernel','process'], default='kernel',
                     help='Timed-kernel ROI (default), or full observed process including setup')
     ap.add_argument("--max-epochs", type=int, default=0)
@@ -94,6 +97,8 @@ def main():
         if args.scope=='process':
             # Pin rejects empty argv entries; absent ROI knobs retain their defaults.
             at=cmd.index('-roi_begin');del cmd[at:at+4]
+        if args.prefetch:
+            at=cmd.index('--');cmd[at:at]=['-prefetch','1','-pf_confirm',str(args.pf_confirm)]
         if args.application_stats:cmd+=['-a']
         if args.sync_mode != 'legacy' or args.local_bbl or args.private_parallel:
             at=cmd.index('--')
@@ -107,7 +112,7 @@ def main():
             cmd[at:at] = ['-track_algo', args.track_algo, '-track_n', args.track_budgets,
                           '-track_k', str(args.track_k), '-dump_topk', '1']
         metadata = dict(command=cmd, gzip_pages=args.gzip_pages, threads=args.threads, input=str(graph),
-                        application_stats=args.application_stats,
+                        application_stats=args.application_stats, prefetch=args.prefetch,
                         sync_mode=args.sync_mode, local_bbl=args.local_bbl, private_parallel=args.private_parallel,
                         input_bytes=graph.stat().st_size,
                         input_sha256=input_hashes[graph],

@@ -1,0 +1,44 @@
+START bc
+START sssp
+START bfs
+COMPLETE sssp: 2629.2s
+START tc
+COMPLETE bc: 3214.3s
+START cc
+COMPLETE cc: 290.8s
+START pr
+Refusing to overwrite /home/zajason/dev/advarch/memory_tiering/results/prefetch-ladder-2026-11-15/gapbs-tc.manifest.json; use a new --out directory
+START tc
+START pr
+START bfs
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py", line 186, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py", line 143, in main
+    save()
+    ~~~~^^
+  File "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py", line 142, in save
+    temp.replace(manifest)
+    ~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 1092, in replace
+    os.replace(self, target)
+    ~~~~~~~~~~^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/zajason/dev/advarch/memory_tiering/results/prefetch-ladder-2026-11-15/gapbs-pr.manifest.json.tmp' -> '/home/zajason/dev/advarch/memory_tiering/results/prefetch-ladder-2026-11-15/gapbs-pr.manifest.json'
+  File "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py", line 186, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py", line 143, in main
+    save()
+    ~~~~^^
+  File "/home/zajason/dev/advarch/memory_tiering/experiments/run_paired.py", line 142, in save
+    temp.replace(manifest)
+    ~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 1092, in replace
+    os.replace(self, target)
+    ~~~~~~~~~~^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/zajason/dev/advarch/memory_tiering/results/prefetch-ladder-2026-11-15/gapbs-bfs.manifest.json.tmp' -> '/home/zajason/dev/advarch/memory_tiering/results/prefetch-ladder-2026-11-15/gapbs-bfs.manifest.json'
+COMPLETE pr: 7744.4s
+COMPLETE tc: 13452.1s
+COMPLETE bfs: 16173.6s

@@ -42,6 +42,7 @@
 #include "cache_model.hpp"
 #include "cache_hierarchy.hpp"
 #include "paired_observer.hpp"
+#include "prefetcher.hpp"
 #include "counter_table.hpp"
 #include "tracker.hpp"
 
@@ -69,6 +70,10 @@ KNOB<UINT64> KnobL3Size(KNOB_MODE_WRITEONCE, "pintool", "l3_kb", "61440", "LLC s
 KNOB<UINT32> KnobL3Assoc(KNOB_MODE_WRITEONCE, "pintool", "l3_assoc", "15", "LLC associativity");
 KNOB<UINT32> KnobCountWB(KNOB_MODE_WRITEONCE, "pintool", "count_wb", "1",
                          "count dirty LLC writebacks as DRAM accesses (PAC snoops them too)");
+KNOB<UINT32> KnobPrefetch(KNOB_MODE_WRITEONCE, "pintool", "prefetch", "0",
+    "model the L2 spatial + streamer hardware prefetchers (see prefetcher.hpp)");
+KNOB<UINT32> KnobPfConfirm(KNOB_MODE_WRITEONCE, "pintool", "pf_confirm", "2",
+    "monotone L2 lookups needed to confirm a stream (assumption; not in the Intel manual)");
 KNOB<UINT32> KnobPaired(KNOB_MODE_WRITEONCE, "pintool", "paired", "0",
                        "record access/fill/traffic coverage in the same execution intervals");
 KNOB<string> KnobSyncMode(KNOB_MODE_WRITEONCE, "pintool", "sync_mode", "legacy",
@@ -181,6 +186,8 @@ UINT32 g_epochId = 0;
 bool g_useCache = true;
 bool g_countWB = true;
 bool g_paired = false;
+bool g_prefetch = false;
+UINT64 g_pfRequests = 0, g_pfFills = 0;
 UINT64 g_epochRefsTarget = 0, g_epochRefs = 0;
 UINT64 g_wacSaturations = 0;
 INT32 g_exitCode = 0;
@@ -230,6 +237,7 @@ void releaseState() {
 struct ThreadState {
     CacheLevel l1;
     CacheLevel l2;
+    Prefetcher pf;
     UINT64 refs;
     UINT64 instructions;
     UINT8 pad[64];  // keep neighbouring threads off the same line
@@ -331,6 +339,21 @@ VOID analyzeMemRef(THREADID tid, ADDRINT addr, UINT32 size, BOOL isWrite) {
             accessShared(g_llc, line, r, [&](uint64_t evicted, bool write) {
                 if (recording && (!write || g_countWB)) recordDram(evicted, write);
             });
+            if (g_prefetch && r.visitedL2) {
+                // A prefetch fills L2 and the LLC but never L1. If the line is not
+                // already cached it is a read at the device, indistinguishable
+                // there from a demand fill.
+                ts->pf.onL2Lookup(line, !r.demand.hit, [&](uint64_t pline) {
+                    ++g_pfRequests;
+                    const Outcome o = ts->l2.access(pline, ACCESS_READ);
+                    if (o.hit) return;
+                    const PrivateResult pr = {{true, false, 0}, o, true};
+                    accessShared(g_llc, pline, pr, [&](uint64_t evicted, bool write) {
+                        if (!write && recording) ++g_pfFills;
+                        if (recording && (!write || g_countWB)) recordDram(evicted, write);
+                    });
+                });
+            }
         }
         if (recording && ((g_epochTarget && g_dramAccesses >= g_epochTarget) ||
                           (g_epochRefsTarget && g_epochRefs >= g_epochRefsTarget)))
@@ -402,6 +425,18 @@ void finishEpoch() {
     // sampled more windows than it actually did.
     if (g_counters.totalAccesses() == 0 && (!g_paired || g_pair.empty())) return;
     if (g_paired) g_pair.endEpoch(g_pairCsv, g_epochId);
+    // Crash-safe ladder: a shutdown mid-run used to lose every level above one
+    // epoch, because they were only written at exit. Rewrite a snapshot every
+    // 32 epochs, atomically, so an interrupted run keeps what it measured.
+    if (g_paired && (g_epochId + 1) % 32 == 0) {
+        const string tmp = g_outPrefix + ".ladder.csv.tmp";
+        {
+            std::ofstream snap(tmp.c_str());
+            snap << "scope,epoch,stream,population,words,pages,events\n";
+            g_pair.finish(snap, g_epochId + 1);
+        }
+        rename(tmp.c_str(), (g_outPrefix + ".ladder.csv").c_str());
+    }
     g_wacSaturations += g_counters.wacSaturations();
 
     UINT64 pagesThisEpoch = 0;
@@ -696,6 +731,7 @@ VOID onThreadStart(THREADID tid, CONTEXT*, INT32, VOID*) {
         n2 << "L2[t" << tid << "]";
         ts->l1.init(n1.str(), KnobL1Size.Value() * 1024, KnobL1Assoc.Value(), 1u << kWordShift);
         ts->l2.init(n2.str(), KnobL2Size.Value() * 1024, KnobL2Assoc.Value(), 1u << kWordShift);
+        ts->pf.confirm = KnobPfConfirm.Value();
     }
     PIN_SetThreadData(g_tlsKey, ts, tid);
 
@@ -763,6 +799,12 @@ void writeSummary() {
         f << "llc                " << KnobL3Size.Value() << " KB, " << KnobL3Assoc.Value()
           << "-way (shared)\n";
         f << "count_writebacks   " << (g_countWB ? "yes" : "no") << "\n";
+        f << "prefetch_model     " << (g_prefetch ? "l2-spatial+streamer" : "off") << "\n";
+        if (g_prefetch) {
+            f << "pf_confirm         " << KnobPfConfirm.Value() << "\n";
+            f << "pf_requests        " << g_pfRequests << "\n";
+            f << "pf_device_fills    " << g_pfFills << "\n";
+        }
     }
     f << "epochs             " << g_epochId << "\n";
     if (g_epochInsTarget)
@@ -877,6 +919,7 @@ int main(int argc, char* argv[]) {
     g_useCache = KnobCacheOn.Value() != 0;
     g_countWB = KnobCountWB.Value() != 0;
     g_paired = KnobPaired.Value() != 0;
+    g_prefetch = KnobPrefetch.Value() != 0;
     if (KnobSyncMode.Value() != "legacy" && KnobSyncMode.Value() != "mutex") return usage();
     g_mutexMode = KnobSyncMode.Value() == "mutex";
     g_localBbl = KnobLocalBbl.Value() != 0;

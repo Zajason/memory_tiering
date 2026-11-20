@@ -273,9 +273,10 @@
       "elapsed_s": 111842.99208259583
     },
     "liblinear": {
-      "status": "running",
-      "started": 1793384040.8673012,
+      "status": "paused",
+      "started": 1793801406.0534468,
       "binary_sha256": "da6ad1eb2f8f71aece70b042d847825522f21bb43f6be6572845c9b69beee2d7",
+      "checkpoint_state": "/mnt/research/memory-tiering/simulator-checkpoints/liblinear/attempt-1",
       "config_sha256": "080532ec48a32d7b8bea91ce196d44123e1e6933abecdde459159461c0a86614",
       "scope": "TimingSimpleCPU from ROI entry to ROI exit; atomic warm-up; independent per-port epochs",
       "graph": "kdda (KDD2010)",
@@ -297,13 +298,14 @@
         "10000000"
       ],
       "output": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/sim/liblinear/attempt-1",
-      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/sim-liblinear-1793384042.run.log",
-      "checkpoint_state": "/mnt/research/memory-tiering/simulator-checkpoints/liblinear/attempt-1"
+      "log": "/home/zajason/dev/advarch/memory_tiering/results/revalidated-2026-10-25/logs/sim-liblinear-1793801407.run.log",
+      "error": "checkpoint saved; run paused",
+      "elapsed_s": 4779.8566155433655
     }
   },
-  "pid": 18799,
-  "status": "running",
-  "started": 1793212567.5938494,
+  "pid": 18230,
+  "status": "paused",
+  "started": 1793801405.644385,
   "planned_jobs": [
     "bfs",
     "cc",
@@ -315,6 +317,6 @@
     "bc-window-1000000",
     "bc-window-100000000"
   ],
-  "updated": 1793384042.965826,
+  "updated": 1793806185.9101539,
   "current": "liblinear"
 }

@@ -1,0 +1,3 @@
+bfs --trials 200 --graph-prefix /mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75 --graph-family Twitter-WWW2010-hash75
+tc --trials 1 --graph-prefix /mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash25 --graph-family Twitter-WWW2010-hash25
+pr --trials 1 --pr-iterations 1000 --pr-tolerance 0.0001 --graph-prefix /mnt/research/memory-tiering/datasets/fidelity-v1/attempt-1/twitter-hash75 --graph-family Twitter-WWW2010-hash75

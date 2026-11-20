@@ -39,7 +39,7 @@ The rebuilt simulator reports 30,321 accepted line requests and 474 page observa
 | memcached | complete | 2631.7 |
 | liblinear | complete | 16752.8 |
 
-### sim: running
+### sim: paused
 
 | Job | State | Elapsed seconds |
 |---|---|---:|
@@ -49,7 +49,10 @@ The rebuilt simulator reports 30,321 accepted line requests and 474 page observa
 | sssp | complete | 17886.9 |
 | pr | complete | 59625.6 |
 | tc | complete | 111843.0 |
-| liblinear | running | 0.0 |
+| liblinear | paused | 0.0 |
+
+Failure detail for `liblinear`: `checkpoint saved; run paused`
+
 | bc-window-1000000 | queued | 0.0 |
 | bc-window-100000000 | queued | 0.0 |
 

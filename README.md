@@ -24,6 +24,78 @@ software tracking and simulation. Full numerical replication remains unresolved.
 
 ## Results at a glance
 
+### Latest: prefetch model and a common time window (15–16 November)
+
+All six GAPBS workloads are complete. Mean max |error| against M5 Figure 4 falls
+from **0.496 to 0.110**, with one measurement window shared by all benchmarks.
+Details and caveats:
+[docs/prefetch-ladder-2026-11-15.md](docs/prefetch-ladder-2026-11-15.md).
+
+![M5 Figure 4 and our reproduction, as grouped bars](docs/assets/fig4_prefetch_bars.png)
+
+The same data as curves, with the earlier demand-only result for comparison:
+
+![M5 Figure 4 against our curves before and after](docs/assets/fig4_prefetch_ladder.png)
+
+- **Hardware prefetching is now modelled.** The cache model counted only demand
+  misses, but a prefetch is a read at the CXL device like any other, so pages
+  looked sparser than they are on real hardware. `prefetcher.hpp` implements the
+  L2 adjacent-line and streamer prefetchers with constants from Intel's
+  optimization manual. The one undocumented value (stream confirmation) was run
+  at both 1 and 2: cc moves 0.234 ↔ 0.243.
+- **One run measures every window.** The window ladder records the curve for
+  each window of 10M × 2^j device events up to the whole run.
+- **The common window is a time window, not an event window.** The six workloads
+  differ about 300-fold in device events per instruction (tc 22B instructions per
+  10M events, pr 74M), and a profiler samples on a timer. One window in *events*
+  for all benchmarks helps bc and sssp but makes tc worse (mean 0.197). One
+  window in *instructions* fits all six (mean 0.110). Its length is chosen for
+  each benchmark by the other five (leave-one-out) and comes out at 45–54 billion
+  instructions every time, so the quoted error is not a fit to the curve being
+  scored.
+
+Max |error| against M5 over N = 4, 8, 16, 32, 48 (traffic stream, real inputs):
+
+| workload | status | before: 10M-event window | now: common time window (leave-one-out) | chosen by the others | that is, in events | common event window (leave-one-out) | whole run | fitted bound (not a result) |
+|---|---|---|---|---|---|---|---|---|
+| bc | complete | 0.772 | **0.143** | 54B instr | whole run | 0.185 (320M) | 0.143 | 0.056 |
+| bfs | complete | 0.555 | **0.079** | 54B instr | 1.28G | 0.236 (whole run) | 0.236 | 0.079 |
+| cc | complete | 0.489 | **0.243** | 54B instr | whole run | 0.243 (320M) | 0.243 | 0.237 |
+| pr | complete | 0.015 | **0.020** | 45B instr | 5.12G | 0.020 (320M) | 0.020 | 0.016 |
+| sssp | complete | 0.796 | **0.110** | 54B instr | whole run | 0.110 (320M) | 0.110 | 0.110 |
+| tc | complete | 0.349 | **0.062** | 54B instr | 20M | 0.387 (320M) | 0.400 | 0.062 |
+
+Mean max error over 6 completed workloads: before 0.496; common event window 0.197; common time window 0.110.
+
+![Error against window length](docs/assets/prefetch_ladder_error.png)
+
+What this does and does not show:
+
+- **The unit was chosen after seeing the data.** Counting the window in
+  instructions was decided once the common event window was seen to fail on tc.
+  It has a physical reason, and its length is leave-one-out, but the choice of
+  unit was not declared in advance.
+- **cc stays at 0.24 and is not a window problem.** Its error is flat across
+  every window; the prefetcher halved it (0.49 → 0.24) and the rest is something
+  the model still lacks. Its first three points are within 0.03 of M5; the
+  residual is at N = 48.
+- **bc and sssp match because both curves are near zero.** Ours is essentially
+  zero at every N, slightly denser than M5; the error equals M5's own value at
+  N = 48. Their gain is from the window, not the prefetcher (whole-run error was
+  already 0.14 and 0.11), and they ran 4 and 8 trials rather than the artifact's
+  100 and 200.
+- **The window is known only to a factor of two.** The ladder doubles at each
+  level, so anything between about 30 and 60 billion instructions selects the
+  same levels. Below about 30 billion, tc falls back to 0.26.
+- Instructions are counted on one thread under Pin; they stand in for wall time
+  on M5's 20-core machine. M5's own collection interval remains unpublished.
+- The "fitted bound" column is the best window per benchmark: a lower bound on
+  what any window choice could achieve, not a reproduction result.
+- Refresh the table, figures and deck with
+  `python src/analysis/plot_prefetch_ladder.py && node presentation/build_signal_el.mjs`.
+
+The sections below predate this and report the demand-only model.
+
 ### Input and execution fidelity campaign
 
 The [27 October follow-up](docs/fidelity-followup.md) reports the next controlled

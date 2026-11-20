@@ -171,7 +171,7 @@ function dataTable(s, head, rows, {y = 1.5, colW, highlight = []} = {}) {
     x: 1.0, y: 4.5, w: 7.3, h: 0.35, fontFace: F.tech, fontSize: 11.5, color: C.white, margin: 0});
   notes(s, 'Καλημέρα. Θα δείξω τη δουλειά στην αναπαραγωγή του Figure 4 του M5: '
     + 'το εργαλείο που έφτιαξα, τι αναπαράγεται και τι όχι, και τι χρειάζομαι για να κλείσει το κενό. '
-    + '15 λεπτά, 15 διαφάνειες.');
+    + '16 διαφάνειες, περίπου 16 λεπτά.');
 }
 
 /* ===================== 2. the problem ===================== */
@@ -264,21 +264,38 @@ function dataTable(s, head, rows, {y = 1.5, colW, highlight = []} = {}) {
 }
 
 /* ===================== 7. the main reproduction ===================== */
+/* Read at build time: a hardcoded number would go stale if a run is redone. */
+const CARD_FILE = path.join(REPO, 'results/prefetch-ladder-2026-11-15/scorecard.json');
+const CARD = existsSync(CARD_FILE) ? JSON.parse(readFileSync(CARD_FILE, 'utf8')) : {};
+const CARD_DONE = Object.values(CARD).filter(c => c.status === 'complete' && c.loo_error != null);
+const cardMean = key => CARD_DONE.length
+  ? (CARD_DONE.reduce((t, c) => t + c[key], 0) / CARD_DONE.length).toFixed(2) : '—';
 {
-  const s = newSlide('Κύριο αποτέλεσμα', 'Figure 4: ένα window definition, έξι workloads');
-  figure(s, 'docs/assets/fig4_uniform_full.png', {y: 1.3, h: 3.55,
-    caption: 'Window: 10M modeled memory events. Η κάτω σειρά χωρίς writebacks. '
-      + 'Οπτική συμφωνία δεν είναι replication — οι ακριβείς είσοδοι και το πρωτόκολλο του paper παραμένουν άγνωστα.'});
-  notes(s, 'Αυτή είναι η κύρια διαφάνεια. Ένα window definition για όλα τα workloads — '
-    + 'η προηγούμενη έκδοση ανακάτευε δύο διαφορετικά window definitions, που κολάκευε τρία workloads. '
-    + 'Δεν επιλέχθηκε κανένα window με βάση την καμπύλη αναφοράς.');
+  const NAMES = {bc: 'BC', bfs: 'BFS', cc: 'CC', pr: 'PageRank', sssp: 'SSSP', tc: 'TC'};
+  const s = newSlide('Κύριο αποτέλεσμα',
+    `Figure 4 στα datasets του artifact — μέσο max σφάλμα ${cardMean('old_epoch')} → ${cardMean('loo_error')}`);
+  figure(s, 'docs/assets/fig4_prefetch_bars.png', {y: 1.3, h: 3.55,
+    caption: 'max |σφάλμα|, πριν → τώρα: '
+      + Object.keys(NAMES).map(k => CARD[k] && CARD[k].loo_error != null
+          ? `${NAMES[k]} ${CARD[k].old_epoch.toFixed(2)} → ${CARD[k].loo_error.toFixed(2)}` : `${NAMES[k]} —`).join(' · ')
+      + '. Ένα κοινό time window, leave-one-out.'});
+  notes(s, 'Αυτή είναι η κύρια διαφάνεια. Πάνω: το Figure 4 όπως δημοσιεύτηκε. Κάτω: η δική μας μέτρηση σήμερα, '
+    + 'στα datasets που ονομάζει το artifact — Twitter και Google+. Η μεσαία σειρά είναι τα accesses της εφαρμογής, '
+    + 'η κάτω σειρά είναι αυτό που φτάνει στη συσκευή: demand misses, hardware prefetches και writebacks. Η κάτω σειρά συγκρίνεται με το M5. '
+    + `Το μέσο max σφάλμα στα έξι workloads πέφτει από ${cardMean('old_epoch')} σε ${cardMean('loo_error')}. `
+    + 'Δύο αλλαγές το έφεραν εκεί, και τις εξηγώ αναλυτικά σε λίγο: το cache model πλέον κάνει hardware prefetching, '
+    + 'και όλα τα benchmarks μετριούνται με το ίδιο time window — που δεν το διαλέγω εγώ ανά benchmark, το διαλέγουν τα άλλα πέντε. '
+    + 'Τρία πράγματα που λέω από τώρα για να μην υπερπουλήσω. Το CC μένει στο 0.24: το N=48 μας είναι 0.63 αντί για 0.39. '
+    + 'Στα SSSP, BC και PageRank οι μπάρες μας είναι πρακτικά μηδέν· του M5 είναι μικρές αλλά όχι μηδέν, άρα εκεί είμαστε λίγο πιο πυκνοί. '
+    + 'Και το interval του M5 δεν δημοσιεύεται: δείχνω ότι ΕΝΑ window είναι '
+    + 'συνεπές και με τα έξι, όχι ότι βρήκα το δικό τους.');
 }
 
 /* ===================== 8. accesses vs misses ===================== */
 {
   const s = newSlide('Accesses vs misses', 'Τα τρία streams δίνουν σχεδόν το ίδιο — και γιατί');
   figure(s, 'docs/assets/fig4_fidelity_full.png', {y: 1.28, h: 2.5});
-  dataTable(s, ['BFS, πραγματικό dataset', 'max |σφάλμα|'], [
+  dataTable(s, ['BFS, πραγματικό dataset, demand-only model', 'max |σφάλμα|'], [
     ['accesses', '0.5554'],
     ['fills (demand misses)', '0.5556'],
     ['traffic (fills + writebacks)', '0.5547'],
@@ -294,7 +311,7 @@ function dataTable(s, head, rows, {y = 1.5, colW, highlight = []} = {}) {
 
 /* ===================== 9. real datasets ===================== */
 {
-  const s = newSlide('Πραγματικά datasets', 'Twitter WWW2010 και Google+ IMC12 — όχι συνθετικοί γράφοι');
+  const s = newSlide('Σημείο εκκίνησης', 'Twitter WWW2010 και Google+ IMC12, demand-only model, 10M-event window');
   dataTable(s, ['Workload', 'max |σφάλμα|', 'P(≤16)', 'events'], [
     ['PageRank  (Twitter)', '0.015', '0.000', '7.04 δισ.'],
     ['Triangle counting  (Twitter)', '0.349', '0.202', '170 εκατ.'],
@@ -306,14 +323,14 @@ function dataTable(s, head, rows, {y = 1.5, colW, highlight = []} = {}) {
   s.addShape(pptx.ShapeType.rect, {x: 0.5, y: 3.75, w: 9, h: 1.0,
     fill: {color: 'EAF1FD'}, line: {color: C.blue, width: 1}});
   s.addText([
-    {text: 'Το PageRank αναπαράγεται — 0.015 σε 7 δισεκατομμύρια memory events. ',
+    {text: 'Από εδώ ξεκινήσαμε: μόνο το PageRank αναπαραγόταν (0.015). ',
       options: {fontFace: F.el, fontSize: 13, bold: true, color: C.blue}},
     {text: 'Τα άλλα πέντε όχι, και το κενό δεν εξηγείται από το dataset: αυτά ΕΙΝΑΙ τα '
-      + 'πραγματικά datasets που ονομάζει το artifact.', options: {fontFace: F.el, fontSize: 13, color: C.ink}},
+      + 'πραγματικά datasets που ονομάζει το artifact. Είναι η κόκκινη καμπύλη της κύριας διαφάνειας.', options: {fontFace: F.el, fontSize: 13, color: C.ink}},
   ], {x: 0.75, y: 3.93, w: 8.5, h: 0.72, margin: 0, valign: 'top'});
-  notes(s, 'Εδώ είναι η ουσία. Βρήκα ότι το artifact ονομάζει Google+ και Twitter, όχι web-Google '
-    + 'που είχα δοκιμάσει αρχικά. Με τα πραγματικά datasets το PageRank πέφτει στο 0.015 — '
-    + 'αναπαράγεται. Τα άλλα πέντε όχι. Άρα το dataset δεν είναι η εξήγηση.');
+  notes(s, 'Πώς φτάσαμε εκεί. Βρήκα ότι το artifact ονομάζει Google+ και Twitter, όχι web-Google '
+    + 'που είχα δοκιμάσει αρχικά. Με τα πραγματικά datasets και το αρχικό, demand-only μοντέλο, το PageRank έπεφτε στο 0.015 — '
+    + 'αναπαραγόταν. Τα άλλα πέντε όχι. Άρα το dataset δεν ήταν η εξήγηση. Αυτοί οι αριθμοί είναι η κόκκινη καμπύλη της κύριας διαφάνειας.');
 }
 
 /* ===================== 10. controls ===================== */
@@ -338,6 +355,37 @@ function dataTable(s, head, rows, {y = 1.5, colW, highlight = []} = {}) {
   notes(s, 'Αυτή είναι η διαφάνεια που θα ρωτήσει. Δοκίμασα συστηματικά: 20 threads όπως το paper, '
     + 'warm setup, 3 και 200 trials, 9 αντί 10 ways. Τίποτα δεν κλείνει το κενό. '
     + 'Ό,τι μένει είναι το collection protocol, που δεν δημοσιεύεται.');
+}
+
+/* ===================== 10b. prefetch model + window ladder ===================== */
+{
+  const done = CARD_DONE;
+  const mean = a => (a.reduce((t, v) => t + v, 0) / a.length).toFixed(2);
+  const s = newSlide('Τι έκλεισε το κενό',
+    'Hardware prefetching και ένα κοινό window σε χρόνο, όχι σε events');
+  figure(s, 'docs/assets/prefetch_ladder_error.png', {y: 1.25, h: 3.2});
+  s.addText(`Μέσο max σφάλμα:  αρχικό ${cardMean('old_epoch')}   →   κοινό window σε events ${cardMean('ev_loo_error')}   →   κοινό window σε instructions ${cardMean('loo_error')}`, {
+    x: 0.5, y: 4.55, w: 9, h: 0.35, fontFace: F.el, fontSize: 13, bold: true, color: C.blue, margin: 0});
+  s.addText('Το TC παράγει περίπου 300 φορές λιγότερα device events ανά instruction από το PageRank: '
+    + 'ίδιο πλήθος events δεν σημαίνει ίδιος χρόνος. Ο κύκλος δείχνει το window που διαλέγουν τα άλλα πέντε benchmarks.', {
+    x: 0.5, y: 4.92, w: 9, h: 0.5, fontFace: F.el, fontSize: 10.5, color: C.grey, margin: 0});
+  notes(s, 'Πώς κλείνει το κενό που έδειξα στην κύρια διαφάνεια. Το αρχικό cache model μας μετρούσε μόνο demand misses. Ένας πραγματικός '
+    + 'επεξεργαστής όμως κάνει και hardware prefetching, και για τη συσκευή CXL ένα prefetch είναι read όπως κάθε άλλο. '
+    + 'Άρα το μοντέλο μας έβλεπε τις σελίδες πιο αραιές απ\' ό,τι το M5. Πρόσθεσα τους δύο L2 prefetchers που τεκμηριώνει '
+    + 'η Intel (adjacent-line και streamer), με όλες τις σταθερές από το optimization manual. Μία τιμή δεν τεκμηριώνεται '
+    + '— πόσα διαδοχικά requests επιβεβαιώνουν ένα stream — και τη δοκίμασα με 1 και 2: στο CC το σφάλμα αλλάζει από 0.243 σε 0.234. '
+    + 'Δεύτερον, το window ladder: ένα run μετράει όλα τα windows από 10M events μέχρι ολόκληρη την εκτέλεση. '
+    + 'Το κρίσιμο εύρημα: ένα κοινό window μετρημένο σε events ΔΕΝ δουλεύει — βοηθάει τα BC και SSSP αλλά χαλάει το TC'
+    + (done.length ? ` (μέσο σφάλμα ${mean(done.map(c => c.ev_loo_error))})` : '') + '. '
+    + 'Ο λόγος: τα έξι workloads διαφέρουν περίπου 300 φορές σε device events ανά instruction, και ένας πραγματικός profiler '
+    + 'δειγματοληπτεί με χρονόμετρο, όχι ανά N events. Όταν το κοινό window μετρηθεί σε instructions, δηλαδή σε χρόνο, ταιριάζουν και τα έξι. '
+    + 'Την τιμή του δεν τη διαλέγω ανά benchmark· τη διαλέγουν τα ΑΛΛΑ πέντε benchmarks (leave-one-out), και βγαίνει περίπου 45–54 δισ. instructions κάθε φορά. '
+    + (done.length ? `Στα ${done.length} workloads το μέσο max σφάλμα πέφτει από ${mean(done.map(c => c.old_epoch))} σε ${mean(done.map(c => c.loo_error))}. ` : '')
+    + 'Τι πρέπει να πω καθαρά. Πρώτον, η επιλογή να μετρήσω το window σε instructions έγινε ΑΦΟΥ είδα ότι το event window αποτυγχάνει στο TC· '
+    + 'έχει φυσική αιτιολόγηση, αλλά δεν ήταν προδηλωμένη. Δεύτερον, το CC μένει στο 0.24 και δεν εξαρτάται από το window: εκεί λείπει κάτι από το μοντέλο. '
+    + 'Τρίτον, στα BC και SSSP η δική μας καμπύλη είναι σχεδόν μηδέν, πιο πυκνή από του M5· και έτρεξαν με 4 και 8 trials αντί για 100 και 200 του artifact. '
+    + 'Τέταρτον, το ladder έχει βήματα ×2, άρα το window ορίζεται μόνο μέχρι έναν παράγοντα 2 (περίπου 30–60 δισ. instructions). '
+    + 'Και το interval του ίδιου του M5 παραμένει αδημοσίευτο.');
 }
 
 /* ===================== 11. PAC/WAC + trackers ===================== */
@@ -410,7 +458,7 @@ function dataTable(s, head, rows, {y = 1.5, colW, highlight = []} = {}) {
     ['3. Άδεια SPEC CPU2017 — 4 από τις 6 υπόλοιπες μπάρες', 'Αν το εργαστήριο την έχει, είναι θέμα πρόσβασης, όχι υλοποίησης.'],
   ], {y: 1.45});
   metricRow(s, [
-    {big: '0.015', label: 'PageRank, πραγματικό\nTwitter — αναπαράγεται', accent: C.blue},
+    {big: cardMean('loo_error'), label: `μέσο max σφάλμα, 6 workloads\n(από ${cardMean('old_epoch')})`, accent: C.blue},
     {big: '18/21', label: 'Stage 2 βήματα\n(3 multithread σε αναμονή)', accent: C.amber},
     {big: '9/14', label: 'μπάρες του Figure 4\nπου έχουν μετρηθεί', accent: C.red},
   ], {y: 3.55, h: 1.6});

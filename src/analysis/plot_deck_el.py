@@ -209,16 +209,16 @@ def fig_sim():
         for r in csv.DictReader(f):
             if r["port"] == "bridge":
                 sim.setdefault(r["workload"], {})[int(r["n"])] = float(r["cdf"])
-    data = {w: [sim[w][n] for n in NS] for w in ORDER}
-    note = {w: f"max |Δ| {max(abs(a - b) for a, b in zip(data[w], M5[w])):.2f}" for w in ORDER}
-    bar_rows([("M5, Figure 4 (ASPLOS '25)", {w: M5[w] for w in ORDER}, None),
+    data = {w: [sim[w][n] for n in NS] for w in MAIN}
+    note = {w: f"max |Δ| {max(abs(a - b) for a, b in zip(data[w], M5[w])):.2f}" for w in MAIN}
+    bar_rows([("M5, Figure 4 (ASPLOS '25)", {w: M5[w] for w in MAIN}, None),
               ("SimCXL (gem5): requests στη CXL bridge, φυσικές διευθύνσεις + kernel", data, note)],
-             "sim.png", 3.6, 9.6)
+             "sim.png", 3.6, 9.6, order=MAIN)
 
 
 def fig_trackers():
     import collections
-    fig, axes = plt.subplots(1, 2, figsize=(7.6, 3.5), sharey=True)
+    fig, axes = plt.subplots(1, 2, figsize=(7.6, 4.6), sharey=True)
     for ax, algo, title in zip(axes, ["spacesaving", "cmsketch"], ["Space-Saving", "Count-Min Sketch"]):
         clean(ax)
         allv = collections.defaultdict(list)
